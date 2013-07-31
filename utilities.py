@@ -105,7 +105,7 @@ def recast_results_queue_output(output,metaData):
 def multiprocess_prf_estimates(stimData,funcData,metaData):
 	"""
 	Uses multiprocessing.Process and multiprocessing.Queue to submit pRF estimation jobs to the 
-	user-specified (gleaned from metaData) number of CPUs.  The results are stored in a Queue
+	user-specified number of CPUs gleaned from metaData.  The results are stored in a Queue
 	that are returned at the conclusion of each CPUs task.
 	
 	TODO:  Implement a job queue in addition to the results queue.  This would maximize the resources
