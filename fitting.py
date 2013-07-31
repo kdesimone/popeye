@@ -196,13 +196,18 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 				if verbose:
 					# print the details of the estimation for this voxel
 					print("VOXEL=(%d,%d,%d,%d/%d),TIME=%.03f,x=%.03f,y=%.03f,s=%.03f,d=%.03f,ERROR=%d,COV=%.03f" 
-						%(xvoxel,
-						  yvoxel,
-  						  zvoxel,
-						  numVoxel+1,
-						  len(xi),
-						  toc-tic,
-						  x,y,s,d,err,stats[2]**2))
+					      %(xvoxel,
+					        yvoxel,
+  						zvoxel,
+						numVoxel+1,
+						len(xi),
+						toc-tic,
+						x,
+						y,
+						s,
+						d,
+						err,
+						stats[2]**2))
 				
 				# store the results
 				results.append((xvoxel,yvoxel,zvoxel,x,y,s,d,stats))
