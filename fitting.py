@@ -167,11 +167,11 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 				
 				# regenerate the best-fit for computing the threshold
 				tsStim = MakeFastPrediction(stimData['degXFine'],
-											stimData['degYFine'],
-											stimData['stimArrayFine'],
-											pRF_phat[0][0],
-											pRF_phat[0][1],
-											pRF_phat[0][2])
+				                            stimData['degYFine'],
+                                            stimData['stimArrayFine'],
+                                            pRF_phat[0][0],
+                                            pRF_phat[0][1],
+                                            pRF_phat[0][2])
 				
 				# convolve with HRF and z-score
 				hrf = double_gamma_hrf(pRF_phat[0][3])
