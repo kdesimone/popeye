@@ -9,21 +9,21 @@ pRF estimator method.  This will maximize the use of the user-specified availabl
 
 """
 
-import shutil, sys
-import ctypes
-from multiprocessing import Array, Manager
-import numpy as np
-import nibabel
-from utilities import resample_stimulus, generate_coordinate_matrices
-
 def init_config():
+	
+	import shutil, sys
+	import ctypes
+	from multiprocessing import Array, Manager
+	import numpy as np
+	import nibabel
+	from utilities import resample_stimulus, generate_coordinate_matrices
 	
 	######################
 	###    Stimulus    ###
 	######################
 	
 	# set the visuotopic stimulus array path
-	stimArrayPath = '/Users/kevin/Desktop/Etc/Analyzed_Data/2_38_39/pRF/barsArray_mod.npy'
+	stimArrayPath = '<PATH>.npy'
 	
 	# make sure the file exists
 	if not shutil.os.path.exists(stimArrayPath):
@@ -55,7 +55,7 @@ def init_config():
 	######################
 	
 	# set functional dataset path
-	funcPath = '/Users/kevin/Desktop/Etc/Analyzed_Data/2_38_39/pRF/2_38_39.nii.gz'
+	funcPath = '<PATH>.nii.gz'
 	
 	# make sure it is accessible on the file-system
 	if not shutil.os.path.exists(funcPath):
@@ -71,7 +71,7 @@ def init_config():
 	######################
 	
 	# set mask dataset path -- any binary mask where voxels-to-be analyzed are non-zero
-	maskPath = '/Users/kevin/Desktop/Etc/Analyzed_Data/2_38_39/pRF/anat_EPI_mask_2mm.nii.gz'
+	maskPath = '<PATH>.nii.gz'
 	
 	# Make sure it is accessible on the file-system
 	if not shutil.os.path.exists(maskPath):
@@ -85,7 +85,7 @@ def init_config():
 	#######################
 	
 	# number of CPUs over which to distribute the work
-	jobs = 23 
+	jobs = 1 
 	
 	# Stimulus arrays
 	shared_array_base = Array(ctypes.c_short,np.prod(np.shape(stimArrayFine)))
@@ -155,10 +155,11 @@ def init_config():
 	# Set the output variables
 	metaData = {}
 	metaData['jobs'] = jobs
-	metaData['outputPath'] = '/Users/kevin/Desktop/'
-	metaData['baseFileName'] = 'pRF_2_38_39'
+	metaData['outputPath'] = ''
+	metaData['baseFileName'] = ''
 	metaData['voxels'] = np.nonzero(maskData)
 	metaData['maskPath'] = maskPath
 	metaData['funcPath'] = funcPath
+	metaData['verbose'] = True
 	
 	return stimData,funcData,metaData
