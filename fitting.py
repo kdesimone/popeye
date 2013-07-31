@@ -40,11 +40,11 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
 	
 	# otherwise generate a prediction
 	tsStim = MakeFastPrediction(degX,
-								degY,
-								stimArray,
-								modelParams[0],
-								modelParams[1],
-								modelParams[2])
+				    degY,
+				    stimArray,
+				    modelParams[0],
+			            modelParams[1],
+				    modelParams[2])
 	
 	# compute the double-gamma HRF at the specified delay
 	hrf = double_gamma_hrf(modelParams[3])
@@ -85,17 +85,17 @@ def adaptive_brute_force_grid_search(Bounds,epsilon,rounds,tsActual,degX,degY,st
 		
 		# get a fit estimate by sparsely sampling the 4-parameter space
 		phat = brute(error_function,
-					 args=(tsActual,degX,degY,stimArray),
-					 ranges=Bounds,
-					 Ns=5,
-					 finish=fmin)
+			     args=(tsActual,degX,degY,stimArray),
+			     ranges=Bounds,
+			     Ns=5,
+			     finish=fmin)
 		
 		# recompute the grid-search bounds by halving the sampling space
 		epsilon /= 2.0
 		Bounds = ((phat[0]-epsilon,phat[0]+epsilon),
-				  (phat[1]-epsilon,phat[1]+epsilon),
-				  (phat[2]-epsilon,phat[2]+epsilon),
-				  (phat[3]-epsilon,phat[3]+epsilon))
+		          (phat[1]-epsilon,phat[1]+epsilon),
+		          (phat[2]-epsilon,phat[2]+epsilon),
+		  	  (phat[3]-epsilon,phat[3]+epsilon))
 		
 		# iterate the pass variable
 		passNum += 1
@@ -148,19 +148,19 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 			
 			# compute the initial guess with the adaptive brute-force grid-search
 			x0 = adaptive_brute_force_grid_search(Bounds,
-												  1,
-												  3,
-												  tsActual,
-												  stimData['degXCoarse'],
-												  stimData['degYCoarse'],
-												  stimData['stimArrayCoarse'])
+							      1,
+							      3,
+							      tsActual,
+							      stimData['degXCoarse'],
+							      stimData['degYCoarse'],
+							      stimData['stimArrayCoarse'])
 			
 			# gradient-descent the solution using the x0 from the brute-force grid-search
 			pRF_phat = fmin_powell(error_function,
-								   x0,
-								   args=(tsActual,stimData['degXFine'],stimData['degYFine'],stimData['stimArrayFine']),
-								   full_output=True,
-								   disp=False)
+					       x0,
+					       args=(tsActual,stimData['degXFine'],stimData['degYFine'],stimData['stimArrayFine']),
+					       full_output=True,
+					       disp=False)
 			
 			# ensure that the fmin finished OK
 			if pRF_phat[-1] == 0 and not np.isnan(pRF_phat[1]) and not np.isinf(pRF_phat[1]):
@@ -168,10 +168,10 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 				# regenerate the best-fit for computing the threshold
 				tsStim = MakeFastPrediction(stimData['degXFine'],
 				                            stimData['degYFine'],
-                                            stimData['stimArrayFine'],
-                                            pRF_phat[0][0],
-                                            pRF_phat[0][1],
-                                            pRF_phat[0][2])
+                                            	 	    stimData['stimArrayFine'],
+                                            		    pRF_phat[0][0],
+                                            		    pRF_phat[0][1],
+                                            		    pRF_phat[0][2])
 				
 				# convolve with HRF and z-score
 				hrf = double_gamma_hrf(pRF_phat[0][3])
@@ -195,7 +195,14 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 				
 				if verbose:
 					# print the details of the estimation for this voxel
-					print("VOXEL=(%d,%d,%d,%d/%d),TIME=%.03f,x=%.03f,y=%.03f,s=%.03f,d=%.03f,ERROR=%d,COV=%.03f" %(xvoxel,yvoxel,zvoxel,numVoxel+1,len(xi),toc-tic,x,y,s,d,err,stats[2]**2))
+					print("VOXEL=(%d,%d,%d,%d/%d),TIME=%.03f,x=%.03f,y=%.03f,s=%.03f,d=%.03f,ERROR=%d,COV=%.03f" 
+						%(xvoxel,
+						  yvoxel,
+  						  zvoxel,
+						  numVoxel+1,
+						  len(xi),
+						  toc-tic,
+						  x,y,s,d,err,stats[2]**2))
 				
 				# store the results
 				results.append((xvoxel,yvoxel,zvoxel,x,y,s,d,stats))
