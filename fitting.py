@@ -68,7 +68,7 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
 
 def adaptive_brute_force_grid_search(Bounds,epsilon,rounds,tsActual,degX,degY,stimArray):
 	"""
-	The adaptive brute-force grid-search sparsely samples the parameter and uses a down-sampled
+	The adaptive brute-force grid-search sparsely samples the parameter space and uses a down-sampled
 	version of the stimulus and cooridnate matrices.  This is intended to yield an initial, ball-park 
 	solution that is then fed into the more finely-tuned fmin_powell in the compute_prf_estimate method 
 	below.
@@ -195,7 +195,7 @@ def compute_prf_estimate(voxels,stimData,funcData,results_q,verbose=True):
 				
 				if verbose:
 					# print the details of the estimation for this voxel
-					print("VOXEL=(%d,%d,%d,%d/%d),TIME=%.03f,x=%.03f,y=%.03f,s=%.03f,d=%.03f,ERROR=%d,COV=%.03f" 
+					print("VOXEL=(%d,%d,%d,%d/%d),TIME=%.03f,X=%.03f,Y=%.03f,S=%.03f,D=%.03f,ERROR=%d,COV=%.03f" 
 					      %(xvoxel,
 					        yvoxel,
   						zvoxel,
