@@ -4,7 +4,7 @@ it creates the visuotopic arrays for plotting the 2D gaussians in stimulus-refer
 be created for reading data from a multiprocessing.Array.  Results are garnered from a multiprocessing.Queue. 
 
 TODO:  Create a multiprocessing.Queue for work-to-be-done.  This would pop jobs off the to-do stack and feed them into the main
-pRF estimator method.  This will maximize the use of the user-specified availble CPUs.
+pRF estimator method.  This will maximize the use of the user-specified available CPUs.
 
 
 """
