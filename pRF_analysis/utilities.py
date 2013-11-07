@@ -14,43 +14,43 @@ from estimation import compute_prf_estimate
 
 def generate_shared_array(unsharedArray,dataType):
     """Creates synchronized shared arrays from numpy arrays.
-    
-    The function takes a numpy array `unsharedArray` and returns a shared memory object, 
+
+    The function takes a numpy array `unsharedArray` and returns a shared memory object,
     `sharedArray_mem`.  The user also specifies the data-type of the values in the array
-    with the `dataType` argument.  See multiprocessing.Array and ctypes for details on 
+    with the `dataType` argument.  See multiprocessing.Array and ctypes for details on
     shared memory arrays and the data-types.
-    
+
     Parameters
     ----------
     unsharedArray : ndarray
         Array_like means all those objects -- lists, nested lists, etc. --
         that can be converted to an array.  We can also refer to
         variables like `var1`.
-    dataType : ctypes instance 
-        The data-type specificed has to be an instance of the ctypes library.  
+    dataType : ctypes instance
+        The data-type specificed has to be an instance of the ctypes library.
         See ctypes for details.
-        
+
     Returns
     -------
     sharedArray : syncrhonized shared array
         An an array that is read/write accessible from multiple processes/threads.
     """
-    
+
     shared_array_base = Array(dataType,np.prod(np.shape(unsharedArray)))
     sharedArray = np.ctypeslib.as_array(shared_array_base.get_obj())
     sharedArray = np.reshape(sharedArray,np.shape(unsharedArray))
     sharedArray[:] = unsharedArray[:]
-    
+
     return sharedArray
 
 def resample_stimulus(stimArray,scaleFactor):
     """Resamples the visual stimulus
-    
+
     The function takes an ndarray `stimArray` and resamples it by the user specified  `scaleFactor`.
-    The stimulus array is assumed to be a three dimensional ndarray representing the stimulus, 
+    The stimulus array is assumed to be a three dimensional ndarray representing the stimulus,
     in screen pixel coordinates, over time.  The first two dimensions of `stimArray` together
     represent the exent of the visual display (pixels) and the last dimensions represents time (TRs).
-    
+
     Parameters
     ----------
     stimArray : ndarray
@@ -59,14 +59,14 @@ def resample_stimulus(stimArray,scaleFactor):
     scaleFactor : float
         The scale factor by which the stimulus is resampled.  The scale factor must be
         a float, and must be greater than 0.
-        
+
     Returns
     -------
     resampledStim : ndarray
         An array that is resampled according to the user-specified scale factor.
-        
+
     """
-    
+
     dims = np.shape(stimArray)
     resampledStim = np.zeros((dims[0]*scaleFactor,dims[1]*scaleFactor,dims[2]))
     for tp in range(dims[2]):
@@ -79,11 +79,11 @@ def resample_stimulus(stimArray,scaleFactor):
 def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFactor):
     """Creates coordinate matrices for representing the visual field in terms of degrees
     of visual angle.
-    
+
     This function takes the screen dimensions, the pixels per degree, and a scaling factor in order
-    to generate a pair of ndarrays representing the horizontal and vertical extents of the visual 
+    to generate a pair of ndarrays representing the horizontal and vertical extents of the visual
     display in degrees of visual angle.
-    
+
     Parameters
     ----------
     pixelsAcross : int
@@ -96,7 +96,7 @@ def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFa
     scaleFactor : float
         The scale factor by which the stimulus is resampled.  The scale factor must be
         a float, and must be greater than 0.
-        
+
     Returns
     -------
     degX : ndarray
@@ -105,23 +105,23 @@ def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFa
     degY : ndarray
         An array representing the vertical extent of the visual display in terms of degrees of
         visual angle.
-        
+
     """
-        
+
     [X,Y] = np.meshgrid(np.arange(pixelsAcross*scaleFactor),np.arange(pixelsDown*scaleFactor))
     degX = (X-np.shape(X)[1]/2)/(pixelsPerDegree*scaleFactor).astype('double')
     degY = (Y-np.shape(Y)[0]/2)/(pixelsPerDegree*scaleFactor).astype('double')
-    
+
     return degX,degY
 
 def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
-    
+
     Takes `output`, a list of multiprocessing.Queue objects containing the output of the pRF estimation
-    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates, written separaltely  
+    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates, written separaltely
     to two nifti files.  Each voxel contains the following metrics:
-        
+
         0 x / polar angle
         1 y / eccentricity
         2 sigma
@@ -130,32 +130,31 @@ def recast_estimation_results_queue(output,metaData,write=True):
         5 standard error of the model-actual fit
         6 correlation of the model-actual fit
         7 two-tailed p-value of the model-actual fit
-    
-    
+        
     Parameters
     ----------
     output : list
         A collection of multiprocessing.Queue objects, with one object per voxel.
     metaData : dict
         A dictionary containing meta-data about the analysis being performed.  For details, see config.py.
-        
-        
+
+
     Returns
     -------
     cartesFileName : string
         The absolute path of the recasted pRF estimation output in Cartesian coordinates.
     polarFileName : string
         The absolute path of the recasted pRF estimation output in polar coordinates.
-    
+
     """
-    
+
     # load the gridParent
     gridParent = nibabel.load(metaData['maskPath'])
     dims = list(gridParent.get_shape())
     dims.append(8)
     pRF_polar = np.zeros(dims)
     pRF_cartes = np.zeros(dims)
-    
+
     # extract the pRF model estimates from the results queue output
     for job in output:
         for voxel in job:
@@ -173,7 +172,7 @@ def recast_estimation_results_queue(output,metaData,write=True):
     voxelDims = list(hdr.get_zooms())
     voxelDims[-1] = 8
     hdr.set_zooms(voxelDims)
-    
+
     # write the files
     now = time.strftime('%Y%m%d_%H%M%S')
     nif_polar = nibabel.Nifti1Image(pRF_polar,aff,header=hdr)
@@ -273,15 +272,15 @@ def recast_simulation_results_queue(output,funcData,metaData,write=True):
 
 def multiprocessor(targetMethod,stimData,funcData,metaData):
     """
-    Uses the multiprocessing toolbox to parallize the voxel-wise pRF estimation across a 
+    Uses the multiprocessing toolbox to parallize the voxel-wise pRF estimation across a
     user-specified number of cpus.
-    
+
     Each voxel is treated as the atomic unit.  Collections of voxels are sent to each of the user-specified
     allocated cpus for pRF estimation.  Currently, the strategy is to use multiprocessing.Process to start
     each batch of voxels on a given cpu.  The results of each are written to a multiprocessing.Queue object,
     collected into a list of results, and returned to the user.
-    
-    
+
+
     Parameters
     ----------
     stimData : dict
@@ -290,30 +289,30 @@ def multiprocessor(targetMethod,stimData,funcData,metaData):
         A 4D numpy array containing the functional data to be used for the pRF estimation. For details, see config.py
     metaData : dict
         A dictionary containing meta-data about the analysis being performed.  For details, see config.py.
-        
-        
+
+
     Returns
     -------
     output : list
         A list of multiprocessing.Queue objects that house the pRF estimates for all the voxels analyzed as specified in
         `metaData`.  The `output` will be a list whose length is equal to the number of cpus specified in `metaData`.
-    
+
     """
-    
+
     # figure out how many voxels are in the mask & the number of jobs we have allocated
     [xi,yi,zi] = metaData['voxels']
     cpus = metaData['cpus']
-    
+
     # Set up the voxel lists for each job
     voxelLists = []
     cutOffs = [int(np.floor(i)) for i in np.linspace(0,len(xi),cpus+1)]
     for i in range(len(cutOffs)-1):
         l = range(cutOffs[i],cutOffs[i+1])
         voxelLists.append(l)
-        
+
     # initialize Queues for managing the outputs of the jobs
     results_q = Queue()
-    
+
     # start the jobs
     procs = []
     for j in range(cpus):
@@ -322,14 +321,14 @@ def multiprocessor(targetMethod,stimData,funcData,metaData):
         p = Process(target=targetMethod,args=(stimData,funcData,metaData,results_q))
         procs.append(p)
         p.start()
-        
+
     # gather the outputs from the queue
     output = []
     for i in range(len(procs)):
         output.append(results_q.get())
-        
+
     # close the jobs
     for p in procs:
         p.join()
-        
+
     return output

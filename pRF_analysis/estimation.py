@@ -136,6 +136,7 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
     
     return error
 
+
 def adaptive_brute_force_grid_search(Bounds,epsilon,rounds,tsActual,degX,degY,stimArray):
     """
     
@@ -173,6 +174,7 @@ def adaptive_brute_force_grid_search(Bounds,epsilon,rounds,tsActual,degX,degY,st
         passNum += 1
     
     return phat
+
 
 def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
     """
