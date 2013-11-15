@@ -10,7 +10,7 @@ from multiprocessing import Process, Queue, Array
 import numpy as np
 import nibabel
 from scipy.misc import imresize
-from fitting import compute_prf_estimate
+from estimation import compute_prf_estimate
 
 def generate_shared_array(unsharedArray,dataType):
     """Creates synchronized shared arrays from numpy arrays.
@@ -71,6 +71,9 @@ def resample_stimulus(stimArray,scaleFactor):
     resampledStim = np.zeros((dims[0]*scaleFactor,dims[1]*scaleFactor,dims[2]))
     for tp in range(dims[2]):
         resampledStim[:,:,tp] = imresize(stimArray[:,:,tp],scaleFactor)
+    
+    resampledStim[resampledStim>0] = 1
+    
     return resampledStim.astype('short')
 
 def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFactor):
@@ -111,7 +114,7 @@ def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFa
     
     return degX,degY
 
-def recast_results_queue_output(output,metaData):
+def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
     
@@ -124,10 +127,9 @@ def recast_results_queue_output(output,metaData):
         2 sigma
         3 HRF delay
         4 slope of the model-actual fit
-        5 intercept of the model-actual fit
+        5 standard error of the model-actual fit
         6 correlation of the model-actual fit
         7 two-tailed p-value of the model-actual fit
-        8 standard error of the model-actual fit
     
     
     Parameters
@@ -150,7 +152,7 @@ def recast_results_queue_output(output,metaData):
     # load the gridParent
     gridParent = nibabel.load(metaData['maskPath'])
     dims = list(gridParent.get_shape())
-    dims.append(9)
+    dims.append(8)
     pRF_polar = np.zeros(dims)
     pRF_cartes = np.zeros(dims)
     
@@ -161,33 +163,115 @@ def recast_results_queue_output(output,metaData):
             x,y,s,d = voxel[3:7]
             stats = voxel[7]
             slope,intercept,rval,pval,stderr = stats[:]
-            pRF_cartes[xi,yi,zi,:] = x,y,s,d,slope,intercept,rval,pval,stderr
-            pRF_polar[xi,yi,zi,:] = np.mod(np.arctan2(x,y),2*np.pi),np.sqrt(x**2+y**2),s,d,slope,intercept,rval**2,pval,stderr
+            pRF_cartes[xi,yi,zi,:] = x,y,s,d,slope,stderr,rval,pval
+            pRF_polar[xi,yi,zi,:] = np.mod(np.arctan2(x,y),2*np.pi),np.sqrt(x**2+y**2),s,d,slope,stderr,rval,pval
     
     # get header information from the gridParent and update for the pRF volume
     aff = gridParent.get_affine()
     hdr = gridParent.get_header()
     hdr.set_data_shape(dims)
     voxelDims = list(hdr.get_zooms())
-    voxelDims[-1] = 9
+    voxelDims[-1] = 8
     hdr.set_zooms(voxelDims)
     
     # write the files
     now = time.strftime('%Y%m%d_%H%M%S')
-    
-    nif = nibabel.Nifti1Image(pRF_polar,aff,header=hdr)
-    nif.set_data_dtype('float32')
+    nif_polar = nibabel.Nifti1Image(pRF_polar,aff,header=hdr)
+    nif_polar.set_data_dtype('float32')
     polarFileName = '%s/%s_polar_%s.nii.gz' %(metaData['outputPath'],metaData['baseFileName'],now)
-    nibabel.save(nif,polarFileName)
-    
-    nif = nibabel.Nifti1Image(pRF_cartes,aff,header=hdr)
-    nif.set_data_dtype('float32')
+    nif_cartes = nibabel.Nifti1Image(pRF_cartes,aff,header=hdr)
+    nif_cartes.set_data_dtype('float32')
     cartesFileName = '%s/%s_cartes_%s.nii.gz' %(metaData['outputPath'],metaData['baseFileName'],now)
-    nibabel.save(nif,cartesFileName)
     
-    return polarFileName,cartesFileName
+    if write:
+        nibabel.save(nif_polar,polarFileName)
+        nibabel.save(nif_cartes,cartesFileName)
+        return polarFileName,cartesFileName
+    else:
+        return pRF_cartes,pRF_polar
 
-def multiprocess_prf_estimates(stimData,funcData,metaData):
+def recast_simulation_results_queue(output,funcData,metaData,write=True):
+    """
+    Recasts the output of the pRF estimation into two nifti_gz volumes.
+    
+    Takes `output`, a list of multiprocessing.Queue objects containing the output of the pRF estimation
+    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates, written separaltely  
+    to two nifti files.  Each voxel contains the following metrics:
+    
+        0 x / polar angle
+        1 y / eccentricity
+        2 neural RF estimate
+        3 HRF delay
+        4 visuotopic scatter
+        5 SSE between pRF and nRF gaussian
+        6 correlation of the model-actual fit
+        7 percent change from old to new sigma
+        
+    Parameters
+    ----------
+    output : list
+        A collection of multiprocessing.Queue objects, with one object per voxel.
+    metaData : dict
+        A dictionary containing meta-data about the analysis being performed.  For details, see config.py.
+        
+        
+    Returns
+    -------
+    cartesFileName : string
+        The absolute path of the recasted pRF estimation output in Cartesian coordinates.
+    polarFileName : string
+        The absolute path of the recasted pRF estimation output in polar coordinates.
+        
+    """
+    
+    # load the gridParent
+    gridParent = nibabel.load(metaData['maskPath'])
+    dims = list(gridParent.get_shape())
+    dims.append(8)
+    nRF_polar = np.zeros(dims)
+    nRF_cartes = np.zeros(dims)
+    
+    
+    # extract the nRF model estimates from the results queue output
+    for job in output:
+        for voxel in job:
+            xi,yi,zi = voxel[0:3]
+            x, y = funcData['pRF_cartes'][xi,yi,zi,0:2]
+            phi, rho = funcData['pRF_polar'][xi,yi,zi,0:2]
+            d = funcData['pRF_cartes'][xi,yi,zi,3]
+            rval = funcData['pRF_cartes'][xi,yi,zi,6]
+            sigma = voxel[3]
+            SSE = voxel[4]
+            meanScatter = voxel[5]
+            percentChange = voxel[6]
+            nRF_cartes[xi,yi,zi,:] = x, y, sigma, d, meanScatter, SSE, rval, percentChange
+            nRF_polar[xi,yi,zi,:] = phi, rho, sigma, d, meanScatter, SSE, rval, percentChange
+            
+    # get header information from the gridParent and update for the nRF volume
+    aff = gridParent.get_affine()
+    hdr = gridParent.get_header()
+    hdr.set_data_shape(dims)
+    voxelDims = list(hdr.get_zooms())
+    voxelDims[-1] = 8
+    hdr.set_zooms(voxelDims)
+        
+    # write the files
+    now = time.strftime('%Y%m%d_%H%M%S')
+    nif_polar = nibabel.Nifti1Image(nRF_polar,aff,header=hdr)
+    nif_polar.set_data_dtype('float32')
+    polarFileName = '%s/%s_polar_ts%d.nii.gz'%(metaData['outputPath'],metaData['baseFileName'],metaData['temporal_smooth'])
+    nif_cartes = nibabel.Nifti1Image(nRF_cartes,aff,header=hdr)
+    nif_cartes.set_data_dtype('float32')
+    cartesFileName = '%s/%s_cartes_ts%d.nii.gz' %(metaData['outputPath'],metaData['baseFileName'],metaData['temporal_smooth'])
+    
+    if write:
+        nibabel.save(nif_polar,polarFileName)
+        nibabel.save(nif_cartes,cartesFileName)
+        return polarFileName,cartesFileName
+    else:
+        return nRF_cartes,nRF_polar
+
+def multiprocessor(targetMethod,stimData,funcData,metaData):
     """
     Uses the multiprocessing toolbox to parallize the voxel-wise pRF estimation across a 
     user-specified number of cpus.
@@ -234,7 +318,8 @@ def multiprocess_prf_estimates(stimData,funcData,metaData):
     procs = []
     for j in range(cpus):
         voxels = [xi[voxelLists[j]],yi[voxelLists[j]],zi[voxelLists[j]]]
-        p = Process(target=compute_prf_estimate,args=(voxels,stimData,funcData,results_q))
+        metaData['core_voxels'] = voxels
+        p = Process(target=targetMethod,args=(stimData,funcData,metaData,results_q))
         procs.append(p)
         p.start()
         
