@@ -1,7 +1,7 @@
 """"
-This is a configuration file that sets filepaths for loading the stimulus, functional, and mask datasets.  In addition, 
+This is a configuration file that sets filepaths for loading the stimulus, functional, and mask datasets.  In addition,
 it creates the visuotopic arrays for plotting the 2D gaussians in stimulus-referred coordinates. Shared-memory arrays will
-be created for reading data from a multiprocessing.Array.  Results are garnered from a multiprocessing.Queue. 
+be created for reading data from a multiprocessing.Array.  Results are garnered from a multiprocessing.Queue.
 
 TODO:  Create a multiprocessing.Queue for work-to-be-done.  This would pop jobs off the to-do stack and feed them into the main
 pRF estimator method.  This will maximize the use of the user-specified available CPUs.
@@ -17,7 +17,7 @@ import nibabel
 from utilities import resample_stimulus, generate_coordinate_matrices, generate_shared_array
 
 def init_config():
-    
+
     ######################
     ###    Metadata    ###
     ######################
@@ -35,14 +35,14 @@ def init_config():
     ######################
     ###    Stimulus    ###
     ######################
-    
+
     # set the visuotopic stimulus array path
     stimArrayPath = '%s/barsArray.npy' %(metaData['basePath'])
     
     # make sure the file exists
     if not shutil.os.path.exists(stimArrayPath):
         sys.exit('The stimulus array %s cannot be found!' %(stimArrayPath))
-    
+
     # stimulus display parameters
     monitorWidth = 25.0 # distance across the width of the image on the projection screen in cm
     viewingDistance = 38.0 # viewing distance from the subject's eye to the projection screen in cm

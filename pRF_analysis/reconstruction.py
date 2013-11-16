@@ -18,7 +18,7 @@ def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
     # set up the time vector for interpolation of the time-series based on the HRF tau estimate
     runLength = np.shape(stimData['stimRecon'])[-1]
     usTime = np.array([np.round(item,1) for item in np.r_[0:runLength-1:0.1]])
-    
+
     # printing niceties
     numVoxels = len(xi)
     voxelCount = 1
@@ -40,14 +40,14 @@ def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
         
         # create the receptive field from the metaData['pRF_polar'] estimate
         rf = MakeFastRF(stimData['degXFine'],stimData['degYFine'],pRFx,pRFy,pRFs)
-        
+
         # grab the voxel's time-series
         tsActual = funcData['bold'][xvoxel,yvoxel,zvoxel,:]
         
         # create the upsampled time-series
         f = interp1d(np.arange(runLength), tsActual, kind='cubic')
         usActual = f(usTime)
-        
+
         for tr in range(runLength):
             usTimePoint = np.nonzero(usTime == np.round(tr+pRFd+5,1))[0]
             if usTimePoint < runLength*10:
@@ -123,7 +123,7 @@ def reconstruct_stimulus_realtime_smoothing(voxels,stimData,funcData,pRFs,verbos
         ts = funcData[xvoxel,yvoxel,zvoxel,:]
         intensity = wiener(ts,5)[-1]
 
-        # create the receptive field from the pRF estimatetimate
+        # create the receptive field from the pRF estimate
         emptyFrame += rf*intensity
 
         if verbose:
@@ -172,7 +172,7 @@ def multiprocess_stimulus_reconstruction_realtime(stimData,funcData,metaData,pRF
     for i in range(len(cutOffs)-1):
         l = range(cutOffs[i],cutOffs[i+1])
         voxelLists.append(l)
-    
+
     # start the jobs
     procs = []
     for j in range(cpus):
@@ -181,10 +181,9 @@ def multiprocess_stimulus_reconstruction_realtime(stimData,funcData,metaData,pRF
         p = Process(target=reconstruct_stimulus_realtime,args=(metaData,stimData,funcData,pRF,tr))
         procs.append(p)
         p.start()
-        
+
     # close the jobs
     for p in procs:
         p.join()
-        
+
     return None
-                
