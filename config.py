@@ -30,8 +30,6 @@ def init_config():
     metaData['baseFileName'] = ''
     metaData['maskPath'] = ''
     metaData['funcPath'] = ''
-    metaData['pRF_polar'] = ''
-    metaData['pRF_cartes'] = ''
     metaData['Bounds'] = () 
  
     ######################
