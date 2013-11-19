@@ -7,4 +7,4 @@ License
 =============
 Copyright (C) 2013 kevin desimone kevindesimone@gmail.com
 
-Distributed with a BSD license (3 clause); see LICENSE
+Distributed with a BSD license (3 clause); see COPYING
