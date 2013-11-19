@@ -1,7 +1,7 @@
 """"
-This is a configuration file that sets filepaths for loading the stimulus, functional, and mask datasets.  In addition,
+This is a configuration file that sets filepaths for loading the stimulus, functional, and mask datasets.  In addition, 
 it creates the visuotopic arrays for plotting the 2D gaussians in stimulus-referred coordinates. Shared-memory arrays will
-be created for reading data from a multiprocessing.Array.  Results are garnered from a multiprocessing.Queue.
+be created for reading data from a multiprocessing.Array.  Results are garnered from a multiprocessing.Queue. 
 
 TODO:  Create a multiprocessing.Queue for work-to-be-done.  This would pop jobs off the to-do stack and feed them into the main
 pRF estimator method.  This will maximize the use of the user-specified available CPUs.
@@ -14,35 +14,40 @@ import ctypes
 from multiprocessing import Array
 import numpy as np
 import nibabel
-from utilities import resample_stimulus, generate_coordinate_matrices, generate_shared_array
+import pRF_analysis as prf
 
 def init_config():
-
+    
     ######################
     ###    Metadata    ###
     ######################
+    
     # User-specified meta-data
     metaData = {}
-    metaData['subject_id'] = ''
-    metaData['cpus'] = 23
-    metaData['outputPath'] = ''
-    metaData['basePath'] = ''
-    metaData['baseFileName'] = ''
-    metaData['maskPath'] = ''
-    metaData['funcPath'] = ''
-    metaData['Bounds'] = () 
- 
+    metaData['subject_id'] = '2_41_42_43'
+    metaData['cpus'] = 3
+    metaData['outputPath'] = '/Users/kevin/Desktop/'
+    metaData['basePath'] = '/Users/kevin/Desktop/Etc/conferences/SfN2013/'
+    metaData['baseFileName'] = 'nRF'
+    metaData['maskPath'] = '%s/%s/anat_LGN.nii.gz' %(metaData['basePath'],metaData['subject_id'])
+    metaData['funcPath'] = '%s/%s/2_41_42_43_ss0_ts0_075mm.nii.gz' %(metaData['basePath'],metaData['subject_id'])
+    metaData['stimArrayPath'] = '%s/%s/barsArray.npy' %(metaData['basePath'],metaData['subject_id'])
+    metaData['Bounds'] = ((-10,10),(-10,10),(0.25,5.25),(-4,4)) 
+    metaData['pRF_polar'] = '%s/%s/pRF_polar_ss0_ts0_075mm.nii.gz' %(metaData['basePath'],metaData['subject_id'])
+    metaData['pRF_cartes'] = '%s/%s/pRF_cartes_ss0_ts0_075mm.nii.gz' %(metaData['basePath'],metaData['subject_id'])
+    metaData['uncorrected_rvalue'] = 0.20
+    
     ######################
     ###    Stimulus    ###
     ######################
-
+    
     # set the visuotopic stimulus array path
-    stimArrayPath = '%s/barsArray.npy' %(metaData['basePath'])
+    stimArrayPath = '%s' %(metaData['stimArrayPath'])
     
     # make sure the file exists
     if not shutil.os.path.exists(stimArrayPath):
         sys.exit('The stimulus array %s cannot be found!' %(stimArrayPath))
-
+    
     # stimulus display parameters
     monitorWidth = 25.0 # distance across the width of the image on the projection screen in cm
     viewingDistance = 38.0 # viewing distance from the subject's eye to the projection screen in cm
@@ -58,22 +63,22 @@ def init_config():
     stimArray = np.load(stimArrayPath)
     stimArray = stimArray[:,:,clipNumber::]
     stimArray = np.roll(stimArray,rollNumber,axis=-1)
-    stimArrayFine = resample_stimulus(stimArray,fineScaleFactor)
-    degXFine,degYFine = generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,fineScaleFactor)
+    stimArrayFine = prf.utilities.resample_stimulus(stimArray,fineScaleFactor)
+    degXFine,degYFine = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,fineScaleFactor)
     
     # the resampled stimulus array
-    stimArrayCoarse = resample_stimulus(stimArray,coarseScaleFactor)
-    degXCoarse,degYCoarse = generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,coarseScaleFactor)
+    stimArrayCoarse = prf.utilities.resample_stimulus(stimArray,coarseScaleFactor)
+    degXCoarse,degYCoarse = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,coarseScaleFactor)
     
     # create shared stimulus arrays and package them into a dict
     stimData = {}
-    stimData['stimArrayFine'] = generate_shared_array(stimArrayFine,ctypes.c_short)
-    stimData['stimArrayCoarse'] = generate_shared_array(stimArrayCoarse,ctypes.c_short)
-    stimData['degXFine'] = generate_shared_array(degXFine,ctypes.c_double)
-    stimData['degXCoarse'] = generate_shared_array(degXCoarse,ctypes.c_double)
-    stimData['degYFine'] = generate_shared_array(degYFine,ctypes.c_double)
-    stimData['degYCoarse'] = generate_shared_array(degYCoarse,ctypes.c_double)
-    stimData['stimRecon'] = generate_shared_array(np.zeros_like(stimData['stimArrayFine'],dtype='double'),ctypes.c_double)
+    stimData['stimArrayFine'] = prf.utilities.generate_shared_array(stimArrayFine,ctypes.c_short)
+    stimData['stimArrayCoarse'] = prf.utilities.generate_shared_array(stimArrayCoarse,ctypes.c_short)
+    stimData['degXFine'] = prf.utilities.generate_shared_array(degXFine,ctypes.c_double)
+    stimData['degXCoarse'] = prf.utilities.generate_shared_array(degXCoarse,ctypes.c_double)
+    stimData['degYFine'] = prf.utilities.generate_shared_array(degYFine,ctypes.c_double)
+    stimData['degYCoarse'] = prf.utilities.generate_shared_array(degYCoarse,ctypes.c_double)
+    stimData['stimRecon'] = prf.utilities.generate_shared_array(np.zeros_like(stimData['stimArrayFine'],dtype='double'),ctypes.c_double)
     
     
     ######################
@@ -93,13 +98,13 @@ def init_config():
     
     # clip the first N-tps off the beginning, created shared array, and store the data into a dict
     funcData = {}
-    funcData['bold'] = generate_shared_array(bold[:,:,:,clipNumber::],ctypes.c_double)
+    funcData['bold'] = prf.utilities.generate_shared_array(bold[:,:,:,clipNumber::],ctypes.c_double)
     
     # load the pRFs if they've been specified
     if metaData.has_key('pRF_cartes') and metaData['pRF_cartes']:
-        funcData['pRF_cartes'] = generate_shared_array(nibabel.load(metaData['pRF_cartes']).get_data(),ctypes.c_double)
+        funcData['pRF_cartes'] = prf.utilities.generate_shared_array(nibabel.load(metaData['pRF_cartes']).get_data(),ctypes.c_double)
     if metaData.has_key('pRF_polar') and metaData['pRF_polar']:
-        funcData['pRF_polar'] = generate_shared_array(nibabel.load(metaData['pRF_polar']).get_data(),ctypes.c_double)
+        funcData['pRF_polar'] = prf.utilities.generate_shared_array(nibabel.load(metaData['pRF_polar']).get_data(),ctypes.c_double)
     
     
     ######################
