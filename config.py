@@ -14,7 +14,7 @@ import ctypes
 from multiprocessing import Array
 import numpy as np
 import nibabel
-from utilities import resample_stimulus, generate_coordinate_matrices, generate_shared_array
+import pRF_analysis as prf
 
 def init_config():
     
@@ -58,22 +58,22 @@ def init_config():
     stimArray = np.load(stimArrayPath)
     stimArray = stimArray[:,:,clipNumber::]
     stimArray = np.roll(stimArray,rollNumber,axis=-1)
-    stimArrayFine = resample_stimulus(stimArray,fineScaleFactor)
-    degXFine,degYFine = generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,fineScaleFactor)
+    stimArrayFine = prf.utilities.resample_stimulus(stimArray,fineScaleFactor)
+    degXFine,degYFine = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,fineScaleFactor)
     
     # the resampled stimulus array
-    stimArrayCoarse = resample_stimulus(stimArray,coarseScaleFactor)
-    degXCoarse,degYCoarse = generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,coarseScaleFactor)
+    stimArrayCoarse = prf.utilities.resample_stimulus(stimArray,coarseScaleFactor)
+    degXCoarse,degYCoarse = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,coarseScaleFactor)
     
     # create shared stimulus arrays and package them into a dict
     stimData = {}
-    stimData['stimArrayFine'] = generate_shared_array(stimArrayFine,ctypes.c_short)
-    stimData['stimArrayCoarse'] = generate_shared_array(stimArrayCoarse,ctypes.c_short)
-    stimData['degXFine'] = generate_shared_array(degXFine,ctypes.c_double)
-    stimData['degXCoarse'] = generate_shared_array(degXCoarse,ctypes.c_double)
-    stimData['degYFine'] = generate_shared_array(degYFine,ctypes.c_double)
-    stimData['degYCoarse'] = generate_shared_array(degYCoarse,ctypes.c_double)
-    stimData['stimRecon'] = generate_shared_array(np.zeros_like(stimData['stimArrayFine'],dtype='double'),ctypes.c_double)
+    stimData['stimArrayFine'] = prf.utilities.generate_shared_array(stimArrayFine,ctypes.c_short)
+    stimData['stimArrayCoarse'] = prf.utilities.generate_shared_array(stimArrayCoarse,ctypes.c_short)
+    stimData['degXFine'] = prf.utilities.generate_shared_array(degXFine,ctypes.c_double)
+    stimData['degXCoarse'] = prf.utilities.generate_shared_array(degXCoarse,ctypes.c_double)
+    stimData['degYFine'] = prf.utilities.generate_shared_array(degYFine,ctypes.c_double)
+    stimData['degYCoarse'] = prf.utilities.generate_shared_array(degYCoarse,ctypes.c_double)
+    stimData['stimRecon'] = prf.utilities.generate_shared_array(np.zeros_like(stimData['stimArrayFine'],dtype='double'),ctypes.c_double)
     
     
     ######################
@@ -97,9 +97,9 @@ def init_config():
     
     # load the pRFs if they've been specified
     if metaData.has_key('pRF_cartes') and metaData['pRF_cartes']:
-        funcData['pRF_cartes'] = generate_shared_array(nibabel.load(metaData['pRF_cartes']).get_data(),ctypes.c_double)
+        funcData['pRF_cartes'] = prf.utilities.generate_shared_array(nibabel.load(metaData['pRF_cartes']).get_data(),ctypes.c_double)
     if metaData.has_key('pRF_polar') and metaData['pRF_polar']:
-        funcData['pRF_polar'] = generate_shared_array(nibabel.load(metaData['pRF_polar']).get_data(),ctypes.c_double)
+        funcData['pRF_polar'] = prf.utilities.generate_shared_array(nibabel.load(metaData['pRF_polar']).get_data(),ctypes.c_double)
     
     
     ######################
