@@ -117,10 +117,12 @@ def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,scaleFa
 def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
-
-    Takes `output`, a list of multiprocessing.Queue objects containing the output of the pRF estimation
-    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates, written separaltely
-    to two nifti files.  Each voxel contains the following metrics:
+    
+    Takes `output`, a list of multiprocessing.Queue objects containing the output of the pRF simulation
+    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates.  If the default
+    value for the `write` parameter is set to False, then the function returns the arrays without writing the
+    nifti files to disk.  Otherwise, if `write` is True, then the two nifti files are written to disk. 
+    Each voxel contains the following metrics:
 
         0 x / polar angle
         1 y / eccentricity
@@ -191,10 +193,10 @@ def recast_estimation_results_queue(output,metaData,write=True):
 
 def recast_simulation_results_queue(output,funcData,metaData,write=True):
     """
-    Recasts the output of the pRF estimation into two nifti_gz volumes.
+    Recasts the output of the neural RF (nRF) simulation into two nifti_gz volumes.
     
-    Takes `output`, a list of multiprocessing.Queue objects containing the output of the pRF estimation
-    for each voxel.  The pRF estimates are expressed in both polar and Cartesian coordinates.  If the default
+    Takes `output`, a list of multiprocessing.Queue objects containing the output of the nRF simulation
+    for each voxel.  The nRF estimates are expressed in both polar and Cartesian coordinates.  If the default
     value for the `write` parameter is set to False, then the function returns the arrays without writing the
     nifti files to disk.  Otherwise, if `write` is True, then the two nifti files are written to disk. 
     Each voxel contains the following metrics:
