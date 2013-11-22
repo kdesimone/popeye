@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Setup file for the pRF_analysis package."""
+"""Setup file for the popeye package."""
 
 import os
 import sys
@@ -11,8 +11,8 @@ if os.path.exists('MANIFEST'):
 
 from distutils.core import setup
 
-# Get version and release info, which is all stored in pRF_analysis/version.py
-ver_file = os.path.join('pRF_analysis', 'version.py')
+# Get version and release info, which is all stored in popeye/version.py
+ver_file = os.path.join('popeye', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
@@ -39,11 +39,11 @@ try:
     from Cython.Distutils import build_ext as build_pyx_ext
     from numpy import get_include
     # add Cython extensions to the setup options
-    exts = [Extension('pRF_analysis.MakeFastPrediction',
-                      ['pRF_analysis/MakeFastPrediction.pyx'],
+    exts = [Extension('popeye.MakeFastPrediction',
+                      ['popeye/MakeFastPrediction.pyx'],
                        include_dirs=[get_include()]),
-            Extension('pRF_analysis.MakeFastRF',
-                      ['pRF_analysis/MakeFastRF.pyx'],
+            Extension('popeye.MakeFastRF',
+                      ['popeye/MakeFastRF.pyx'],
                        include_dirs=[get_include()])
                        ]
     opts['cmdclass'] = dict(build_ext=build_pyx_ext)
