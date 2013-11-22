@@ -1,4 +1,4 @@
-pRF_analysis
+popeye
 ============
 
 31 July 2013
