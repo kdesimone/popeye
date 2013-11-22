@@ -148,6 +148,31 @@ def adaptive_brute_force_grid_search(Bounds,epsilon,rounds,tsActual,degX,degY,st
     solution that is then fed into the more finely-tuned fmin_powell in the compute_prf_estimate method 
     below.
     
+    Parameters
+    ----------
+    Bounds : tuple
+        A tuple of paired tuples for the upper and lower bounds of the model parameters e.g. ((-10,10),(-10,10),((0.25,5.25),(-4,4))
+    epsilon : int
+        The step-size for reducing the grid-search bounds on each iteration through the adaptive brute-force search.
+    rounds : int
+        The number of iterations through the adaptive brute-force search
+    tsActual : ndarray
+        A vector of the actual BOLD time-series extacted from a single voxel coordinate.
+    degX : ndarray
+        An array representing the horizontal extent of the visual display in terms of degrees of
+        visual angle.
+    degY : ndarray
+        An array representing the vertical extent of the visual display in terms of degrees of
+        visual angle.
+    stimArray : ndarray
+        Array_like means all those objects -- lists, nested lists, etc. --
+        that can be converted to an array.
+        
+    Returns
+    -------
+    error : float
+        The residual sum of squared errors computed between the predicted and actual time-series.
+    
     """
     
     # set initial pass to 1
@@ -271,7 +296,7 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
             stats_x0 = linregress(tsActual,tsModel)
             
             # only continue if the brute-force grid-search came close to a solution
-            if stats_x0[2] > 0.20:
+            if stats_x0[2] > metaData['uncorrected_rval']:
                 
                 # gradient-descent the solution using the x0 from the brute-force grid-search
                 pRF_phat = fmin_powell(error_function,
