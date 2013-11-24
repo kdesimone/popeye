@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 
 from config import init_config
-import pRF_analysis as prf
+import popeye
 
 # initialize the datasets as per config.py
 stimData,funcData,metaData = init_config()
@@ -15,10 +15,10 @@ metaData['voxels'] = tuple((xi[randInd],yi[randInd],zi[randInd]))
 
 # # Run the pRF estimation
 tic = datetime.datetime.now()
-output = prf.utilities.multiprocessor(prf.estimation.compute_prf_estimate,stimData,funcData,metaData)
+output = popeye.utilities.multiprocessor(popeye.estimation.compute_popeye_estimate,stimData,funcData,metaData)
 toc = datetime.datetime.now()
 print("The pRF estimation took %s" %(toc-tic))
  
 # # Write the results out as nifti_gz
-prf.utilities.recast_estimation_results_queue(output,metaData,True)
+popeye.utilities.recast_estimation_results_queue(output,metaData,True)
 

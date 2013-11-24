@@ -14,7 +14,7 @@ import ctypes
 from multiprocessing import Array
 import numpy as np
 import nibabel
-import pRF_analysis as prf
+import popeye as prf
 
 def init_config():
     
