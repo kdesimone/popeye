@@ -7,7 +7,8 @@ import popeye
 # initialize the datasets as per config.py
 stimData,funcData,metaData = init_config()
 
-# Randomize the voxel indices so that a particular core doesn't get stuck with all large sigmas ...
+# Randomize the voxel indices so that a particular core doesn't get stuck with
+# all large sigmas ... 
 [xi,yi,zi] = metaData['voxels']
 randVec = np.random.rand(len(xi))
 randInd = np.argsort(randVec)

@@ -15,7 +15,8 @@ def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
     # grab voxel indices
     xi,yi,zi = metaData['core_voxels']
     
-    # set up the time vector for interpolation of the time-series based on the HRF tau estimate
+    # set up the time vector for interpolation of the time-series based on the
+    # HRF tau estimate 
     runLength = np.shape(stimData['stimRecon'])[-1]
     usTime = np.array([np.round(item,1) for item in np.r_[0:runLength-1:0.1]])
 
@@ -160,9 +161,11 @@ def multiprocess_stimulus_reconstruction(stimData,funcData,metaData):
     return None
     
 
-def multiprocess_stimulus_reconstruction_realtime(stimData,funcData,metaData,pRF,tr):
+def multiprocess_stimulus_reconstruction_realtime(stimData,funcData,metaData,
+                                                  pRF,tr):
     
-    # figure out how many voxels are in the mask & the number of jobs we have allocated
+    # figure out how many voxels are in the mask & the number of jobs we have
+    # allocated s
     [xi,yi,zi] = metaData['voxels']
     cpus = metaData['cpus']
     
