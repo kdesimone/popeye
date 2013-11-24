@@ -329,12 +329,15 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
                 # brute-force grid-search 
                 pRF_phat = fmin_powell(error_function,
                                        x0,
-                                       args=(tsActual,stimData['degXFine'],stimData['degYFine'],stimData['stimArrayFine']),
+                                       args=(tsActual,stimData['degXFine'],
+                                             stimData['degYFine'],
+                                             stimData['stimArrayFine']),
                                        full_output=True,
                                        disp=False)
                 
                 # ensure that the fmin finished OK
-                if pRF_phat[-1] == 0 and not np.isnan(pRF_phat[1]) and not np.isinf(pRF_phat[1]):
+                if (pRF_phat[-1] == 0 and not np.isnan(pRF_phat[1])
+                    and not np.isinf(pRF_phat[1])):
                     
                     # regenerate the best-fit for computing the threshold
                     tsStim = MakeFastPrediction(stimData['degXFine'],
