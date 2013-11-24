@@ -16,7 +16,8 @@ metaData['voxels'] = tuple((xi[randInd],yi[randInd],zi[randInd]))
 
 # # Run the pRF estimation
 tic = datetime.datetime.now()
-output = popeye.utilities.multiprocessor(popeye.estimation.compute_popeye_estimate,stimData,funcData,metaData)
+output = popeye.utilities.multiprocessor(popeye.estimation.compute_prf_estimate,
+                                stimData,funcData,metaData)
 toc = datetime.datetime.now()
 print("The pRF estimation took %s" %(toc-tic))
  

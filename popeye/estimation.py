@@ -219,8 +219,7 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
 
 
 def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
-    """
-    
+    """ 
     The main pRF estimation method using a single Gaussian pRF model (Dumoulin
     & Wandell, 2008). 
     
@@ -329,7 +328,8 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
                 # brute-force grid-search 
                 pRF_phat = fmin_powell(error_function,
                                        x0,
-                                       args=(tsActual,stimData['degXFine'],
+                                       args=(tsActual,
+                                             stimData['degXFine'],
                                              stimData['degYFine'],
                                              stimData['stimArrayFine']),
                                        full_output=True,
