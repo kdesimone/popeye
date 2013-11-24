@@ -218,7 +218,10 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
     return phat
 
 
-def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
+def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
+                         stim_arr_coarse, stim_arr_fine, funcData, 
+                         bounds, core_voxels, uncorrected_rval, results_q,
+                         verbose=True):
     """ 
     The main pRF estimation method using a single Gaussian pRF model (Dumoulin
     & Wandell, 2008). 
@@ -235,15 +238,18 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
     
     Parameters
     ----------
-    metaData : dict
-        A dictionary containing meta-data about the analysis being performed.
-        For details, see config.py.
-    stimData : dict
-        A dictionary containing the stimulus array and other stimulus-related
-        data.  For details, see config.py
+    deg_x_coarse : XXX
+    deg_y_coarse : XXX
+    deg_x_fine : XXX
+    deg_y_fine : XXX
+    stim_arr_coarse : XXX
+    stim_arr_fine : XXX
     funcData : ndarray
         A 4D numpy array containing the functional data to be used for the pRF
-        estimation. For details, see config.py 
+        estimation. For details, see config.py
+    bounds : XXX
+    core_voxels : XXX
+    uncorrected_rval : XXX 
     results_q : multiprocessing.Queue object
         A multiprocessing.Queue object into which list of pRF estimates and fit
         metrics are stacked. 
@@ -265,12 +271,8 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
     in human visual cortex. Neuroimage 39: 647-660.
     
     """
-    
-    # bounds for the adaptive brute-force grid-search
-    bounds = metaData['bounds']	    
-    
     # grab voxel indices
-    xi,yi,zi = metaData['core_voxels']
+    xi,yi,zi = core_voxels
     
     # initialize a list in which to store the results
     results = []
@@ -298,14 +300,14 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
                                                   1,
                                                   3,
                                                   tsActual,
-                                                  stimData['degXCoarse'],
-                                                  stimData['degYCoarse'],
-                                                  stimData['stimArrayCoarse'])
+                                                  deg_x_coarse,
+                                                  deg_y_coarse,
+                                                  stim_arr_coarse)
                                                 
             # regenerate the best-fit for computing the threshold
-            tsStim = MakeFastPrediction(stimData['degXCoarse'],
-                                        stimData['degYCoarse'],
-                                        stimData['stimArrayCoarse'],
+            tsStim = MakeFastPrediction(deg_x_coarse,
+                                        deg_y_coarse,
+                                        stim_arr_coarse,
                                         x0[0],
                                         x0[1],
                                         x0[2])
@@ -322,16 +324,16 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
             
             # only continue if the brute-force grid-search came close to a
             # solution 
-            if stats_x0[2] > metaData['uncorrected_rval']:
+            if stats_x0[2] > uncorrected_rval:
                 
                 # gradient-descent the solution using the x0 from the
                 # brute-force grid-search 
                 pRF_phat = fmin_powell(error_function,
                                        x0,
                                        args=(tsActual,
-                                             stimData['degXFine'],
-                                             stimData['degYFine'],
-                                             stimData['stimArrayFine']),
+                                             deg_x_fine,
+                                             deg_y_fine,
+                                             stim_arr_fine),
                                        full_output=True,
                                        disp=False)
                 
@@ -340,9 +342,9 @@ def compute_prf_estimate(stimData,funcData,metaData,results_q,verbose=True):
                     and not np.isinf(pRF_phat[1])):
                     
                     # regenerate the best-fit for computing the threshold
-                    tsStim = MakeFastPrediction(stimData['degXFine'],
-                                                stimData['degYFine'],
-                                                stimData['stimArrayFine'],
+                    tsStim = MakeFastPrediction(deg_x_fine,
+                                                deg_y_fine,
+                                                stim_arr_fine,
                                                 pRF_phat[0][0],
                                                 pRF_phat[0][1],
                                                 pRF_phat[0][2])

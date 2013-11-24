@@ -34,8 +34,7 @@ def generate_shared_array(unsharedArray,dataType):
     Returns
     -------
     sharedArray : syncrhonized shared array
-        An an array that is read/write accessible from multiple
-        processes/threads. 
+        An array that is read/write accessible from multiple processes/threads. 
     """
 
     shared_array_base = Array(dataType,np.prod(np.shape(unsharedArray)))
