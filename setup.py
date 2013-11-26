@@ -44,8 +44,11 @@ try:
                        include_dirs=[get_include()]),
             Extension('popeye.MakeFastRF',
                       ['popeye/MakeFastRF.pyx'],
+                       include_dirs=[get_include()]),
+            Extension('popeye.MakeFastRFs',
+                      ['popeye/MakeFastRFs.pyx'],
                        include_dirs=[get_include()])
-                       ]
+                      ]
     opts['cmdclass'] = dict(build_ext=build_pyx_ext)
     opts['ext_modules'] = exts
 except ImportError:

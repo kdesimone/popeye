@@ -1,4 +1,4 @@
-"""pRF_analysis version/release information"""
+"""popeye version/release information"""
 
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
@@ -24,14 +24,14 @@ CLASSIFIERS = ["Development Status :: 3 - Alpha",
                "Programming Language :: Python",
                "Topic :: Scientific/Engineering"]
 
-description = "pRF_analysis : voxel population receptive fields from fMRI data"
+description = "popeye : voxel population receptive fields from fMRI data"
 
 # Note: this long_description is actually a copy/paste from the top-level
 # README.txt, so that it shows up nicely on PyPI.  So please remember to edit
 # it only in one place and sync it correctly.
 long_description = """
 ===============================================================
-pRF_analysis : voxel population receptive fields from fMRI data
+popeye : voxel population receptive fields from fMRI data
 ===============================================================
 
 XXX Write a longer description here.
@@ -40,7 +40,7 @@ XXX Write a longer description here.
 License information
 ===================
 
-pRF_analysis is licensed under the terms of the new BSD license. See the file
+popeye is licensed under the terms of the new BSD license. See the file
 "LICENSE" for information on the history of this software, terms & conditions
 for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
@@ -50,13 +50,13 @@ Copyright (c) 2013, Kevin Desimone
 All rights reserved.
 """
 
-NAME = "pRF_analysis"
+NAME = "popeye"
 MAINTAINER = "Kevin Desimone"
 MAINTAINER_EMAIL = "kevindesimone@gmail.com"
 DESCRIPTION = description
 LONG_DESCRIPTION = long_description
-URL = "https://github.com/kdesimone/pRF_analysis/"
-DOWNLOAD_URL = "http://github.com/kdesimone/pRF_analysis/downloads"
+URL = "https://github.com/kdesimone/popeye/"
+DOWNLOAD_URL = "http://github.com/kdesimone/popeye/downloads"
 LICENSE = "Simplified BSD"
 AUTHOR = "Kevin Desimone"
 AUTHOR_EMAIL = "kevindesimone@gmail.com"
@@ -65,6 +65,6 @@ MAJOR = _version_major
 MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
-PACKAGES = ['pRF_analysis']
-PACKAGE_DATA = {"pRF_analysis": ["LICENSE"]}
+PACKAGES = ['popeye']
+PACKAGE_DATA = {"popeye": ["LICENSE"]}
 REQUIRES = []
