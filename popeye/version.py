@@ -51,7 +51,7 @@ All rights reserved.
 """
 
 NAME = "popeye"
-MAINTAINER = "Kevin Desimone"
+MAINTAINER = "Kevin DeSimone"
 MAINTAINER_EMAIL = "kevindesimone@gmail.com"
 DESCRIPTION = description
 LONG_DESCRIPTION = long_description
