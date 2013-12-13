@@ -8,5 +8,3 @@ from .version import  __version__
 from . import reconstruction
 from . import simulation
 from . import utilities
-from . import MakeFastPrediction
-from . import MakeFastRF
