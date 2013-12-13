@@ -1,10 +1,12 @@
 from __future__ import division
 import time
+
 import numpy as np
 from scipy.ndimage.measurements import standard_deviation
-from MakeFastRFs import MakeFastRFs
-from MakeFastRF import MakeFastRF
 from scipy.optimize import fmin_powell, fmin
+
+from popeye.spinach  import MakeFastRFs
+from popeye.spinach import MakeFastRF
 
 def error_function(sigma,old_sigma,xs,ys,degX,degY,voxel_RF):
     if sigma <= 0:
