@@ -114,8 +114,8 @@ def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,
 
     [X,Y] = np.meshgrid(np.arange(pixelsAcross*scaleFactor),
                         np.arange(pixelsDown*scaleFactor))
-    degX = (X-np.shape(X)[1]/2)/(pixelsPerDegree*scaleFactor).astype('double')
-    degY = (Y-np.shape(Y)[0]/2)/(pixelsPerDegree*scaleFactor).astype('double')
+    degX = (X-np.shape(X)[1]/2)/(pixelsPerDegree*scaleFactor)
+    degY = (Y-np.shape(Y)[0]/2)/(pixelsPerDegree*scaleFactor)
 
     return degX,degY
 
