@@ -8,6 +8,7 @@ from scipy.optimize import fmin_powell, fmin, brute
 from scipy.stats import linregress
 
 from popeye.spinach import MakeFastPrediction
+import popeye.utilities as utils
 
 def double_gamma_hrf(delay):
     """
@@ -133,12 +134,12 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
     hrf = double_gamma_hrf(modelParams[3])
     
     # convolve the stimulus time-series with the HRF
-    tsModel = np.convolve(tsStim,hrf)
-    tsModel = tsModel[0:len(tsActual)]
+    ts_model= np.convolve(tsStim,hrf)
+    ts_model= tsModel[0:len(tsActual)]
     
     # z-score the model time-series
-    tsModel -= np.mean(tsModel)
-    tsModel /= np.std(tsModel)
+    ts_model-= np.mean(tsModel)
+    ts_model/= np.std(tsModel)
     
     # compute the RSS
     error = np.sum((tsModel-tsActual)**2)
@@ -223,6 +224,7 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
 def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
                          stim_arr_coarse, stim_arr_fine, funcData, 
                          bounds, core_voxels, uncorrected_rval, results_q,
+                         norm_func=utils.zscore,
                          verbose=True):
     """ 
     The main pRF estimation method using a single Gaussian pRF model (Dumoulin
@@ -255,9 +257,13 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
     results_q : multiprocessing.Queue object
         A multiprocessing.Queue object into which list of pRF estimates and fit
         metrics are stacked. 
+    norm_func : callable, optional
+        The function used to normalize the time-series data. Can be any
+        function that takes an array as input and returns a same-shaped array,
+    but consider using `utils.percent_change` or `utils.zscore` (the default).
     verbose : bool, optional
         Toggle the progress printing to the terminal.
-        
+
     Returns
     -------
     results_q : multiprocessing.Queue
@@ -289,19 +295,19 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
         
         # time each voxel's estimation time
         tic = time.clock()
-        
-        # z-score the functional data and clip off the intial blank period
-        tsActual = funcData['bold'][xvoxel,yvoxel,zvoxel,:]
-        tsActual /= np.std(tsActual)
+
+        # Grab the 1-D timeseries for this voxel
+        ts_actual = funcData[xvoxel, yvoxel, zvoxel,:]
+        ts_actual = norm_func(ts_actual)
         
         # make sure we're only analyzing valid voxels
-        if not np.isnan(np.sum(tsActual)):
+        if not np.isnan(np.sum(ts_actual)):
             
             # compute the initial guess with the adaptive brute-force grid-search
             x0 = adaptive_brute_force_grid_search(bounds,
                                                   1,
                                                   3,
-                                                  tsActual,
+                                                  ts_actual,
                                                   deg_x_coarse,
                                                   deg_y_coarse,
                                                   stim_arr_coarse)
@@ -316,13 +322,13 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
                                         
             # convolve with HRF and z-score
             hrf = double_gamma_hrf(x0[3])
-            tsModel = np.convolve(tsStim,hrf)
-            tsModel = tsModel[0:len(tsActual)]
-            tsModel -= np.mean(tsModel)
-            tsModel /= np.std(tsModel)
+            ts_model= np.convolve(tsStim,hrf)
+            ts_model= tsModel[0:len(ts_actual)]
+            ts_model-= np.mean(tsModel)
+            ts_model/= np.std(tsModel)
             
             # compute the p-value to be used for thresholding
-            stats_x0 = linregress(tsActual,tsModel)
+            stats_x0 = linregress(ts_actual,tsModel)
             
             # only continue if the brute-force grid-search came close to a
             # solution 
@@ -332,7 +338,7 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
                 # brute-force grid-search 
                 pRF_phat = fmin_powell(error_function,
                                        x0,
-                                       args=(tsActual,
+                                       args=(ts_actual,
                                              deg_x_fine,
                                              deg_y_fine,
                                              stim_arr_fine),
@@ -353,13 +359,13 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
                     
                     # convolve with HRF and z-score
                     hrf = double_gamma_hrf(pRF_phat[0][3])
-                    tsModel = np.convolve(tsStim,hrf)
-                    tsModel = tsModel[0:len(tsActual)]
-                    tsModel -= np.mean(tsModel)
-                    tsModel /= np.std(tsModel)
+                    ts_model= np.convolve(tsStim,hrf)
+                    ts_model= tsModel[0:len(ts_actual)]
+                    ts_model-= np.mean(tsModel)
+                    ts_model/= np.std(tsModel)
                     
                     # compute the p-value to be used for thresholding
-                    stats = linregress(tsActual,tsModel)
+                    stats = linregress(ts_actual, tsModel)
                     
                     # close the processing time
                     toc = time.clock()
