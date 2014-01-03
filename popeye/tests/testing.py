@@ -68,8 +68,8 @@ def test_make_stimulus_prediction():
     stimulus_array[xi,yi,10::] = 1
     
     
-    # make the stimulus prediction
-    stimulus = MakeFastPrediction(dx,
+    # make the response prediction
+    response = MakeFastPrediction(dx,
                                 dy,
                                 stimulus_array,
                                 xcenter,
@@ -78,7 +78,8 @@ def test_make_stimulus_prediction():
                                 
     # make sure the RSS is 0
     step = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
-    rval = np.corrcoef(stimulus,step)[0, 1]
+    rval = np.corrcoef(response, step)[0, 1]
     
-    # compare the volume of the pRF to a known value
+    # The voxel responds when the stimulus covers its PRF, so it perfectly
+    # correlates with a step function: 
     nt.assert_equal(round(rval, 3), 1)
