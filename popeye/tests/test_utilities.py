@@ -19,6 +19,11 @@ def test_zscore():
                                                         [1., 1., 1., 1.]]))
 
 
+    # Test the 1D case:
+    x = np.array([1, 1, 3, 3])
+    npt.assert_equal(utils.zscore(x), [-1, -1, 1, 1])
+
+
 def test_percent_change():
     x = np.array([[99, 100, 101], [4, 5, 6]])
     p = utils.percent_change(x)

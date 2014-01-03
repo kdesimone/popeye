@@ -436,6 +436,10 @@ def zscore(time_series, axis=-1):
     st = time_series.std(axis=axis)
     sl = [slice(None)] * len(time_series.shape)
     sl[axis] = np.newaxis
-    zt = time_series - et[sl]
-    zt /= st[sl]
+    if sl == [None]:
+        zt = (time_series - et)/st
+    else:
+        zt = time_series - et[sl]
+        zt /= st[sl]
+
     return zt
