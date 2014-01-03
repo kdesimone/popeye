@@ -21,27 +21,54 @@ def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
                        np.ndarray[DTYPE2_t, ndim=2] degY,
                        np.ndarray[short,ndim=3] stimArray,
                        DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
-                       # i just like splitting up the function args onto different lines
 
+    """
+    Predict a time-series of a voxels response, for a specific Gaussian
+    pRF. Note that this is the response before convolving with the voxel's HRF 
+
+    Parameters
+    ----------
+    degX : 2D array
+           The X coordinates of points in the stimulus (in degrees)
+    degY : 2D array
+           The Y coordinates of points in the stimulus (in degrees)
+    stimArray : 3D array
+    x : float
+       The x coordinate of the center of the pRF (in dva)
+    y : float
+       The y coordinate of the center of the pRF (in dva)
+    s : float
+       The sigma variable, determining the size of the pRF (in dva).
+
+    Returns
+    """
     # cdef's
     cdef int i,j,k # iteration variables
-    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants becauaes i don't if the compiler would optimize this, so i'll just do it
+    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants because
+                                         # i don't if the compiler would
+                                         # optimize this, so i'll just do it
     cdef DTYPE2_t s_factor3 = (3.0*s)**2
-    cdef int xlim = degX.shape[0] # for the python-for-range-loop --> c-for-loop optimization to kick in, range()'s argument must be some size of c-integer
-    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not sure, so i just stick with range.
+    cdef int xlim = degX.shape[0] # for the python-for-range-loop -->
+                                  # c-for-loop optimization to kick in,
+                                  # range()'s argument must be some size of
+                                  # c-integer
+    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not
+                                  # sure, so i just stick with range.
     cdef int zlim = stimArray.shape[2]
     cdef DTYPE2_t d, gauss1D # d for distance
 
     # go
 
-    # now that we are using cython, arithmetic using c-types is fast,
-    # so we aren't restricted to using array operations and vectorization for speed
-    # then, we don't have to use intermediate lists/arrays,
-    # and just apply the result once we find a "good" index (i,j).
+    # now that we are using cython, arithmetic using c-types is fast, so we
+    # aren't restricted to using array operations and vectorization for speed
+    # then, we don't have to use intermediate lists/arrays, and just apply the
+    # result once we find a "good" index (i,j).
 
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] tsStim = np.zeros(zlim,dtype=DTYPE2)
-    # mode='c' (or mode='fortran') is another hint to cython, which guarantees that the array is stored contiguously
-    # making indexing just a little faster. i know there are some resources about this...
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] tsStim = np.zeros(zlim,
+                                                                dtype=DTYPE2)
+    # mode='c' (or mode='fortran') is another hint to cython, which guarantees
+    # that the array is stored contiguously making indexing just a little
+    # faster. i know there are some resources about this...
     cdef DTYPE2_t sum_gauss = 0.0
 
     for i in xrange(xlim):
@@ -62,26 +89,32 @@ def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
 def MakeFastRF(np.ndarray[DTYPE2_t, ndim=2] degX,
                        np.ndarray[DTYPE2_t, ndim=2] degY,
                        DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
-                       # i just like splitting up the function args onto different lines
-
+    """
+    
+    """
     # cdef's
     cdef int i,j # iteration variables
-    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants becauaes i don't if the compiler would optimize this, so i'll just do it
+    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants because
+                                         # i don't if the compiler would
+                                         # optimize this, so i'll just do it
     cdef DTYPE2_t s_factor3 = (3.0*s)**2
-    cdef int xlim = degX.shape[0] # for the python-for-range-loop --> c-for-loop optimization to kick in, range()'s argument must be some size of c-integer
-    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not sure, so i just stick with range.
+    cdef int xlim = degX.shape[0] # for the python-for-range-loop -->
+                                  # c-for-loop optimization to kick in,
+                                  # range()'s argument must be some size of
+                                  # c-integer
+    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not
+                                  # sure, so i just stick with range.
     cdef DTYPE2_t d # d for distance
 
-    # go
-
-    # now that we are using cython, arithmetic using c-types is fast,
-    # so we aren't restricted to using array operations and vectorization for speed
-    # then, we don't have to use intermediate lists/arrays,
-    # and just apply the result once we find a "good" index (i,j).
+    # now that we are using cython, arithmetic using c-types is fast, so we
+    # aren't restricted to using array operations and vectorization for speed
+    # then, we don't have to use intermediate lists/arrays, and just apply the
+    # result once we find a "good" index (i,j).
 
     cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] rf = np.zeros((xlim,ylim),dtype=DTYPE2)
-    # mode='c' (or mode='fortran') is another hint to cython, which guarantees that the array is stored contiguously
-    # making indexing just a little faster. i know there are some resources about this...
+    # mode='c' (or mode='fortran') is another hint to cython, which guarantees
+    # that the array is stored contiguously making indexing just a little
+    # faster. i know there are some resources about this...
 
     for i in xrange(xlim):
         for j in xrange(ylim):
@@ -100,27 +133,31 @@ def MakeFastRFs(np.ndarray[DTYPE2_t, ndim=2] degX,
                        np.ndarray[DTYPE2_t, ndim=1] xs,
                        np.ndarray[DTYPE2_t, ndim=1] ys,
                        DTYPE2_t s):
-                       # i just like splitting up the function args onto different lines
-
     # cdef's
     cdef int i,j,k # iteration variables
-    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants becauaes i don't if the compiler would optimize this, so i'll just do it
+    cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants
+                                         # because i don't if the compiler
+                                         # would optimize this, so i'll just do
+                                         # it
     cdef DTYPE2_t s_factor3 = (3.0*s)**2
-    cdef int xlim = degX.shape[0] # for the python-for-range-loop --> c-for-loop optimization to kick in, range()'s argument must be some size of c-integer
-    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not sure, so i just stick with range.
+    cdef int xlim = degX.shape[0] # for the python-for-range-loop -->
+                                  # c-for-loop optimization to kick in,
+                                  # range()'s argument must be some size of
+                                  # c-integer
+    cdef int ylim = degX.shape[1] # it might also optimize xrange, but im not
+                                  # sure, so i just stick with range.
     cdef int zlim = len(xs)
     cdef DTYPE2_t d # d for distance
 
-    # go
-
-    # now that we are using cython, arithmetic using c-types is fast,
-    # so we aren't restricted to using array operations and vectorization for speed
-    # then, we don't have to use intermediate lists/arrays,
-    # and just apply the result once we find a "good" index (i,j).
+    # now that we are using cython, arithmetic using c-types is fast, so we
+    # aren't restricted to using array operations and vectorization for speed
+    # then, we don't have to use intermediate lists/arrays, and just apply the
+    # result once we find a "good" index (i,j).
 
     cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] rf = np.zeros((xlim,ylim),dtype=DTYPE2)
-    # mode='c' (or mode='fortran') is another hint to cython, which guarantees that the array is stored contiguously
-    # making indexing just a little faster. i know there are some resources about this...
+    # mode='c' (or mode='fortran') is another hint to cython, which guarantees
+    # that the array is stored contiguously making indexing just a little
+    # faster. i know there are some resources about this...
 
     for i in xrange(xlim):
         for j in xrange(ylim):
