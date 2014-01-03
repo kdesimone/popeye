@@ -26,10 +26,10 @@ def test_make_prf():
                                                           scaleFactor)
     
     # generate a pRF at (0,0) and 1 sigma wide
-    rf = MakeFastRF(dx,dy,xcenter,ycenter,sigma)
+    rf = MakeFastRF(dx, dy, xcenter, ycenter, sigma)
     
     # compare the volume of the pRF to a known value
-    nt.assert_equal(np.round(np.sum(rf)),test_value)
+    nt.assert_equal(np.round(np.sum(rf)), test_value)
     
 
 def test_make_stimulus_prediction():
@@ -52,7 +52,8 @@ def test_make_stimulus_prediction():
     timeseries_length = 15 # number of frames to simulate our stimulus array
     
     # initialize the stimulus array
-    stimulus_array = np.zeros((xpixels,ypixels,timeseries_length)).astype('short')
+    stimulus_array = np.zeros((xpixels, ypixels, timeseries_length)).astype(
+                                                                     'short')
     
     # make a circular mask appear for the first 5 frames
     xi,yi = np.nonzero(np.sqrt((dx-xcenter)**2 + (dy-ycenter)**2)<sigma)
@@ -76,8 +77,8 @@ def test_make_stimulus_prediction():
                                 np.short(sigma))
                                 
     # make sure the RSS is 0
-    step = np.array([0,0,0,0,0,1,1,1,1,1,0,0,0,0,0])
-    rval = np.corrcoef(stimulus,step)[0,1]
+    step = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+    rval = np.corrcoef(stimulus,step)[0, 1]
     
     # compare the volume of the pRF to a known value
-    nt.assert_equal(round(rval,3),1)
+    nt.assert_equal(round(rval, 3), 1)
