@@ -99,13 +99,9 @@ def init_config():
         sys.exit('The functional dataset %s cannot be found!' %(
             metaData['funcPath']))
     
-    # load and trim the leading TRs
-    bold = nibabel.load(metaData['funcPath']).get_data()
-    
-    # FIX THIS -- when 3dVol2Surf -> SurfSmooth -> 3dSurf2Vol, the EPI ends up
-    # being 5-D with a dummy dimension.  Haven't figured out how to fix this.
-    if len(np.shape(bold)) > 4:
-        bold = bold[:,:,:,0,:]
+    # load and trim the leading TRs. Squeeze out extraneous dimensions (such as
+    # those created when using 3dVol2Surf -> SurfSmooth -> 3dSurf2Vol:
+    bold = np.squeeze(nibabel.load(metaData['funcPath']).get_data())
     
     # clip the first N-tps off the beginning, created shared array, and store
     # the data into a dict

@@ -8,6 +8,7 @@ from scipy.optimize import fmin_powell, fmin, brute
 from scipy.stats import linregress
 
 from popeye.spinach import MakeFastPrediction
+import popeye.utilities as utils
 
 def double_gamma_hrf(delay):
     """
@@ -57,7 +58,7 @@ def double_gamma_hrf(delay):
             
     return hrf
 
-def error_function(modelParams,tsActual,degX,degY,stimArray):
+def error_function(modelParams,ts_actual,degX,degY,stimArray):
     """
     The objective function that yields a minimizeable error between the
     predicted and actual BOLD time-series.
@@ -83,7 +84,7 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
         A quadruplet model parameters including the pRF estimate (x,y,sigma)
         and the HRF delay (tau).
 
-    tsActual : ndarray
+    ts_actual : ndarray
         A vector of the actual BOLD time-series extacted from a single voxel
         coordinate.
 
@@ -122,7 +123,7 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
         return np.inf
         
     # otherwise generate a prediction
-    tsStim = MakeFastPrediction(degX,
+    ts_stim = MakeFastPrediction(degX,
                                 degY,
                                 stimArray,
                                 modelParams[0],
@@ -133,15 +134,15 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
     hrf = double_gamma_hrf(modelParams[3])
     
     # convolve the stimulus time-series with the HRF
-    tsModel = np.convolve(tsStim,hrf)
-    tsModel = tsModel[0:len(tsActual)]
+    ts_model= np.convolve(ts_stim, hrf)
+    ts_model= ts_model[0:len(ts_actual)]
     
     # z-score the model time-series
-    tsModel -= np.mean(tsModel)
-    tsModel /= np.std(tsModel)
+    ts_model-= np.mean(ts_model)
+    ts_model/= np.std(ts_model)
     
     # compute the RSS
-    error = np.sum((tsModel-tsActual)**2)
+    error = np.sum((ts_model-ts_actual)**2)
     
     # catch NaN
     if np.isnan(np.sum(error)):
@@ -150,7 +151,7 @@ def error_function(modelParams,tsActual,degX,degY,stimArray):
     return error
 
 
-def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
+def adaptive_brute_force_grid_search(bounds,epsilon,rounds,ts_actual,degX,degY,
                                      stimArray):
     """    
     An adaptive brute force grid-search to generate a ball-park pRF estimate for
@@ -173,7 +174,7 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
         through the adaptive brute-force search. 
     rounds : int
         The number of iterations through the adaptive brute-force search
-    tsActual : ndarray
+    ts_actual : ndarray
         A vector of the actual BOLD time-series extacted from a single voxel
         coordinate.
     degX : ndarray
@@ -202,7 +203,7 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
         
         # get a fit estimate by sparsely sampling the 4-parameter space
         phat = brute(error_function,
-                 args=(tsActual,degX,degY,stimArray),
+                 args=(ts_actual, degX, degY, stimArray),
                  ranges=bounds,
                  Ns=5,
                  finish=fmin_powell)
@@ -219,11 +220,10 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,tsActual,degX,degY,
     
     return phat
 
-
 def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
                          stim_arr_coarse, stim_arr_fine, funcData, 
-                         bounds, core_voxels, uncorrected_rval, results_q,
-                         verbose=True):
+                         core_voxels, results_q, bounds=(), uncorrected_rval=0, 
+                         norm_func=utils.zscore, verbose=True):
     """ 
     The main pRF estimation method using a single Gaussian pRF model (Dumoulin
     & Wandell, 2008). 
@@ -255,9 +255,13 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
     results_q : multiprocessing.Queue object
         A multiprocessing.Queue object into which list of pRF estimates and fit
         metrics are stacked. 
+    norm_func : callable, optional
+        The function used to normalize the time-series data. Can be any
+        function that takes an array as input and returns a same-shaped array,
+    but consider using `utils.percent_change` or `utils.zscore` (the default).
     verbose : bool, optional
         Toggle the progress printing to the terminal.
-        
+
     Returns
     -------
     results_q : multiprocessing.Queue
@@ -285,111 +289,140 @@ def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
     printLength = len(xi)/10
     
     # main loop
-    for xvoxel,yvoxel,zvoxel in zip(xi,yi,zi):
+    for xvoxel, yvoxel, zvoxel in zip(xi, yi, zi):
         
         # time each voxel's estimation time
         tic = time.clock()
-        
-        # z-score the functional data and clip off the intial blank period
-        tsActual = funcData['bold'][xvoxel,yvoxel,zvoxel,:]
-        tsActual /= np.std(tsActual)
+
+        # Grab the 1-D timeseries for this voxel
+        ts_actual = funcData[xvoxel, yvoxel, zvoxel,:]
+        ts_actual = norm_func(ts_actual)
         
         # make sure we're only analyzing valid voxels
-        if not np.isnan(np.sum(tsActual)):
-            
-            # compute the initial guess with the adaptive brute-force grid-search
-            x0 = adaptive_brute_force_grid_search(bounds,
-                                                  1,
-                                                  3,
-                                                  tsActual,
-                                                  deg_x_coarse,
-                                                  deg_y_coarse,
-                                                  stim_arr_coarse)
-                                                
-            # regenerate the best-fit for computing the threshold
-            tsStim = MakeFastPrediction(deg_x_coarse,
-                                        deg_y_coarse,
-                                        stim_arr_coarse,
-                                        x0[0],
-                                        x0[1],
-                                        x0[2])
-                                        
-            # convolve with HRF and z-score
-            hrf = double_gamma_hrf(x0[3])
-            tsModel = np.convolve(tsStim,hrf)
-            tsModel = tsModel[0:len(tsActual)]
-            tsModel -= np.mean(tsModel)
-            tsModel /= np.std(tsModel)
-            
-            # compute the p-value to be used for thresholding
-            stats_x0 = linregress(tsActual,tsModel)
-            
-            # only continue if the brute-force grid-search came close to a
-            # solution 
-            if stats_x0[2] > uncorrected_rval:
+        if not np.isnan(np.sum(ts_actual)):
+            x, y, s, d, err, stats = voxel_prf(ts_actual,
+                                               deg_x_coarse,
+                                               deg_y_coarse,
+                                               deg_x_fine,
+                                               deg_y_fine,
+                                               stim_arr_coarse,
+                                               stim_arr_fine,
+                                               bounds=bounds,
+                                               uncorrected_rval=0,
+                                               norm_func=norm_func)
+    
+            # close the processing time
+            toc = time.clock()
+                                    
+            if verbose:
+                  percentDone = (voxelCount / numVoxels) * 100
+                  # print the details of the estimation for this voxel
+                  report_str = "%.01f%% DONE "%percentDone
+                  report_str += "VOXEL=(%.03d,%.03d,%.03d) "%(xvoxel,
+                                                              yvoxel,
+                                                              zvoxel)
+                  report_str += "TIME=%.03f "%toc-tic
+                  report_str += "ERROR=%.03d "%err
+                  report_str += "RVAL=%.02f"%stats[2]
+                  print(report_str)
+                  # store the results
+            results.append((xvoxel, yvoxel, zvoxel, x, y, s, d, stats))
                 
-                # gradient-descent the solution using the x0 from the
-                # brute-force grid-search 
-                pRF_phat = fmin_powell(error_function,
-                                       x0,
-                                       args=(tsActual,
-                                             deg_x_fine,
-                                             deg_y_fine,
-                                             stim_arr_fine),
-                                       full_output=True,
-                                       disp=False)
-                
-                # ensure that the fmin finished OK
-                if (pRF_phat[-1] == 0 and not np.isnan(pRF_phat[1])
-                    and not np.isinf(pRF_phat[1])):
-                    
-                    # regenerate the best-fit for computing the threshold
-                    tsStim = MakeFastPrediction(deg_x_fine,
-                                                deg_y_fine,
-                                                stim_arr_fine,
-                                                pRF_phat[0][0],
-                                                pRF_phat[0][1],
-                                                pRF_phat[0][2])
-                    
-                    # convolve with HRF and z-score
-                    hrf = double_gamma_hrf(pRF_phat[0][3])
-                    tsModel = np.convolve(tsStim,hrf)
-                    tsModel = tsModel[0:len(tsActual)]
-                    tsModel -= np.mean(tsModel)
-                    tsModel /= np.std(tsModel)
-                    
-                    # compute the p-value to be used for thresholding
-                    stats = linregress(tsActual,tsModel)
-                    
-                    # close the processing time
-                    toc = time.clock()
-                    
-                    # assign the fit variables and print
-                    x = pRF_phat[0][0]
-                    y = pRF_phat[0][1]
-                    s = pRF_phat[0][2]
-                    d = pRF_phat[0][3]
-                    err = pRF_phat[1]
-                
-                    if verbose:
-                        percentDone = (voxelCount/numVoxels)*100
-                        # print the details of the estimation for this voxel
-                        print("%.01f%% DONE  VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03f ERROR=%.03d  RVAL=%.02f" 
-                              %(percentDone,
-                                xvoxel,
-                                yvoxel,
-                                zvoxel,
-                                toc-tic,
-                                err,
-                                stats[2]))
-                
-                    # store the results
-                    results.append((xvoxel,yvoxel,zvoxel,x,y,s,d,stats))
-                
-        # interate variable
-        voxelCount += 1
-                
+            # interate variable
+            voxelCount += 1
+
     # add results to the queue
     results_q.put(results)
-    
     return results_q
+
+
+def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
+              deg_x_fine, deg_y_fine, stim_arr_coarse,
+              stim_arr_fine, bounds=(), uncorrected_rval=0,
+              norm_func=utils.zscore):
+      """
+      Compute the pRF parameters for a single voxel.
+
+      Start with a brute force grid search, at coarse resolution and follow up
+      with a gradient descent at fine resolution.
+      
+      Parameters
+      ----------
+      ts_vox : 1D array
+         The normalized time-series of a
+      deg_x_coarse, deg_y_coarse :
+      deg_x_fine, deg_y_fine :
+      stim_arr_coarse :
+      stim_arr_fine :
+      uncorrected_rval : float, optional
+      norm_func: callable, optional
+      
+      Returns
+      -------
+      The pRF parameters for this voxel
+      x : 
+      y : 
+      sigma : 
+      """
+      # compute the initial guess with the adaptive brute-force grid-search
+      x0, y0, s0, hrf0 = adaptive_brute_force_grid_search(bounds,
+                                                    1,
+                                                    3,
+                                                    ts_vox,
+                                                    deg_x_coarse,
+                                                    deg_y_coarse,
+                                                    stim_arr_coarse)
+
+      # regenerate the best-fit for computing the threshold
+      ts_stim = MakeFastPrediction(deg_x_coarse,
+                                  deg_y_coarse,
+                                  stim_arr_coarse,
+                                  x0,
+                                  y0,
+                                  s0)
+
+      # convolve with HRF and z-score
+      hrf = double_gamma_hrf(hrf0)
+      ts_model= np.convolve(ts_stim, hrf)
+      ts_model= ts_model[0:len(ts_vox)]
+      norm_func(ts_model)
+      
+      # compute the p-value to be used for thresholding
+      stats0 = linregress(ts_vox, ts_model)
+
+      # only continue if the brute-force grid-search came close to a
+      # solution 
+      if stats0[2] > uncorrected_rval:
+          # gradient-descent the solution using the x0 from the
+          [x, y, sigma, hrf_delay], err,  _, _, _, warnflag =\
+              fmin_powell(error_function,
+                          (x0, y0, s0, hrf0),
+                          args=(ts_vox,
+                                deg_x_fine,
+                                deg_y_fine,
+                                stim_arr_fine),
+                                full_output=True,
+                                disp=False)
+
+          # ensure that the fmin finished OK:
+          if (warnflag == 0 and not np.any(np.isnan([x, y, sigma, hrf_delay]))
+             and not np.isinf(err)):
+
+              # regenerate the best-fit for computing the threshold
+              ts_stim = MakeFastPrediction(deg_x_fine,
+                                          deg_y_fine,
+                                          stim_arr_fine,
+                                          x,
+                                          y,
+                                          sigma)
+
+              # convolve with HRF and z-score
+              hrf = double_gamma_hrf(hrf_delay)
+              ts_model= np.convolve(ts_stim, hrf)
+              ts_model= ts_model[0:len(ts_vox)]
+              ts_model = norm_func(ts_model)
+
+              # compute the final stats:
+              stats = linregress(ts_vox, ts_model)
+
+      return x, y, sigma, hrf_delay, err, stats
