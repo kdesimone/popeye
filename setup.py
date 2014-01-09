@@ -1,8 +1,21 @@
 #!/usr/bin/env python
 """Setup file for the popeye package."""
 
+import urllib
+import zipfile 
 import os
 import sys
+
+popeye_config = os.path.join(os.path.expanduser('~'), '.popeye')
+# If the data is not already there: 
+if not os.path.exists(popeye_config):
+    os.mkdir(popeye_config)
+    # You might need to get the data:
+    print ("Downloading test-data ...")
+    # Get the test data and put it in the right place
+    f=urllib.urlretrieve("http://arokem.org/data/popeye.zip")[0]
+    zf = zipfile.ZipFile(f)
+    zf.extractall(path=popeye_config)    
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
