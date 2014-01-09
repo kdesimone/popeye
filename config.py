@@ -1,18 +1,12 @@
 """"
-This is a configuration file that sets filepaths for loading the stimulus,
-functional, and mask datasets.  In addition, it creates the visuotopic arrays
-for plotting the 2D gaussians in stimulus-referred coordinates. Shared-memory
-arrays will be created for reading data from a multiprocessing.Array.  Results
-are garnered from a multiprocessing.Queue.
-
-TODO: Create a multiprocessing.Queue for work-to-be-done.  This would pop jobs
-off the to-do stack and feed them into the main pRF estimator method.  This
-will maximize the use of the user-specified available CPUs.
-
+This is a configuration file that sets filepaths for 
+loading the sample stimulus and BOLD functional time-series data.
+In addition, it creates the visuotopic arrays for plotting the 2D 
+gaussians in stimulus-referred coordinates. 
 
 """
 
-import shutil, sys
+import shutil, sys, os
 import ctypes
 from multiprocessing import Array
 import numpy as np
@@ -24,115 +18,86 @@ def init_config():
     ######################
     ###    Metadata    ###
     ######################
+    
     # User-specified meta-data
-    metaData = {}
-    metaData['subject_id'] = ''
-    metaData['cpus'] = 1
-    metaData['outputPath'] = ''
-    metaData['basePath'] = ''
-    metaData['baseFileName'] = ''
-    metaData['maskPath'] = ''
-    metaData['funcPath'] = ''
-    metaData['Bounds'] = () 
+    
+    meta_data = {}
+    meta_data['subject_id'] = ''
+    meta_data['cpus'] = 1
+    meta_data['output_path'] = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
+    meta_data['base_path'] =  meta_data['output_path']
+    meta_data['base_filename'] = ''
+    meta_data['mask_path'] = ''
+    meta_data['func_path'] = '%s/sample_response.npy' %(meta_data['base_path'])
+    meta_data['stim_path'] = '%s/sample_stimulus.npy' %(meta_data['base_path'])
+    meta_data['bounds'] = ((-10,10),(-10,10),(0.25,5.25),(-4,4))
  
     ######################
     ###    Stimulus    ###
     ######################
     
-    # set the visuotopic stimulus array path
-    stimArrayPath = '%s/barsArray.npy' %(metaData['basePath'])
-    
-    # make sure the file exists
-    if not shutil.os.path.exists(stimArrayPath):
-        sys.exit('The stimulus array %s cannot be found!' %(stimArrayPath))
-    
     # stimulus display parameters
-    monitorWidth = 25.0 # distance across the width of the image on the
+    monitor_width = 25.0 # distance across the width of the image on the
                         # projection screen in cm 
-    viewingDistance = 38.0 # viewing distance from the subject's eye to the
+    viewing_distance = 38.0 # viewing distance from the subject's eye to the
                            # projection screen in cm 
-    pixelsAcross = 800 # display resolution across in pixels
-    pixelsDown = 600 # display resolution down in pixels
-    pixelsPerDegree = np.pi * pixelsAcross / np.arctan(monitorWidth/viewingDistance/2.0) / 360.0 # degrees of visual angle
-    clipNumber = 10 # TRs to remove at the beginning
-    rollNumber = -2 # TRs to rotate the time-series.
-    fineScaleFactor = 1.0 # Decimal describing how much to down-sample the
+    pixels_across = 800 # display resolution across in pixels
+    pixels_down = 600 # display resolution down in pixels
+    ppd = np.pi*pixels_across/np.arctan(monitor_width/viewing_distance/2.0)/360.0 # degrees of visual angle
+    clip_number = 10 # TRs to remove at the beginning
+    roll_number = -2 # TRs to rotate the time-series.
+    fine_scale = 1.0 # Decimal describing how much to down-sample the
                           # stimulus for increased fitting speed 
-    coarseScaleFactor = 0.05 # Decimal describing how much to down-sample the
+    coarse_scale = 0.05 # Decimal describing how much to down-sample the
                              # stimulus for increased fitting speed 
     
     # the non-resampled stimulus array
-    stimArray = np.load(stimArrayPath)
-    stimArray = stimArray[:,:,clipNumber::]
-    stimArray = np.roll(stimArray,rollNumber,axis=-1)
-    stimArrayFine = prf.utilities.resample_stimulus(stimArray,fineScaleFactor)
-    degXFine,degYFine = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,fineScaleFactor)
+    stim_arr = np.load(meta_data['stim_path'])
+    stim_arr = stim_arr[:,:,clip_number::]
+    stim_arr = np.roll(stim_arr,roll_number,axis=-1)
+    stim_arr_fine = prf.utilities.resample_stimulus(stim_arr,fine_scale)
+    deg_x_fine,deg_y_fine = prf.utilities.generate_coordinate_matrices(pixels_across,
+                                                                       pixels_down,
+                                                                       ppd,
+                                                                       fine_scale)
     
     # the resampled stimulus array
-    stimArrayCoarse = prf.utilities.resample_stimulus(stimArray,coarseScaleFactor)
-    degXCoarse,degYCoarse = prf.utilities.generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,coarseScaleFactor)
+    stim_arr_coarse = prf.utilities.resample_stimulus(stim_arr,coarse_scale)
+    deg_x_coarse,deg_y_coarse = prf.utilities.generate_coordinate_matrices(pixels_across,
+                                                                           pixels_down,
+                                                                           ppd,
+                                                                           coarse_scale)
     
-    # create shared stimulus arrays and package them into a dict
-    stimData = {}
-    stimData['stimArrayFine'] = prf.utilities.generate_shared_array(
-        stimArrayFine,ctypes.c_short)
-    stimData['stimArrayCoarse'] = prf.utilities.generate_shared_array(
-        stimArrayCoarse,ctypes.c_short)
-    stimData['degXFine'] = prf.utilities.generate_shared_array(degXFine,
-                                                               ctypes.c_double)
-    stimData['degXCoarse'] = prf.utilities.generate_shared_array(degXCoarse,
-                                                                 ctypes.c_double)
-    stimData['degYFine'] = prf.utilities.generate_shared_array(degYFine,
-                                                               ctypes.c_double)
-    stimData['degYCoarse'] = prf.utilities.generate_shared_array(degYCoarse,
-                                                                 ctypes.c_double)
-    stimData['stimRecon'] = prf.utilities.generate_shared_array(
-        np.zeros_like(stimData['stimArrayFine'],dtype='double'),ctypes.c_double)
+    # package it
+    stim_data = {}
+    stim_data['deg_x_coarse'] = deg_x_coarse
+    stim_data['deg_y_coarse'] = deg_y_coarse
+    stim_data['deg_x_fine'] = deg_x_fine
+    stim_data['deg_y_fine'] = deg_y_fine
+    stim_data['stim_arr_coarse'] = stim_arr_coarse
+    stim_data['stim_arr_fine'] = stim_arr_fine
     
     
     ######################
     ###   Functional   ###
     ######################
     
-    # make sure it is accessible on the file-system
-    if not shutil.os.path.exists(metaData['funcPath']):
-        sys.exit('The functional dataset %s cannot be found!' %(
-            metaData['funcPath']))
-    
-    # load and trim the leading TRs. Squeeze out extraneous dimensions (such as
-    # those created when using 3dVol2Surf -> SurfSmooth -> 3dSurf2Vol:
-    bold = np.squeeze(nibabel.load(metaData['funcPath']).get_data())
+    # load and trim the leading TRs
+    bold = np.load(meta_data['func_path'])
     
     # clip the first N-tps off the beginning, created shared array, and store
     # the data into a dict
-    funcData = {}
-    funcData['bold'] = generate_shared_array(bold[:,:,:,clipNumber::],
-                                             ctypes.c_double)
-    
-    # load the pRFs if they've been specified
-    if metaData.has_key('pRF_cartes') and metaData['pRF_cartes']:
-        funcData['pRF_cartes'] = prf.utilities.generate_shared_array(
-            nibabel.load(metaData['pRF_cartes']).get_data(),ctypes.c_double)
-    if metaData.has_key('pRF_polar') and metaData['pRF_polar']:
-        funcData['pRF_polar'] = prf.utilities.generate_shared_array(
-            nibabel.load(metaData['pRF_polar']).get_data(),ctypes.c_double)
-    
+    func_data = {}
+    func_data['bold'] = prf.utilities.generate_shared_array(bold[:,clip_number::],ctypes.c_double)
     
     ######################
     ###      Mask      ###
     ######################
     
-    # make sure it is accessible on the file-system
-    if not shutil.os.path.exists(metaData['maskPath']):
-        sys.exit('The mask dataset %s cannot be found!' %(metaData['maskPath']))
+    # load the mask -- here we're just taking all the voxels in the sample dataset
+    maskData = np.ones_like(func_data['bold'][:,0])
     
-    # load the mask
-    maskData = nibabel.load(metaData['maskPath']).get_data()
+    # grab the indices
+    meta_data['voxels'] = np.nonzero(maskData)[0]
     
-    # make sure the mask being used is in the same space as the functional data
-    if funcData['bold'].shape[0:3] != maskData.shape[0:3]:
-        sys.exit('The mask and functional datasetsar e not the same shape!\n\n%s\n%s' %(metaData['maskPath'],metaData['funcPath']))
-    
-    metaData['voxels'] = np.nonzero(maskData)
-    
-    return stimData,funcData,metaData
+    return stim_data,func_data,meta_data
