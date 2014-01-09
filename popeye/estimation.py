@@ -342,7 +342,7 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
               norm_func=utils.zscore):
       """
       Compute the pRF parameters for a single voxel.
-
+      
       Start with a brute force grid search, at coarse resolution and follow up
       with a gradient descent at fine resolution.
       
@@ -363,33 +363,37 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
       x : 
       y : 
       sigma : 
+      hrf_delay: 
+      stats: 
+      
       """
+      
       # compute the initial guess with the adaptive brute-force grid-search
       x0, y0, s0, hrf0 = adaptive_brute_force_grid_search(bounds,
-                                                    1,
-                                                    3,
-                                                    ts_vox,
-                                                    deg_x_coarse,
-                                                    deg_y_coarse,
-                                                    stim_arr_coarse)
-
+                                                          1,
+                                                          3,
+                                                          ts_vox,
+                                                          deg_x_coarse,
+                                                          deg_y_coarse,
+                                                          stim_arr_coarse)
+                                                          
       # regenerate the best-fit for computing the threshold
       ts_stim = MakeFastPrediction(deg_x_coarse,
-                                  deg_y_coarse,
-                                  stim_arr_coarse,
-                                  x0,
-                                  y0,
-                                  s0)
-
+                                   deg_y_coarse,
+                                   stim_arr_coarse,
+                                   x0,
+                                   y0,
+                                   s0)
+                                   
       # convolve with HRF and z-score
       hrf = double_gamma_hrf(hrf0)
       ts_model= np.convolve(ts_stim, hrf)
       ts_model= ts_model[0:len(ts_vox)]
-      norm_func(ts_model)
+      ts_model= norm_func(ts_model)
       
       # compute the p-value to be used for thresholding
       stats0 = linregress(ts_vox, ts_model)
-
+      
       # only continue if the brute-force grid-search came close to a
       # solution 
       if stats0[2] > uncorrected_rval:
@@ -403,11 +407,11 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
                                 stim_arr_fine),
                                 full_output=True,
                                 disp=False)
-
+                                
           # ensure that the fmin finished OK:
           if (warnflag == 0 and not np.any(np.isnan([x, y, sigma, hrf_delay]))
              and not np.isinf(err)):
-
+             
               # regenerate the best-fit for computing the threshold
               ts_stim = MakeFastPrediction(deg_x_fine,
                                           deg_y_fine,
@@ -415,14 +419,20 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
                                           x,
                                           y,
                                           sigma)
-
+                                          
               # convolve with HRF and z-score
               hrf = double_gamma_hrf(hrf_delay)
               ts_model= np.convolve(ts_stim, hrf)
               ts_model= ts_model[0:len(ts_vox)]
               ts_model = norm_func(ts_model)
-
+              
               # compute the final stats:
               stats = linregress(ts_vox, ts_model)
-
-      return x, y, sigma, hrf_delay, err, stats
+              
+              return x, y, sigma, hrf_delay, err, stats
+          else:
+              print("The fmin did not finish properly!")
+              return None
+      else:
+         print("The brute-force did not produce a fit better than an r-value of %.02f!" %(uncorrected_rval))
+         return None

@@ -2,31 +2,34 @@ import datetime
 import numpy as np
 
 from config import init_config
-import popeye
+from popeye.estimation import voxel_prf
+import popeye.utilities as utils
+
 
 # initialize the datasets as per config.py
-stimData,funcData,metaData = init_config()
+stim,func,meta = init_config()
 
-# Randomize the voxel indices so that a particular core doesn't get stuck with
-# all large sigmas ... 
-[xi,yi,zi] = metaData['voxels']
-randVec = np.random.rand(len(xi))
-randInd = np.argsort(randVec)
-metaData['voxels'] = tuple((xi[randInd],yi[randInd],zi[randInd]))
+# initialize a results list
+output = []
 
-# # Run the pRF estimation
-tic = datetime.datetime.now()
-output = popeye.utilities.multiprocessor(popeye.estimation.compute_prf_estimate,
-                                stimData['degXFine'],
-                                stimData['degYFine'],
-                                stimData['stimArrayFine'],
-                                funcData,
-                                metaData['bounds'],
-                                metaData['core_voxels'],
-                                metaData['uncorrected_rval'])
-toc = datetime.datetime.now()
-print("The pRF estimation took %s" %(toc-tic))
- 
-# # Write the results out as nifti_gz
-popeye.utilities.recast_estimation_results_queue(output,metaData,True)
-
+# loop over each time-series and compute the prf
+for voxel in meta['voxels']:
+    
+    # grab the voxel's time-series
+    ts_vox = func['bold'][voxel,:]
+    ts_vox = utils.zscore(ts_vox)
+    
+    # compute the prf estimate
+    x, y, sigma, hrf_delay, err, stats = voxel_prf(ts_vox, 
+                                                   stim['deg_x_coarse'],
+                                                   stim['deg_y_coarse'],
+                                                   stim['deg_x_fine'],
+                                                   stim['deg_y_fine'],
+                                                   stim['stim_arr_coarse'],
+                                                   stim['stim_arr_fine'],
+                                                   meta['bounds'],
+                                                   norm_func=utils.zscore,
+                                                   uncorrected_rval=0)
+    
+    # store the results
+    output.append([voxel,x, y, sigma, hrf_delay, err, stats])
