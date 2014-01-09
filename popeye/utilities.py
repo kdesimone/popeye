@@ -443,3 +443,31 @@ def zscore(time_series, axis=-1):
         zt /= st[sl]
 
     return zt
+
+def randomize_voxels(voxels):
+    """Returns a set of 3D coordinates that are randomized.
+    
+    Since the brain is highly spatially correlated and because computational time increases with
+    increases in the pRF size, we randomize the voxel order so that a particular core doesn't get
+    stuck with a disproportionately high number of voxels whose sigma values are large.
+    
+    Parameters
+    ----------
+    voxels : ndarray
+        an array of voxel coordinates
+    
+    
+    Returns
+    _______
+    randomized_voxels : ndarray
+        the shuffled voxel coordinates 
+    """
+    
+    
+    xi,yi,zi = voxels[:]
+    randVec = np.random.rand(len(xi))
+    randInd = np.argsort(randVec)
+    randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
+    
+    return randomized_voxels
+
