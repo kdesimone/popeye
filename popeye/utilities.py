@@ -113,15 +113,19 @@ def generate_coordinate_matrices(pixels_across,pixels_down,ppd,
     """
     
     [X,Y] = np.meshgrid(np.arange(pixels_across*scale_factor),
-                        np.arange(pixels_down*scale_factor,0,-1))
+                        np.arange(pixels_down*scale_factor))
     
-    # convert pixels to degrees
-    deg_x = (X-np.floor(pixels_across*scale_factor/2))/(ppd*scale_factor)
-    deg_y = (Y-np.floor(pixels_down*scale_factor/2))/(ppd*scale_factor)
+    Y = np.flipud(Y)
     
-    # add a half a degrees to make sure we're referencing the center instead of the edge
-    deg_x = deg_x + 0.5
-    deg_y = deg_y + 0.5
+    [X,Y] = np.meshgrid(np.arange(np.round(pixels_across*scale_factor)),
+                        np.arange(np.round(pixels_down*scale_factor)))
+                        
+                        
+    deg_x = (X-np.round(pixels_across*scale_factor)/2)/(ppd*scale_factor)
+    deg_y = (Y-np.round(pixels_down*scale_factor)/2)/(ppd*scale_factor)
+    
+    deg_x = deg_x + 0.5/(ppd*scale_factor)
+    deg_y = deg_y + 0.5/(ppd*scale_factor)
         
     return deg_x, deg_y
     
