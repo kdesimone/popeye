@@ -31,7 +31,7 @@ def test_make_prf():
     nt.assert_equal(np.round(np.sum(rf)), test_value)
 
 
-def test_make_stimulus_prediction():    
+def test_make_stimulus_prediction():
     xpixels = 100 # simulated screen width
     ypixels = 100 # simulated screen height
     ppd = 1 # simulated visual angle
