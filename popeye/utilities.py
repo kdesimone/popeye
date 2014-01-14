@@ -112,11 +112,6 @@ def generate_coordinate_matrices(pixels_across,pixels_down,ppd,
         terms of degrees of visual angle.
     """
     
-    [X,Y] = np.meshgrid(np.arange(pixels_across*scale_factor),
-                        np.arange(pixels_down*scale_factor))
-    
-    Y = np.flipud(Y)
-    
     [X,Y] = np.meshgrid(np.arange(np.round(pixels_across*scale_factor)),
                         np.arange(np.round(pixels_down*scale_factor)))
                         

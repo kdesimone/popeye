@@ -1,11 +1,36 @@
 import os
 
 import numpy as np
+import numpy.testing as npt
 import nose.tools as nt
 
 import popeye.utilities as utils
-from popeye.estimation import voxel_prf, adaptive_brute_force_grid_search
+import popeye.estimation as pest
 
+def test_double_gamma_hrf():
+    """
+    Test voxel-wise prf estimation function in popeye.estimation 
+    using the stimulus and BOLD time-series data that ship with the 
+    popeye installation.
+    """
+    
+    # produce an HRF with 0 delay
+    hrf0 = pest.double_gamma_hrf(0)
+    hrf0 = np.round(np.sum(hrf0)*100,2)
+    
+    # produce an HRF with +1 delay
+    hrf_pos = pest.double_gamma_hrf(1)
+    hrf_pos = np.round(np.sum(hrf_pos)*100,2)
+    
+    # produce an HRF with -1 delay
+    hrf_neg = pest.double_gamma_hrf(-1)
+    hrf_neg = np.round(np.sum(hrf_neg)*100,2)
+    
+    # assert 
+    nt.assert_almost_equal(hrf0, 80.02, 2)
+    nt.assert_almost_equal(hrf_pos, 80.01, 2)
+    nt.assert_almost_equal(hrf_neg, 80.11, 2)
+    
 def test_error_function():
     """
     Test voxel-wise prf estimation function in popeye.estimation 
@@ -46,18 +71,22 @@ def test_error_function():
                                                                ppd,
                                                                fine_scale)
     
-   # grab a voxel's time-series and z-score it
-   ts_voxel = response[0,clip_number::]
-   ts_voxel = utils.zscore(ts_voxel)
-   
-   # compute the error using the results of a known pRF estimation
-   test_results = np.round(error_function(estimate[0,0:4],ts_voxel,deg_x_fine,deg_y_fine,stim_arr_fine),3)
-   
-   # get the precomputed error
-   gold_standard = np.round(estimate[0,4],3)
-   
-   # assert equivalence
-   nt.assert_true(np.any(gold_standard == test_results))
+    # grab a voxel's time-series and z-score it
+    ts_voxel = response[0,clip_number::]
+    ts_voxel = utils.zscore(ts_voxel)
+    
+    # compute the error using the results of a known pRF estimation
+    test_results = pest.error_function(estimate[0,0:4],
+                                                ts_voxel,
+                                                deg_x_fine,
+                                                deg_y_fine,
+                                                stim_arr_fine)
+    
+    # get the precomputed error
+    gold_standard = estimate[0,4]
+    
+    # assert equal to 3 decimal places
+    npt.assert_almost_equal(gold_standard, test_results)
 
 def test_adapative_brute_force_grid_search():
     """
@@ -113,22 +142,22 @@ def test_adapative_brute_force_grid_search():
     ts_voxel = utils.zscore(ts_voxel)
     
     # compute the initial guess with the adaptive brute-force grid-search
-    x0, y0, s0, hrf0 = adaptive_brute_force_grid_search(bounds,
-                                                        1,
-                                                        3,
-                                                        ts_voxel,
-                                                        deg_x_coarse,
-                                                        deg_y_coarse,
-                                                        stim_arr_coarse)
+    x0, y0, s0, hrf0 = pest.adaptive_brute_force_grid_search(bounds,
+                                                             1,
+                                                             3,
+                                                             ts_voxel,
+                                                             deg_x_coarse,
+                                                             deg_y_coarse,
+                                                             stim_arr_coarse)
         
     # grab the known pRF estimate for the sample data
     gold_standard = np.array([ 8.446,  2.395,  0.341, -0.777])
     
     # package some of the results for comparison with known results
-    test_results = np.around(np.array([x0,y0,s0,hrf0]),3)
+    test_results = np.round(np.array([x0,y0,s0,hrf0]),3)
         
-    # assert equivalence
-    nt.assert_true(np.any(gold_standard == test_results))
+    # assert
+    npt.almost_equal(np.any(gold_standard == test_results))
     
 def test_voxel_prf():
     """
@@ -200,10 +229,10 @@ def test_voxel_prf():
         
         
         # grab the known pRF estimate for the sample data
-        gold_standard = np.around(estimate[voxel,0:4],3)
+        gold_standard = np.round(estimate[voxel,0:4],3)
         
         # package some of the results for comparison with known results
-        test_results = np.around(np.array([x,y,sigma,hrf_delay]),3)
+        test_results = np.round(np.array([x,y,sigma,hrf_delay]),3)
         
         # assert equivalence
-        nt.assert_true(np.any(gold_standard == test_results))
+        npt.assert_true(np.any(gold_standard == test_results))
