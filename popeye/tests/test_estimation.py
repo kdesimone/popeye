@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import numpy.testing as npt
 import nose.tools as nt
 
 import popeye.utilities as utils
@@ -66,15 +65,15 @@ def test_voxel_prf():
         ts_voxel = utils.zscore(ts_voxel)
         
         x, y, sigma, hrf_delay, err, stats = pest.voxel_prf(ts_voxel,
-                                                      deg_x_coarse,
-                                                      deg_y_coarse,
-                                                      deg_x_fine,
-                                                      deg_y_fine,
-                                                      stim_arr_coarse,
-                                                      stim_arr_fine,
-                                                      bounds,
-                                                      norm_func=utils.zscore,
-                                                      uncorrected_rval=0)
+                                                            deg_x_coarse,
+                                                            deg_y_coarse,
+                                                            deg_x_fine,
+                                                            deg_y_fine,
+                                                            stim_arr_coarse,
+                                                            stim_arr_fine,
+                                                            bounds,
+                                                            norm_func=utils.zscore,
+                                                            uncorrected_rval=0)
         
         
         # grab the known pRF estimate for the sample data
