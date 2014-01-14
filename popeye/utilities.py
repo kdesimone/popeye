@@ -20,7 +20,7 @@ def generate_shared_array(unsharedArray,dataType):
     the values in the array with the `dataType` argument.  See
     multiprocessing.Array and ctypes for details on shared memory arrays and
     the data-types.
-
+    
     Parameters
     ----------
     unsharedArray : ndarray
@@ -30,95 +30,101 @@ def generate_shared_array(unsharedArray,dataType):
     dataType : ctypes instance
         The data-type specificed has to be an instance of the ctypes library.
         See ctypes for details.
-
+        
     Returns
     -------
     sharedArray : syncrhonized shared array
         An array that is read/write accessible from multiple processes/threads. 
     """
-
+    
     shared_array_base = Array(dataType,np.prod(np.shape(unsharedArray)))
     sharedArray = np.ctypeslib.as_array(shared_array_base.get_obj())
     sharedArray = np.reshape(sharedArray,np.shape(unsharedArray))
     sharedArray[:] = unsharedArray[:]
-
+    
     return sharedArray
-
-def resample_stimulus(stimArray,scaleFactor):
+    
+def resample_stimulus(stim_arr,scale_factor):
     """Resamples the visual stimulus
-
-    The function takes an ndarray `stimArray` and resamples it by the user
-    specified `scaleFactor`.  The stimulus array is assumed to be a three
+    
+    The function takes an ndarray `stim_arr` and resamples it by the user
+    specified `scale_factor`.  The stimulus array is assumed to be a three
     dimensional ndarray representing the stimulus, in screen pixel coordinates,
-    over time.  The first two dimensions of `stimArray` together represent the
+    over time.  The first two dimensions of `stim_arr` together represent the
     exent of the visual display (pixels) and the last dimensions represents
     time (TRs).
-
+    
     Parameters
     ----------
-    stimArray : ndarray
+    stim_arr : ndarray
         Array_like means all those objects -- lists, nested lists, etc. --
         that can be converted to an array.
-    scaleFactor : float
+    scale_factor : float
         The scale factor by which the stimulus is resampled.  The scale factor
         must be a float, and must be greater than 0.
-
+        
     Returns
     -------
     resampledStim : ndarray
         An array that is resampled according to the user-specified scale factor.
     """
-
-    dims = np.shape(stimArray)
-    resampledStim = np.zeros((dims[0]*scaleFactor,dims[1]*scaleFactor,dims[2]))
+    
+    dims = np.shape(stim_arr)
+    resampledStim = np.zeros((dims[0]*scale_factor,dims[1]*scale_factor,dims[2]))
     for tp in range(dims[2]):
-        resampledStim[:,:,tp] = imresize(stimArray[:,:,tp],scaleFactor)
+        resampledStim[:,:,tp] = imresize(stim_arr[:,:,tp],scale_factor)
     
     resampledStim[resampledStim>0] = 1
     
     return resampledStim.astype('short')
-
-def generate_coordinate_matrices(pixelsAcross,pixelsDown,pixelsPerDegree,
-                                 scaleFactor):
+    
+def generate_coordinate_matrices(pixels_across,pixels_down,ppd,
+                                 scale_factor):
     """Creates coordinate matrices for representing the visual field in terms
        of degrees of visual angle.
-
+       
     This function takes the screen dimensions, the pixels per degree, and a
     scaling factor in order to generate a pair of ndarrays representing the
     horizontal and vertical extents of the visual display in degrees of visual
-    angle. 
-
+    angle.
+    
     Parameters
     ----------
-    pixelsAcross : int
+    pixels_across : int
         The number of pixels along the horizontal extent of the visual display.
-    pixelsDown : int
+    pixels_down : int
         The number of pixels along the vertical extent of the visual display.
-    pixelsPerDegree: float
+    ppd: float
         The number of pixels that spans 1 degree of visual angle.  This number
         is computed using the display width and the viewing distance.  See the
         config.init_config for details. 
-    scaleFactor : float
+    scale_factor : float
         The scale factor by which the stimulus is resampled.  The scale factor
         must be a float, and must be greater than 0.
-
+        
     Returns
     -------
-    degX : ndarray
+    deg_x : ndarray
         An array representing the horizontal extent of the visual display in
         terms of degrees of visual angle.
-    degY : ndarray
+    deg_y : ndarray
         An array representing the vertical extent of the visual display in
         terms of degrees of visual angle.
     """
-
-    [X,Y] = np.meshgrid(np.arange(pixelsAcross*scaleFactor),
-                        np.arange(pixelsDown*scaleFactor))
-    degX = (X-np.shape(X)[1]/2)/(pixelsPerDegree*scaleFactor)
-    degY = (Y-np.shape(Y)[0]/2)/(pixelsPerDegree*scaleFactor)
-
-    return degX,degY
-
+    
+    [X,Y] = np.meshgrid(np.arange(pixels_across*scale_factor),
+                        np.arange(pixels_down*scale_factor,0,-1))
+    
+    # convert pixels to degrees
+    deg_x = (X-np.floor(pixels_across*scale_factor/2))/(ppd*scale_factor)
+    deg_y = (Y-np.floor(pixels_down*scale_factor/2))/(ppd*scale_factor)
+    
+    # add a half a degrees to make sure we're referencing the center instead of the edge
+    deg_x = deg_x + 0.5
+    deg_y = deg_y + 0.5
+        
+    return deg_x, deg_y
+    
 def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
