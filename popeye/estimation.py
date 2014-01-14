@@ -440,5 +440,5 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
               print("The fmin did not finish properly!")
               return None
       else:
-         print("The brute-force did not produce a fit better than an r-value of %.02f!" %(uncorrected_rval))
+         print("The brute-force did not pass threshold, %.02f < %.02f!" %(stats0[2],uncorrected_rval))
          return None
