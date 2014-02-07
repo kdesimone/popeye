@@ -435,7 +435,7 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
               # compute the final stats:
               stats = linregress(ts_vox, ts_model)
               
-              return x, y, sigma, hrf_delay, err, stats
+              return x, y, sigma, hrf_delay, err, stats, ts_model
           else:
               print("The fmin did not finish properly!")
               return None

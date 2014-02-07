@@ -14,13 +14,13 @@ from scipy.misc import imresize
 
 def generate_shared_array(unsharedArray,dataType):
     """Creates synchronized shared arrays from numpy arrays.
-
+        
     The function takes a numpy array `unsharedArray` and returns a shared
     memory object, `sharedArray_mem`.  The user also specifies the data-type of
     the values in the array with the `dataType` argument.  See
     multiprocessing.Array and ctypes for details on shared memory arrays and
     the data-types.
-    
+        
     Parameters
     ----------
     unsharedArray : ndarray
