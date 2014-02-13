@@ -1,4 +1,3 @@
-
 """
 
 Base-classes for poulation encoding models and fits.
@@ -20,7 +19,7 @@ class PopulationModel(object):
         return PopulationModel(self, data)
 
 class PopulationFit(object):
-    """ Abstract class which holds the fit result of ReconstModel
+    """ Abstract class which holds the fit result of PopulationModel
 
     For example that could be holding FA or GFA etc.
     """
