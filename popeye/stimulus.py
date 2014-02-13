@@ -1,12 +1,9 @@
 """
 
-Base-classes for voxel-wise encoding models and voxel-wise encoding model fits.
-
-All the models in the reconst module follow the same template: a Model object
-is used to represent the abstract properties of the model, that are independent
-of the specifics of the data . These properties are reused whenver fitting a
-particular set of data (different voxels, for example).
-
+First pass at a stimulus model for abstracting the qualities and functionality of a stimulus
+into an abstract class.  For now, we'll assume the stimulus model only pertains to visual 
+stimuli on a visual display over time (i.e., 3D).  Hopefully this can be extended to other stimuli
+with an arbitrary number of dimensions (e.g., auditory stimuli).
 
 """
 from __future__ import division
