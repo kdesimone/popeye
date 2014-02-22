@@ -7,7 +7,7 @@ import popeye.utilities as utils
 
 
 # initialize the datasets as per config.py
-stim,func,meta = init_config()
+func,meta = init_config()
 
 # initialize a results list
 output = []
@@ -20,16 +20,11 @@ for voxel in meta['voxels']:
     ts_vox = utils.zscore(ts_vox)
     
     # compute the prf estimate
-    x, y, sigma, hrf_delay, err, stats = voxel_prf(ts_vox, 
-                                                   stim['deg_x_coarse'],
-                                                   stim['deg_y_coarse'],
-                                                   stim['deg_x_fine'],
-                                                   stim['deg_y_fine'],
-                                                   stim['stim_arr_coarse'],
-                                                   stim['stim_arr_fine'],
-                                                   meta['bounds'],
-                                                   norm_func=utils.zscore,
-                                                   uncorrected_rval=0)
+    x, y, sigma, hrf_delay, err, stats, ts_model = voxel_prf(ts_vox, 
+                                                             stimulus,
+                                                             meta['bounds'],
+                                                             norm_func=utils.zscore,
+                                                             uncorrected_rval=0)
     
     # store the results
     output.append([voxel,x, y, sigma, hrf_delay, err, stats])
