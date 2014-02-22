@@ -74,8 +74,6 @@ def resample_stimulus(stim_arr,scale_factor):
     for tp in range(dims[2]):
         resampledStim[:,:,tp] = imresize(stim_arr[:,:,tp],scale_factor)
     
-    resampledStim[resampledStim>0] = 1
-    
     return resampledStim.astype('short')
     
 def generate_coordinate_matrices(pixels_across,pixels_down,ppd,
