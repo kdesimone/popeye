@@ -27,68 +27,6 @@ def test_randomize_voxels():
     nt.assert_true(set(yi) == set(rand_yi))
     nt.assert_true(set(zi) == set(rand_zi))
     
-
-def test_generate_coordinate_matrices():
-    
-    # set some dummy display parameters
-    pixels_across = 100
-    pixels_down = 100
-    ppd = 1.0
-    scale_factor = 1.0
-    
-    # generate coordinates
-    deg_x, deg_y = utils.generate_coordinate_matrices(pixels_across,pixels_down,ppd,scale_factor)
-    
-    # assert
-    nt.assert_true(np.sum(deg_x[0,0:50]) == np.sum(deg_x[0,50::])*-1)
-    nt.assert_true(np.sum(deg_y[0:50,0]) == np.sum(deg_y[50::,0])*-1)
-    
-    # try the same with an odd number of pixels
-    pixels_across = 101
-    pixels_down = 101
-    
-    # generate coordinates
-    deg_x, deg_y = utils.generate_coordinate_matrices(pixels_across,pixels_down,ppd,scale_factor)
-    
-    # assert
-    nt.assert_true(np.sum(deg_x[0,0:50]) == np.sum(deg_x[0,50::])*-1)
-    nt.assert_true(np.sum(deg_y[0:50,0]) == np.sum(deg_y[50::,0])*-1)
-    
-    # try with another rescaling factor
-    scale_factor = 0.5
-    
-    # get the horizontal and vertical coordinate matrices
-    deg_x, deg_y = utils.generate_coordinate_matrices(pixels_across,pixels_down,ppd,scale_factor)
-    
-    # assert
-    nt.assert_true(np.sum(deg_x[0,0:50]) == np.sum(deg_x[0,50::])*-1)
-    nt.assert_true(np.sum(deg_y[0:50,0]) == np.sum(deg_y[50::,0])*-1)
-
-
-def test_resample_stimulus():
-    
-    # set the downsampling rate
-    scale_factor = 0.5
-    
-    # set the path to data
-    data_path = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
-    
-    # load the datasets
-    stimulus = np.load('%s/sample_stimulus.npy' %(data_path))
-    
-    # downsample the stimulus by 50%
-    stimulus_coarse = utils.resample_stimulus(stimulus,scale_factor)
-    
-    # grab the stimulus dimensions
-    stim_dims = np.shape(stimulus)
-    stim_coarse_dims = np.shape(stimulus_coarse)
-    
-    # assert
-    nt.assert_true(stim_coarse_dims[0]/stim_dims[0] == scale_factor)
-    nt.assert_true(stim_coarse_dims[1]/stim_dims[1] == scale_factor)
-    nt.assert_true(stim_coarse_dims[2] == stim_dims[2])
-    
-    
 def test_zscore():
     
     x = np.array([[1, 1, 3, 3],
