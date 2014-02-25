@@ -111,39 +111,32 @@ def test_gaussian_fit(stimulus):
     
     # load the datasets
     response = np.load('%s/sample_response.npy' %(data_path))
+    response = response[:,stimulus.clip_number::]
     estimate = np.load('%s/sample_estimate.npy' %(data_path))
-    
-    # initialize the gaussian model
-    prf_model = prf.GaussianModel(stimulus)
     
     # set up bounds for the grid search
     bounds = ((-10,10),(-10,10),(0.25,5.25),(-4,4))
     
-    for voxel in np.arange(0,5):
+    # initialize the gaussian model
+    prf_model = prf.GaussianModel(stimulus)
+    
+    # fit the model
+    prf_fits = prf_model.fit(response, bounds, prf.error_function, utils.zscore)
+    
+    # check the results against the stored values
+    for voxel in np.arange(len(prf_fits)):
         
-        # clean the data up
-        ts_voxel = response[voxel, stimulus.clip_number::]
-        ts_voxel = utils.zscore(ts_voxel)
+        prf_fit = prf_fits[voxel][0]
+        voxel_ind = prf_fits[voxel][1]
         
-        # initialize the fit
-        prf_fit = prf_model.fit(ts_voxel, bounds, prf.error_function)
+        test_results = np.round(np.array([prf_fit.x, prf_fit.y, prf_fit.sigma, prf_fit.hrf_delay]),2)
         
-        # do the coarse search
-        x0, y0, s0, h0 = prf_fit.grid_search()
-        
-        # do the fine search
-        x, y, sigma, hrf_delay, err = prf_fit.gradient_descent(x0, y0, s0, h0)
-                
-        # grab the known pRF estimate for the sample data
-        gold_standard = np.round(estimate[voxel,:],3)
-        
-        # package some of the results for comparison with known results
-        test_results = np.round(np.array([x,y,sigma,hrf_delay,err]),3)
+        gold_standard = np.round(estimate[voxel,:-1],2)
         
         # assert equivalence
         nt.assert_true(np.any(gold_standard == test_results))
         
-
+    
 
 
 
