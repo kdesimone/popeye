@@ -71,7 +71,7 @@ class Stimulus(object):
         self.roll_number = -2
         
         # load the stimulus assuming npy format
-        self.stim_arr = self.load_stimulus_file(self.stim_path)
+        self.stim_arr = self.load_stimulus()
         
         # trim the stimulus, rotate it in time, and binarize it
         self.stim_arr = self.stim_arr[:, :, self.clip_number::]
@@ -85,18 +85,22 @@ class Stimulus(object):
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
         # generate the coordinate matrices
-        self.deg_x, self.deg_y = self.coordinate_matrices(1.0)
+        self.deg_x, self.deg_y = self.coordinate_matrices()
         
         # generate the coarse arrays
         self.deg_x_coarse, self.deg_y_coarse = self.coordinate_matrices(self.scale_factor)
-        self.stim_arr_coarse = self.resample_stimulus(self.scale_factor)
+        self.stim_arr_coarse = self.resample_stimulus()
         self.stim_arr_coarse[self.stim_arr_coarse>0] = 1
         
-        def coordinate_matrices(self, scale_factor):
-            
-            return generate_coordinate_matrices(self.pixels_across, self.pixels_down, scale_factor)
+    def coordinate_matrices(self, scale_factor=1):
         
-        def resample_stimulus(self, scale_factor):
-            
-            return resample_stimulus(self.scale_factor)
+        return generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, scale_factor)
+    
+    def resample_stimulus(self):
+        
+        return resample_stimulus(self.stim_arr,self.scale_factor)
+    
+    def load_stimulus(self):
+        
+        return load_stimulus_file(self.stim_path)
         
