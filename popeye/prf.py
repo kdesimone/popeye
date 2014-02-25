@@ -12,7 +12,6 @@ from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
 
-import popeye.estimation as pest
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastPrediction
@@ -172,8 +171,8 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr):
         
     return error
 
-def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,deg_x,deg_y,
-                                     stim_arr):
+def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,
+                                     deg_x,deg_y,stim_arr):
     """ 
     An adaptive brute force grid-search to generate a ball-park pRF estimate for
     fine tuning via a gradient descent error minimization.
@@ -224,10 +223,10 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,deg_x,deg
         
         # get a fit estimate by sparsely sampling the 4-parameter space
         phat = brute(error_function,
-                 args=(response_ts, deg_x, deg_y, stim_arr),
-                 ranges=bounds,
-                 Ns=5,
-                 finish=fmin_powell)
+                     args=(response_ts, deg_x, deg_y, stim_arr),
+                     ranges=bounds,
+                     Ns=5,
+                     finish=fmin_powell)
                  
         # recompute the grid-search bounds by halving the sampling space
         epsilon /= 2.0
@@ -253,7 +252,7 @@ def gradient_descent_search(x, y, sigma, hrf_delay,
                     full_output=True,
                     disp=False)
 
-    return x, y, sigma, hrf_delay, err
+    return x, y, sigma, hrf_delay
 
 class GaussianModel(PopulationModel):
     
@@ -266,8 +265,8 @@ class GaussianModel(PopulationModel):
         # this is a weird notation
         PopulationModel.__init__(self, stimulus)
         
-    def fit(self, data, bounds, error_function, norm_func=utils.zscore):
-        """ Fit method of the DTI model class
+    def fit(self, data, bounds, error_function, norm_func=utils.zscore, mask=None):
+        """ Fit method of the GaussianModel class
         
         Parameters
         ----------
@@ -279,10 +278,27 @@ class GaussianModel(PopulationModel):
             should be analyzed that has the shape data.shape[-1]
         """
         
+        if mask is not None:
+            # Make sure it's boolean, so that it can be used to mask
+            mask = np.array(mask, dtype=bool, copy=False)
+        else:
+            # if no mask is specified, create on the same size as the functional
+            # data minus the time dimension
+            mask = np.ones(data.shape[:-1])
+        
+        # get the indices we wish to fit
+        indices_in_mask = zip(*np.nonzero(mask))
+        
+        # normalize the data
         self.norm_func = norm_func
         normed_data = self.norm_func(data)
         
-        return GaussianFit(self, normed_data, bounds, error_function)
+        # fit it
+        fits = []
+        for ind in indices_in_mask:
+            fits.append((GaussianFit(self, normed_data[ind], bounds, error_function),ind))
+        
+        return fits
         
 class GaussianFit(object):
     
@@ -296,6 +312,10 @@ class GaussianFit(object):
         self.data = data
         self.bounds = bounds
         self.error_function = error_function
+        
+        # fit it
+        self.x0, self.y0, self.s0, self.h0 = self.grid_search()
+        self.x, self.y, self.sigma, self.hrf_delay = self.gradient_descent()
         
         return None
     
@@ -321,9 +341,9 @@ class GaussianFit(object):
                                                 self.model.stimulus.deg_y_coarse,
                                                 self.model.stimulus.stim_arr_coarse)
     
-    def gradient_descent(self, x, y, sigma, hrf_delay):
+    def gradient_descent(self):
         
-        return gradient_descent_search(x, y, sigma, hrf_delay,
+        return gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
                                        self.error_function,
                                        self.data, 
                                        self.model.stimulus.deg_x,
