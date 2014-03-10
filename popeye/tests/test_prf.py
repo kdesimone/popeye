@@ -7,6 +7,21 @@ import nose.tools as nt
 import popeye.utilities as utils
 import popeye.prf as prf
 from popeye.base import PopulationModel, PopulationFit
+from popeye.stimulus import Stimulus
+import popeye.estimation as pest
+
+# Make these global for this test-file, since we are going to reuse them in a
+# couple of places: 
+# set the path to data
+data_path = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
+
+# load the datasets
+response = np.load('%s/sample_response.npy' %(data_path))
+estimate = np.load('%s/sample_estimate.npy' %(data_path))
+# Initalize the stimulus object:
+stimulus = Stimulus('%s/sample_stimulus.npy' %(data_path),
+                    24, 24, 1)
+
 
 def test_double_gamma_hrf():
     """
@@ -32,23 +47,15 @@ def test_double_gamma_hrf():
     nt.assert_almost_equal(hrf_pos, 80.01, 2)
     nt.assert_almost_equal(hrf_neg, 80.11, 2)
     
-def test_error_function(stimulus):
+def test_error_function():
     """
     Test voxel-wise prf estimation function in popeye.estimation 
     using the stimulus and BOLD time-series data that ship with the 
     popeye installation.
     """
     
-    # set the path to data
-    data_path = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
-    
-    # load the datasets
-    response = np.load('%s/sample_response.npy' %(data_path))
-    estimate = np.load('%s/sample_estimate.npy' %(data_path))
-    
-    
     # grab a voxel's time-series and z-score it
-    ts_voxel = response[0,stimulus.clip_number::]
+    ts_voxel = response[0, stimulus.clip_number::]
     ts_voxel = utils.zscore(ts_voxel)
     
     # compute the error using the results of a known pRF estimation
@@ -65,7 +72,7 @@ def test_error_function(stimulus):
     npt.assert_almost_equal(gold_standard, test_results)
 
 
-def test_adapative_brute_force_grid_search(stimulus):
+def test_adapative_brute_force_grid_search():
     """
     Test voxel-wise prf estimation function in popeye.estimation 
     using the stimulus and BOLD time-series data that ship with the 
@@ -87,12 +94,12 @@ def test_adapative_brute_force_grid_search(stimulus):
     
     # compute the initial guess with the adaptive brute-force grid-search
     x0, y0, s0, hrf0 = pest.adaptive_brute_force_grid_search(bounds,
-                                                             1,
-                                                             3,
-                                                             ts_voxel,
-                                                             stimulus.deg_x_coarse,
-                                                             stimulus.deg_y_coarse,
-                                                             stimulus.stim_arr_coarse)
+                                                        1,
+                                                        3,
+                                                        ts_voxel,
+                                                        stimulus.deg_x_coarse,
+                                                        stimulus.deg_y_coarse,
+                                                        stimulus.stim_arr_coarse)
                                                              
     # grab the known pRF estimate for the sample data
     gold_standard = np.array([ 8.446,  2.395,  0.341, -0.777])
@@ -104,15 +111,8 @@ def test_adapative_brute_force_grid_search(stimulus):
     npt.almost_equal(np.any(gold_standard == test_results))
     
 
-def test_gaussian_fit(stimulus):
-    
-    # set the path to data
-    data_path = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
-    
-    # load the datasets
-    response = np.load('%s/sample_response.npy' %(data_path))
-    estimate = np.load('%s/sample_estimate.npy' %(data_path))
-    
+def test_gaussian_fit():
+       
     # initialize the gaussian model
     prf_model = prf.GaussianModel(stimulus)
     
