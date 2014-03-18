@@ -14,13 +14,13 @@ from scipy.misc import imresize
 
 def generate_shared_array(unsharedArray,dataType):
     """Creates synchronized shared arrays from numpy arrays.
-
+        
     The function takes a numpy array `unsharedArray` and returns a shared
     memory object, `sharedArray_mem`.  The user also specifies the data-type of
     the values in the array with the `dataType` argument.  See
     multiprocessing.Array and ctypes for details on shared memory arrays and
     the data-types.
-    
+        
     Parameters
     ----------
     unsharedArray : ndarray
@@ -73,8 +73,6 @@ def resample_stimulus(stim_arr,scale_factor):
     resampledStim = np.zeros((dims[0]*scale_factor,dims[1]*scale_factor,dims[2]))
     for tp in range(dims[2]):
         resampledStim[:,:,tp] = imresize(stim_arr[:,:,tp],scale_factor)
-    
-    resampledStim[resampledStim>0] = 1
     
     return resampledStim.astype('short')
     
