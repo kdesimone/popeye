@@ -59,8 +59,8 @@ def double_gamma_hrf(delay):
     scale = 1
     hrf = scale*( ( ( t ** (alpha_1 - 1 ) * beta_1 ** alpha_1 *
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-        ( ( t ** (alpha_2 - 1 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
-          /gamma( alpha_2 ) ) )
+                  ( ( t ** (alpha_2 - 1 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
+                      /gamma( alpha_2 ) ) )
             
     return hrf
 
@@ -308,7 +308,7 @@ class GaussianFit(object):
     
     def __init__(self, model, data, bounds, error_function):
         
-        self.model = model
+        self.model = model # a model object, as in GaussianModel(stimulus)
         self.data = data
         self.bounds = bounds
         self.error_function = error_function
@@ -327,9 +327,10 @@ class GaussianFit(object):
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse)
     
-    def hires_model_ts(self, x, y, sigma, hrf_delay):
+    @property
+    def hires_model_ts(self):
         
-        return compute_model_ts(x, y, sigma, hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr)
@@ -350,11 +351,13 @@ class GaussianFit(object):
                                        self.model.stimulus.deg_y,
                                        self.model.stimulus.stim_arr)
     
-    def compute_fit_stats(self, model_ts):
+    @property
+    def fit_stats(self):
         
-        return linregress(self.data, model_ts)
+        return linregress(self.data, self.hires_model_ts)
     
-    def rss(self, model_ts):
+    @property
+    def rss(self):
         
-        return np.sum((self.data - model_ts)**2)
+        return np.sum((self.data - self.hires_model_ts)**2)
     
