@@ -57,7 +57,7 @@ def load_stimulus_file(stim_path):
 class Stimulus(object):
     """ Abstract class for stimulus models
     """
-    def __init__(self, stim_path, viewing_distance, screen_width, scale_factor):
+    def __init__(self, stim_path, viewing_distance, screen_width, scale_factor, clip_number=0, roll_number=0):
         """
         
         """
@@ -67,8 +67,8 @@ class Stimulus(object):
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
         self.scale_factor = scale_factor
-        self.clip_number = 10
-        self.roll_number = -2
+        self.clip_number = clip_number
+        self.roll_number = roll_number
         
         # load the stimulus assuming npy format
         self.stim_arr = self.load_stimulus()
