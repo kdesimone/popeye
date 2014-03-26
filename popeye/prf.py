@@ -16,7 +16,7 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastPrediction
 
-def double_gamma_hrf(delay):
+def double_gamma_hrf(delay,TR):
     """
     The double-gamma hemodynamic reponse function (HRF) used to convolve with
     the stimulus time-series.
@@ -30,8 +30,11 @@ def double_gamma_hrf(delay):
     
     Parameters
     ----------
-    delay : int
+    delay : float
         The delay of the HRF peak and under-shoot.
+    
+    TR : float
+        The length of the repetition time in seconds.
         
         
     Returns
@@ -49,17 +52,17 @@ def double_gamma_hrf(delay):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 5.0+delay
+    alpha_1 = 6.0/TR+delay/TR
     beta_1 = 1.0
     c = 0.2
-    alpha_2 = 15.0+delay
+    alpha_2 = 16.0/TR+delay/TR
     beta_2 = 1.0
     
-    t = np.arange(0,33)
+    t = np.arange(0,33/TR,TR)
     scale = 1
-    hrf = scale*( ( ( t ** (alpha_1 - 1 ) * beta_1 ** alpha_1 *
+    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 - 1 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
+                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
                       /gamma( alpha_2 ) ) )
             
     return hrf
