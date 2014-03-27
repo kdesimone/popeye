@@ -16,6 +16,38 @@ import nibabel
 
 def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1):
     
+    """Creates coordinate matrices for representing the visual field in terms
+       of degrees of visual angle.
+       
+    This function takes the screen dimensions, the pixels per degree, and a
+    scaling factor in order to generate a pair of ndarrays representing the
+    horizontal and vertical extents of the visual display in degrees of visual
+    angle.
+    
+    Parameters
+    ----------
+    pixels_across : int
+        The number of pixels along the horizontal extent of the visual display.
+    pixels_down : int
+        The number of pixels along the vertical extent of the visual display.
+    ppd: float
+        The number of pixels that spans 1 degree of visual angle.  This number
+        is computed using the display width and the viewing distance.  See the
+        config.init_config for details. 
+    scale_factor : float
+        The scale factor by which the stimulus is resampled.  The scale factor
+        must be a float, and must be greater than 0.
+        
+    Returns
+    -------
+    deg_x : ndarray
+        An array representing the horizontal extent of the visual display in
+        terms of degrees of visual angle.
+    deg_y : ndarray
+        An array representing the vertical extent of the visual display in
+        terms of degrees of visual angle.
+    """
+    
     [X,Y] = np.meshgrid(np.arange(np.round(pixels_across*scale_factor)),
                         np.arange(np.round(pixels_down*scale_factor)))
                         
@@ -29,6 +61,30 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     return deg_x, deg_y
     
 def resample_stimulus(stim_arr, scale_factor=0.05):
+    
+    """Resamples the visual stimulus
+    
+    The function takes an ndarray `stim_arr` and resamples it by the user
+    specified `scale_factor`.  The stimulus array is assumed to be a three
+    dimensional ndarray representing the stimulus, in screen pixel coordinates,
+    over time.  The first two dimensions of `stim_arr` together represent the
+    exent of the visual display (pixels) and the last dimensions represents
+    time (TRs).
+    
+    Parameters
+    ----------
+    stim_arr : ndarray
+        Array_like means all those objects -- lists, nested lists, etc. --
+        that can be converted to an array.
+    scale_factor : float
+        The scale factor by which the stimulus is resampled.  The scale factor
+        must be a float, and must be greater than 0.
+        
+    Returns
+    -------
+    resampledStim : ndarray
+        An array that is resampled according to the user-specified scale factor.
+    """
     
     dims = np.shape(stim_arr)
     
