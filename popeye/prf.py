@@ -67,7 +67,7 @@ def double_gamma_hrf(delay,TR):
             
     return hrf
 
-def compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
+def compute_model_ts(x, y, sigma, hrf_delay, tr_length, deg_x, deg_y,
                     stim_arr, norm_func=utils.zscore):
     
     # otherwise generate a prediction
@@ -79,7 +79,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
                                  sigma)
     
     # compute the hrf
-    hrf = double_gamma_hrf(hrf_delay)
+    hrf = double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve and trim
     model_ts = np.convolve(ts_stim, hrf)
@@ -91,7 +91,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
     return model_ts
 
 
-def error_function(parameters, response_ts, deg_x, deg_y, stim_arr):
+def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
     """
     The objective function that yields a minimizeable error between the
     predicted and actual BOLD time-series.
@@ -133,6 +133,9 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr):
     
     stim_arr: ndarray
         The binarized array representing the visual stimulus.
+    
+    tr_length: float
+        The length of the repetition time in seconds.
         
     Returns
     -------
@@ -163,7 +166,7 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr):
         return np.inf
         
     # otherwise generate a prediction
-    model_ts = compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y, stim_arr)
+    model_ts = compute_model_ts(x, y, sigma, hrf_delay, tr_length, deg_x, deg_y, stim_arr)
     
     # compute the RSS
     error = np.sum((model_ts-response_ts)**2)
@@ -174,8 +177,8 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr):
         
     return error
 
-def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,
-                                     deg_x,deg_y,stim_arr):
+def adaptive_brute_force_grid_search(bounds, epsilon, rounds, response_ts,
+                                     deg_x, deg_y, stim_arr, tr_length):
     """ 
     An adaptive brute force grid-search to generate a ball-park pRF estimate for
     fine tuning via a gradient descent error minimization.
@@ -226,10 +229,10 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,
         
         # get a fit estimate by sparsely sampling the 4-parameter space
         phat = brute(error_function,
-                     args=(response_ts, deg_x, deg_y, stim_arr),
+                     args=(response_ts, deg_x, deg_y, stim_arr, tr_length),
                      ranges=bounds,
                      Ns=5,
-                     finish=fmin_powell)
+                     finish=None)
                  
         # recompute the grid-search bounds by halving the sampling space
         epsilon /= 2.0
@@ -245,13 +248,13 @@ def adaptive_brute_force_grid_search(bounds,epsilon,rounds,response_ts,
     
     return x, y, sigma, hrf_delay
 
-def gradient_descent_search(x, y, sigma, hrf_delay,
+def gradient_descent_search(x, y, sigma, hrf_delay, tr_length,
                             error_function, response_ts, 
                             deg_x, deg_y, stim_arr):
                             
     [x, y, sigma, hrf_delay], err,  _, _, _, warnflag =\
         fmin_powell(error_function,(x, y, sigma, hrf_delay),
-                    args=(response_ts,deg_x,deg_y,stim_arr),
+                    args=(response_ts,deg_x,deg_y,stim_arr, tr_length),
                     full_output=True,
                     disp=False)
 
@@ -268,7 +271,7 @@ class GaussianModel(PopulationModel):
         # this is a weird notation
         PopulationModel.__init__(self, stimulus)
         
-    def fit(self, data, bounds, error_function, norm_func=utils.zscore, mask=None):
+    def fit(self, data, bounds, tr_length, error_function, norm_func=utils.zscore, mask=None):
         """ Fit method of the GaussianModel class
         
         Parameters
@@ -299,7 +302,7 @@ class GaussianModel(PopulationModel):
         # fit it
         fits = []
         for ind in indices_in_mask:
-            fits.append((GaussianFit(self, normed_data[ind], bounds, error_function),ind))
+            fits.append((GaussianFit(self, normed_data[ind], bounds, tr_length, error_function),ind))
         
         return fits
         
@@ -309,11 +312,12 @@ class GaussianFit(object):
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, model, data, bounds, error_function):
+    def __init__(self, model, data, bounds, tr_length, error_function):
         
         self.model = model # a model object, as in GaussianModel(stimulus)
         self.data = data
         self.bounds = bounds
+        self.tr_length = tr_length
         self.error_function = error_function
         
         # fit it
@@ -322,10 +326,11 @@ class GaussianFit(object):
         
         return None
     
-    def lowres_model_ts(self, x, y, sigma, hrf_delay):
+    @property
+    def lowres_model_ts(self, x, y, sigma, hrf_delay, tr_length):
         
         
-        return compute_model_ts(x, y, sigma, hrf_delay,
+        return compute_model_ts(x, y, sigma, hrf_delay, self.tr_length,
                                 self.model.stimulus.deg_x_coarse,
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse)
@@ -333,7 +338,7 @@ class GaussianFit(object):
     @property
     def hires_model_ts(self):
         
-        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr)
@@ -343,11 +348,13 @@ class GaussianFit(object):
         return adaptive_brute_force_grid_search(self.bounds, 1, 3, self.data,
                                                 self.model.stimulus.deg_x_coarse,
                                                 self.model.stimulus.deg_y_coarse,
-                                                self.model.stimulus.stim_arr_coarse)
+                                                self.model.stimulus.stim_arr_coarse,
+                                                self.tr_length)
     
     def gradient_descent(self):
         
         return gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
+                                       self.tr_length,
                                        self.error_function,
                                        self.data, 
                                        self.model.stimulus.deg_x,
