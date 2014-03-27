@@ -414,13 +414,14 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
 
 def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, stim_ecc):
     
-    
+    # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
     deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
     
-    # initialize the stimulus
+    # initialize the stimulus array
     bar_stimulus = np.zeros((pixels_down, pixels_across, len(thetas)*num_steps))
     
+    # initialize a counter
     tr_num = 0
     
     # main loop
@@ -429,17 +430,21 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
         # find the starting position and trajectory
         theta_rad = theta * np.pi/180
         
-        start_pos = [-np.cos(theta_rad)*stim_ecc,np.sin(theta_rad)*stim_ecc]
-        end_pos = 2*stim_ecc*np.array([np.cos(theta_rad), -np.sin(theta_rad)])
+        # get the starting point and trajectory
+        start_pos = np.array([-np.cos(theta_rad)*stim_ecc, np.sin(theta_rad)*stim_ecc])
+        end_pos = np.array([np.cos(theta_rad)*stim_ecc, -np.sin(theta_rad)*stim_ecc])
         run_and_rise = end_pos - start_pos;
         
         # step through each position along the trajectory
         for step in np.arange(0,num_steps):
             
             # get the position of the bar at each step
-            xy0 = run_and_rise * step/(num_steps-1) + start_pos
+            xy0 = run_and_rise * step/num_steps + start_pos
             
+            # generate the gaussian
             Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],1,50,theta)
+            
+            # store and iterate
             bar_stimulus[:,:,tr_num] = Z
             
             tr_num += 1
