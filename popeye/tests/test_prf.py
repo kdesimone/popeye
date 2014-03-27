@@ -6,7 +6,9 @@ import nose.tools as nt
 
 import popeye.utilities as utils
 import popeye.prf as prf
+
 from popeye.base import PopulationModel, PopulationFit
+from popeye.stimulus import Stimulus
 
 def test_double_gamma_hrf():
     """
@@ -102,42 +104,47 @@ def test_adapative_brute_force_grid_search(stimulus):
     
     # assert
     npt.almost_equal(np.any(gold_standard == test_results))
-    
 
-def test_gaussian_fit(stimulus):
+def test_gaussian_fit():
     
-    # set the path to data
-    data_path = os.path.join(os.path.expanduser('~'), '.popeye/popeye')
+    # stimulus features
+    pixels_across = 800 
+    pixels_down = 600
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,45)
+    num_steps = 30
+    ecc = 10
+    tr_length = 1.5
     
-    # load the datasets
-    response = np.load('%s/sample_response.npy' %(data_path))
-    response = response[:,stimulus.clip_number::]
-    estimate = np.load('%s/sample_estimate.npy' %(data_path))
+    # create the sweeping bar stimulus in memory
+    bar = utils.simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    
+    # digitize the bar
+    bar_digital = np.zeros_like(bar, dtype='short')
+    bar_digital[bar>0.33] = 1
+    
+    # instantiate an instance of the Stimulus class
+    stimulus = Stimulus(bar_digital, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
-    bounds = ((-10,10),(-10,10),(0.25,5.25),(-4,4))
+    bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
     
     # initialize the gaussian model
     prf_model = prf.GaussianModel(stimulus)
     
-    # fit the model
-    prf_fits = prf_model.fit(response, bounds, prf.error_function, utils.zscore)
+    # generate a simulated BOLD signal
+    estimate = [0,0,1,0]
+    response = prf.MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
+    hrf = prf.double_gamma_hrf(estimate[3], 1)
+    response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
     
-    # check the results against the stored values
-    for voxel in np.arange(len(prf_fits)):
-        
-        prf_fit = prf_fits[voxel][0]
-        voxel_ind = prf_fits[voxel][1]
-        
-        test_results = np.round(np.array([prf_fit.x, prf_fit.y, prf_fit.sigma, prf_fit.hrf_delay]),2)
-        
-        gold_standard = np.round(estimate[voxel,:-1],2)
-        
-        # assert equivalence
-        nt.assert_true(np.any(gold_standard == test_results))
-        
+    # create some noise and add it to the response
+    rand_ts = np.random.randn(len(response))/5
+    bold = utils.zscore(response + rand_ts)
     
-
-
+    # fit the response
+    prf_fit = prf.GaussianFit(prf_model, bold, bounds, 1, prf.error_function)
+    
 
 
