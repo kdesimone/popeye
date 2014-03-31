@@ -115,7 +115,7 @@ def test_gaussian_fit():
     thetas = np.arange(0,360,45)
     num_steps = 30
     ecc = 10
-    tr_length = 1.5
+    tr_length = 1.0
     
     # create the sweeping bar stimulus in memory
     bar = utils.simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
@@ -134,17 +134,21 @@ def test_gaussian_fit():
     prf_model = prf.GaussianModel(stimulus)
     
     # generate a simulated BOLD signal
-    estimate = [0,0,1,0]
+    estimate = [1, 1, 0.5, -0.25]
     response = prf.MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
     hrf = prf.double_gamma_hrf(estimate[3], 1)
     response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
     
     # create some noise and add it to the response
-    rand_ts = np.random.randn(len(response))/5
-    bold = utils.zscore(response + rand_ts)
+    # noise = np.random.randn(len(response))/5
+    bold = utils.zscore(response)
     
     # fit the response
     prf_fit = prf.GaussianFit(prf_model, bold, bounds, 1, prf.error_function)
     
-
-
+    # assert equivalence
+    nt.assert_almost_equal(prf_fit.x,estimate[0])
+    nt.assert_almost_equal(prf_fit.y,estimate[1])
+    nt.assert_almost_equal(prf_fit.sigma,estimate[2])
+    nt.assert_almost_equal(prf_fit.hrf_delay,estimate[3])
+    
