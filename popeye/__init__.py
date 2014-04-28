@@ -7,4 +7,4 @@ from .version import  __version__
 
 from . import stimulus
 from . import utilities
-from . import prf
+from . import gaussian
