@@ -6,9 +6,8 @@ import nose.tools as nt
 
 import popeye.utilities as utils
 import popeye.prf as prf
-
 from popeye.base import PopulationModel, PopulationFit
-from popeye.stimulus import Stimulus
+from popeye.stimulus import Stimulus, simulate_bar_stimulus
 
 def test_double_gamma_hrf():
     """
@@ -118,14 +117,10 @@ def test_gaussian_fit():
     tr_length = 1.0
     
     # create the sweeping bar stimulus in memory
-    bar = utils.simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
-    
-    # digitize the bar
-    bar_digital = np.zeros_like(bar, dtype='short')
-    bar_digital[bar>0.33] = 1
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # instantiate an instance of the Stimulus class
-    stimulus = Stimulus(bar_digital, viewing_distance, screen_width, 0.05, 0, 0)
+    stimulus = Stimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
     bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
@@ -133,18 +128,20 @@ def test_gaussian_fit():
     # initialize the gaussian model
     prf_model = prf.GaussianModel(stimulus)
     
-    # generate a simulated BOLD signal
-    estimate = [1, 1, 0.5, -0.25]
+    # generate a random pRF estimate
+    estimate = []
+    estimate.append(np.random.uniform(bounds[0][0],bounds[0][1]))
+    estimate.append(np.random.uniform(bounds[1][0],bounds[1][1]))
+    estimate.append(np.random.uniform(bounds[2][0],bounds[2][1]))
+    estimate.append(np.random.uniform(bounds[3][0],bounds[3][1]))
+    
+    # generate the modeled BOLD response`
     response = prf.MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
     hrf = prf.double_gamma_hrf(estimate[3], 1)
     response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
     
-    # create some noise and add it to the response
-    # noise = np.random.randn(len(response))/5
-    bold = utils.zscore(response)
-    
     # fit the response
-    prf_fit = prf.GaussianFit(prf_model, bold, bounds, 1, prf.error_function)
+    prf_fit = prf.GaussianFit(prf_model, response, bounds, tr_length)
     
     # assert equivalence
     nt.assert_almost_equal(prf_fit.x,estimate[0])
