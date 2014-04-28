@@ -3,7 +3,7 @@
 """ Classes and functions for fitting population encoding models """
 
 from __future__ import division, print_function, absolute_import
-
+import time
 import warnings
 warnings.simplefilter("ignore")
 
@@ -271,103 +271,55 @@ class GaussianModel(PopulationModel):
         # this is a weird notation
         PopulationModel.__init__(self, stimulus)
         
-    def fit(self, data, bounds, tr_length, error_function, norm_func=utils.zscore, mask=None):
-        """ Fit method of the GaussianModel class
-        
-        Parameters
-        ----------
-        data : array
-            The measured signal from one voxel.
-            
-        mask : array
-            A boolean array used to mark the coordinates in the data that
-            should be analyzed that has the shape data.shape[-1]
-        """
-        
-        if mask is not None:
-            # Make sure it's boolean, so that it can be used to mask
-            mask = np.array(mask, dtype=bool, copy=False)
-        else:
-            # if no mask is specified, create on the same size as the functional
-            # data minus the time dimension
-            mask = np.ones(data.shape[:-1])
-        
-        # get the indices we wish to fit
-        indices_in_mask = zip(*np.nonzero(mask))
-        
-        # normalize the data
-        self.norm_func = norm_func
-        normed_data = self.norm_func(data)
-        
-        # fit it
-        fits = []
-        for ind in indices_in_mask:
-            fits.append((GaussianFit(self, normed_data[ind], bounds, tr_length, error_function),ind))
-        
-        return fits
-        
 class GaussianFit(object):
     
     """
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, model, data, bounds, tr_length, error_function):
+    def __init__(self, data, model, bounds, tr_length, verbose):
         
-        self.model = model # a model object, as in GaussianModel(stimulus)
-        self.data = data
+        tic = time.clock()
+        
         self.bounds = bounds
         self.tr_length = tr_length
-        self.error_function = error_function
+        self.data = data
         
         # fit it
-        self.x0, self.y0, self.s0, self.h0 = self.grid_search()
-        self.x, self.y, self.sigma, self.hrf_delay = self.gradient_descent()
+        self.x0, self.y0, self.s0, self.h0 = adaptive_brute_force_grid_search(self.bounds, 1, 3, self.data,
+                                                                              model.stimulus.deg_x_coarse,
+                                                                              model.stimulus.deg_y_coarse,
+                                                                              model.stimulus.stim_arr_coarse,
+                                                                              self.tr_length)
+                                                                              
+        self.x, self.y, self.sigma, self.hrf_delay = gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
+                                                                             self.tr_length,
+                                                                             error_function,
+                                                                             self.data, 
+                                                                             model.stimulus.deg_x,
+                                                                             model.stimulus.deg_y,
+                                                                             model.stimulus.stim_arr)
+                                                                             
+        # store the modeled timeseries
+        self.model_ts = compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
+                                         model.stimulus.deg_x,
+                                         model.stimulus.deg_y,
+                                         model.stimulus.stim_arr)
         
-        return None
-    
-    @property
-    def lowres_model_ts(self, x, y, sigma, hrf_delay, tr_length):
         
+        # store some fit metrics
+        self.fit_stats = linregress(self.data,self.model_ts)
+        self.rss = np.sum((self.data - self.model_ts)**2)
         
-        return compute_model_ts(x, y, sigma, hrf_delay, self.tr_length,
-                                self.model.stimulus.deg_x_coarse,
-                                self.model.stimulus.deg_y_coarse,
-                                self.model.stimulus.stim_arr_coarse)
-    
-    @property
-    def hires_model_ts(self):
+        toc = time.clock()
         
-        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
-                                self.model.stimulus.deg_x,
-                                self.model.stimulus.deg_y,
-                                self.model.stimulus.stim_arr)
-    
-    def grid_search(self):
-        
-        return adaptive_brute_force_grid_search(self.bounds, 1, 3, self.data,
-                                                self.model.stimulus.deg_x_coarse,
-                                                self.model.stimulus.deg_y_coarse,
-                                                self.model.stimulus.stim_arr_coarse,
-                                                self.tr_length)
-    
-    def gradient_descent(self):
-        
-        return gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
-                                       self.tr_length,
-                                       self.error_function,
-                                       self.data, 
-                                       self.model.stimulus.deg_x,
-                                       self.model.stimulus.deg_y,
-                                       self.model.stimulus.stim_arr)
-    
-    @property
-    def fit_stats(self):
-        
-        return linregress(self.data, self.hires_model_ts)
-    
-    @property
-    def rss(self):
-        
-        return np.sum((self.data - self.hires_model_ts)**2)
-    
+        # print to screen if verbose
+        if verbose:
+            print("%.01f%% DONE  VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d ERROR=%.03d  RVAL=%.02f" 
+                  %(1.0,
+                    1,
+                    2,
+                    3,
+                    toc-tic,
+                    self.rss,
+                    self.fit_stats[2]))
