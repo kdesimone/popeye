@@ -7,6 +7,10 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 
 """
 from __future__ import division
+import ctypes
+
+from multiprocessing import Process, Queue, Array
+from multiprocessing.managers import BaseManager
 
 import numpy as np
 from scipy.misc import imresize
@@ -59,7 +63,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     deg_y += 0.5/(ppd*scale_factor)
     
     return deg_x, deg_y
-    
+
 def resample_stimulus(stim_arr, scale_factor=0.05):
     
     """Resamples the visual stimulus
@@ -107,16 +111,81 @@ def load_stimulus_file(stim_path):
     
     return stim_arr.astype('short')
 
+def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
+    
+    theta = degrees*2*np.pi/360
+    
+    a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
+    b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
+    c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
+    
+    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
+    
+    return Z
+
+def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, 
+                         thetas, num_steps, stim_ecc, blanks=True, threshold = 0.33):
+    
+    # visuotopic stuff
+    ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
+    deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
+    
+    # initialize a counter
+    tr_num = 0
+    
+    # insert blanks
+    if blanks:
+        thetas = list(thetas)
+        thetas.insert(0,-1)
+        thetas.append(-1)
+        
+    # initialize the stimulus array
+    bar_stimulus = np.zeros((pixels_down, pixels_across, len(thetas)*num_steps))
+    
+    # main loop
+    for theta in thetas:
+        
+        if theta != -1:
+            
+            theta_rad = theta * np.pi / 180
+            
+            # get the starting point and trajectory
+            start_pos = np.array([-np.cos(theta_rad)*stim_ecc, np.sin(theta_rad)*stim_ecc])
+            end_pos = np.array([np.cos(theta_rad)*stim_ecc, -np.sin(theta_rad)*stim_ecc])
+            run_and_rise = end_pos - start_pos;
+            
+            # step through each position along the trajectory
+            for step in np.arange(0,num_steps):
+                
+                # get the position of the bar at each step
+                xy0 = run_and_rise * step/num_steps + start_pos
+                
+                # generate the gaussian
+                Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],1,100,theta)
+                
+                # store and iterate
+                bar_stimulus[:,:,tr_num] = Z
+                tr_num += 1
+                
+        else:
+            for step in np.arange(0,num_steps):
+                tr_num += 1
+                
+    
+    bar_digital = np.zeros_like(bar_stimulus)
+    bar_digital[bar_stimulus > threshold] = 1
+    bar_digital = np.short(bar_digital)
+    
+    return bar_digital
+
 
 # This should eventually be VisualStimulus, and there would be an abstract class layer
 # above this called Stimulus that would be generic for n-dimentional feature spaces.
 class Stimulus(object):
-    """ Abstract class for stimulus models
-    """
+    
+    """ Abstract class for stimulus model """
+    
     def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor, clip_number=0, roll_number=0):
-        """
-        
-        """
         
         # absorb the vars
         self.stim_arr = stim_arr
@@ -126,10 +195,11 @@ class Stimulus(object):
         self.clip_number = clip_number
         self.roll_number = roll_number
         
-        # trim the stimulus, rotate it in time, and binarize it
-        self.stim_arr = self.stim_arr[:, :, self.clip_number::]
-        self.stim_arr = np.roll(self.stim_arr, self.roll_number, axis=-1)
-        self.stim_arr[self.stim_arr>0] = 1
+        # trim and rotate stimulus is specified
+        if self.clip_number != 0:
+            self.stim_arr = self.stim_arr[:, :, self.clip_number::]
+        if self.roll_number != 0:
+            self.stim_arr = np.roll(self.stim_arr, self.roll_number, axis=-1)
         
         # ascertain stimulus features
         self.pixels_across = np.shape(self.stim_arr)[1]
@@ -137,23 +207,16 @@ class Stimulus(object):
         self.run_length = np.shape(self.stim_arr)[2]
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
+        # create down-sampled stimulus
+        # self.stim_arr_coarse = self.resampled_stimulus()
+        
         # generate the coordinate matrices
-        self.deg_x, self.deg_y = self.coordinate_matrices()
+        self.deg_x, self.deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
         
-        # generate the coarse arrays
-        self.deg_x_coarse, self.deg_y_coarse = self.coordinate_matrices(self.scale_factor)
-        self.stim_arr_coarse = self.resample_stimulus()
-        self.stim_arr_coarse[self.stim_arr_coarse>0] = 1
+        self.deg_x_coarse, self.deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
-    def coordinate_matrices(self, scale_factor=1):
-        
-        return generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, scale_factor)
-    
-    def resample_stimulus(self):
+    @property
+    def stim_arr_coarse(self):
         
         return resample_stimulus(self.stim_arr,self.scale_factor)
-    
-    def load_stimulus(self):
-        
-        return load_stimulus_file(self.stim_path)
         
