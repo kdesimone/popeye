@@ -11,38 +11,6 @@ import numpy as np
 import nibabel
 from scipy.misc import imresize
 
-def generate_shared_array(unsharedArray,dataType):
-    """Creates synchronized shared arrays from numpy arrays.
-        
-    The function takes a numpy array `unsharedArray` and returns a shared
-    memory object, `sharedArray_mem`.  The user also specifies the data-type of
-    the values in the array with the `dataType` argument.  See
-    multiprocessing.Array and ctypes for details on shared memory arrays and
-    the data-types.
-        
-    Parameters
-    ----------
-    unsharedArray : ndarray
-        Array_like means all those objects -- lists, nested lists, etc. --
-        that can be converted to an array.  We can also refer to
-        variables like `var1`.
-    dataType : ctypes instance
-        The data-type specificed has to be an instance of the ctypes library.
-        See ctypes for details.
-        
-    Returns
-    -------
-    sharedArray : syncrhonized shared array
-        An array that is read/write accessible from multiple processes/threads. 
-    """
-    
-    shared_array_base = Array(dataType,np.prod(np.shape(unsharedArray)))
-    sharedArray = np.ctypeslib.as_array(shared_array_base.get_obj())
-    sharedArray = np.reshape(sharedArray,np.shape(unsharedArray))
-    sharedArray[:] = unsharedArray[:]
-    
-    return sharedArray
-
 def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
