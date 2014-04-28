@@ -6,14 +6,10 @@ though that might change with time.
 
 from __future__ import division
 import sys, os, time
-import ctypes
-from multiprocessing import Process, Queue, Array
 
 import numpy as np
 import nibabel
 from scipy.misc import imresize
-
-from popeye.stimulus import generate_coordinate_matrices
 
 def generate_shared_array(unsharedArray,dataType):
     """Creates synchronized shared arrays from numpy arrays.
@@ -46,7 +42,7 @@ def generate_shared_array(unsharedArray,dataType):
     sharedArray[:] = unsharedArray[:]
     
     return sharedArray
-    
+
 def recast_estimation_results_queue(output,metaData,write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
@@ -398,66 +394,3 @@ def randomize_voxels(voxels):
     randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
     
     return randomized_voxels
-
-
-def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
-
-    theta = degrees*2*np.pi/360
-
-    a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
-    b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
-    c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
-
-    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
-
-    return Z
-
-def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, stim_ecc, blanks=True):
-    
-    # visuotopic stuff
-    ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
-    deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
-    
-    # initialize a counter
-    tr_num = 0
-    
-    # insert blanks
-    if blanks:
-        thetas = list(thetas)
-        thetas.insert(0,-1)
-        thetas.append(-1)
-    
-    # initialize the stimulus array
-    bar_stimulus = np.zeros((pixels_down, pixels_across, len(thetas)*num_steps))
-    
-    # main loop
-    for theta in thetas:
-        
-        if theta != -1:
-            
-            theta_rad = theta * np.pi / 180
-            
-            # get the starting point and trajectory
-            start_pos = np.array([-np.cos(theta_rad)*stim_ecc, np.sin(theta_rad)*stim_ecc])
-            end_pos = np.array([np.cos(theta_rad)*stim_ecc, -np.sin(theta_rad)*stim_ecc])
-            run_and_rise = end_pos - start_pos;
-            
-            # step through each position along the trajectory
-            for step in np.arange(0,num_steps):
-                
-                # get the position of the bar at each step
-                xy0 = run_and_rise * step/num_steps + start_pos
-                
-                # generate the gaussian
-                Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],1,100,theta)
-                
-                # store and iterate
-                bar_stimulus[:,:,tr_num] = Z
-                tr_num += 1
-            
-        else:
-            for step in np.arange(0,num_steps):
-                tr_num += 1
-                
-    
-    return bar_stimulus
