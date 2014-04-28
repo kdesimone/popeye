@@ -188,7 +188,6 @@ class Stimulus(object):
     def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor, clip_number=0, roll_number=0):
         
         # absorb the vars
-        self.stim_arr = stim_arr
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
         self.scale_factor = scale_factor
@@ -197,26 +196,40 @@ class Stimulus(object):
         
         # trim and rotate stimulus is specified
         if self.clip_number != 0:
-            self.stim_arr = self.stim_arr[:, :, self.clip_number::]
+            stim_arr = stim_arr[:, :, self.clip_number::]
         if self.roll_number != 0:
-            self.stim_arr = np.roll(self.stim_arr, self.roll_number, axis=-1)
+            stim_arr = np.roll(stim_arr, self.roll_number, axis=-1)
         
         # ascertain stimulus features
-        self.pixels_across = np.shape(self.stim_arr)[1]
-        self.pixels_down = np.shape(self.stim_arr)[0]
-        self.run_length = np.shape(self.stim_arr)[2]
+        self.pixels_across = np.shape(stim_arr)[1]
+        self.pixels_down = np.shape(stim_arr)[0]
+        self.run_length = np.shape(stim_arr)[2]
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
         # create down-sampled stimulus
-        # self.stim_arr_coarse = self.resampled_stimulus()
+        stim_arr_coarse = resample_stimulus(stim_arr,self.scale_factor)
         
         # generate the coordinate matrices
-        self.deg_x, self.deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
+        deg_x, deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
+        deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
-        self.deg_x_coarse, self.deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
+        # share the arrays via memmap to reduce size
+        self.deg_x = np.memmap('%s%s.npy' %('/tmp/','deg_x'),dtype = np.double, mode = 'w+',shape = np.shape(deg_x))
+        self.deg_x[:] = deg_x[:]
         
-    @property
-    def stim_arr_coarse(self):
+        self.deg_y = np.memmap('%s%s.npy' %('/tmp/','deg_y'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
+        self.deg_y[:] = deg_y[:]
         
-        return resample_stimulus(self.stim_arr,self.scale_factor)
+        self.deg_x_coarse = np.memmap('%s%s.npy' %('/tmp/','deg_x_coarse'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
+        self.deg_x_coarse[:] = deg_x_coarse[:]
+        
+        self.deg_y_coarse = np.memmap('%s%s.npy' %('/tmp/','deg_y_coarse'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
+        self.deg_y_coarse[:] = deg_y_coarse[:]
+        
+        self.stim_arr = np.memmap('%s%s.npy' %('/tmp/','stim_arr'),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr))
+        self.stim_arr[:] = stim_arr[:]
+        
+        self.stim_arr_coarse = np.memmap('%s%s.npy' %('/tmp/','stim_arr_coarse'),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
+        self.stim_arr_coarse[:] = stim_arr_coarse[:]
+        
         
