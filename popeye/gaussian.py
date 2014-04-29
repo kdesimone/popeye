@@ -162,7 +162,7 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
         return np.inf
         
     # if the HRF delay parameter is greater than 4 seconds, abort with an inf
-    if np.abs(hrf_delay) > 4:
+    if np.abs(hrf_delay) > 5:
         return np.inf
         
     # otherwise generate a prediction
@@ -269,7 +269,8 @@ def parallel_fit(args):
     bounds = args[2]
     tr_length = args[3]
     voxel_index = args[4]
-    verbose = args[5]
+    uncorrected_rval = args[5]
+    verbose = args[6]
     
     # fit the data
     fit = GaussianFit(response,
@@ -277,6 +278,7 @@ def parallel_fit(args):
                       bounds,
                       tr_length,
                       voxel_index,
+                      uncorrected_rval,
                       verbose)
     return fit
 
@@ -298,50 +300,65 @@ class GaussianFit(object):
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, data, model, bounds, tr_length, voxel_index, verbose=True):
+    def __init__(self, data, model, bounds, tr_length, voxel_index, uncorrected_rval, verbose=True):
         
         tic = time.clock()
         
+        self.data = utils.zscore(data)
         self.bounds = bounds
         self.tr_length = tr_length
-        self.data = utils.zscore(data)
         self.voxel_index = voxel_index
+        self.uncorrected_rval = uncorrected_rval
+        self.verbose = verbose
         
-        # fit iterations
+        
+        # fit
         self.x0, self.y0, self.s0, self.h0 = adaptive_brute_force_grid_search(self.bounds, 1, 3, self.data,
                                                                               model.stimulus.deg_x_coarse,
                                                                               model.stimulus.deg_y_coarse,
                                                                               model.stimulus.stim_arr_coarse,
                                                                               self.tr_length)
-                                                                              
-        self.x, self.y, self.sigma, self.hrf_delay = gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
-                                                                             self.tr_length,
-                                                                             error_function,
-                                                                             self.data, 
-                                                                             model.stimulus.deg_x,
-                                                                             model.stimulus.deg_y,
-                                                                             model.stimulus.stim_arr)
+        
+        # return the coarse model ts
+        coarse_model_ts = compute_model_ts(self.x0, self.y0, self.s0, self.h0, self.tr_length,
+                                           model.stimulus.deg_x,
+                                           model.stimulus.deg_y,
+                                           model.stimulus.stim_arr)
+        
+        coarse_fit_stats = linregress(self.data, coarse_model_ts)
+        
+        if coarse_fit_stats[2] > self.uncorrected_rval:
+            
+            
+            self.x, self.y, self.sigma, self.hrf_delay = gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
+                                                                                 self.tr_length,
+                                                                                 error_function,
+                                                                                 self.data, 
+                                                                                 model.stimulus.deg_x,
+                                                                                 model.stimulus.deg_y,
+                                                                                 model.stimulus.stim_arr)
                                                                              
-        # store the modeled timeseries
-        self.model_ts = compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
-                                         model.stimulus.deg_x,
-                                         model.stimulus.deg_y,
-                                         model.stimulus.stim_arr)
+            # store the modeled timeseries
+            self.model_ts = compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
+                                             model.stimulus.deg_x,
+                                             model.stimulus.deg_y,
+                                             model.stimulus.stim_arr)
+            
+            
+            # store some fit metric
+            self.fit_stats = linregress(self.data,self.model_ts)
+            self.rss = np.sum((self.data - self.model_ts)**2)
+            
+            toc = time.clock()
+            
+            # print to screen if verbose
+            if self.verbose:
+                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
+                      %(self.voxel_index[0],
+                        self.voxel_index[1],
+                        self.voxel_index[2],
+                        toc-tic,
+                        self.rss,
+                        self.fit_stats[2]))
+            
         
-        
-        # store some fit metrics
-        self.fit_stats = linregress(self.data,self.model_ts)
-        self.rss = np.sum((self.data - self.model_ts)**2)
-        
-        toc = time.clock()
-        
-        # print to screen if verbose
-        if verbose:
-            print("%.01f%% DONE  VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d ERROR=%.03d  RVAL=%.02f" 
-                  %(1.0,
-                    self.voxel_index[0],
-                    self.voxel_index[1],
-                    self.voxel_index[2],
-                    toc-tic,
-                    self.rss,
-                    self.fit_stats[2]))
