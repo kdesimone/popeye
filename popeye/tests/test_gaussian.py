@@ -71,9 +71,6 @@ def test_error_function(stimulus):
                                            stimulus.deg_y,
                                            stimulus.stim_arr,
                                            tr_length)
-                                            
-    # get the precomputed error
-    gold_standard = estimate[0,4]
     
     # assert equal to 3 decimal places
     npt.assert_equal(test_results, 0.0)
@@ -111,7 +108,7 @@ def test_adapative_brute_force_grid_search(stimulus):
     # generate a random pRF estimate
     estimate = [1,1,1,1]
     
-    # generate the modeled BOLD response`
+    # generate the modeled BOLD response
     response = MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
     hrf = gaussian.double_gamma_hrf(estimate[3], 1)
     response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
