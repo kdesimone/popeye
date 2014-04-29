@@ -11,7 +11,7 @@ import numpy as np
 import nibabel
 from scipy.misc import imresize
 
-def recast_estimation_results_queue(output,metaData,write=True):
+def recast_estimation_results(output, grid_parent, write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
     
@@ -21,80 +21,77 @@ def recast_estimation_results_queue(output,metaData,write=True):
     for the `write` parameter is set to False, then the function returns the
     arrays without writing the nifti files to disk.  Otherwise, if `write` is
     True, then the two nifti files are written to disk.
-
+    
     Each voxel contains the following metrics: 
-
+    
         0 x / polar angle
         1 y / eccentricity
         2 sigma
         3 HRF delay
-        4 slope of the model-actual fit
-        5 standard error of the model-actual fit
-        6 correlation of the model-actual fit
-        7 two-tailed p-value of the model-actual fit
+        4 RSS error of the model fit
+        5 correlation of the model fit
         
     Parameters
     ----------
     output : list
-        A collection of multiprocessing.Queue objects, with one object per
-        voxel. 
-    metaData : dict
-        A dictionary containing meta-data about the analysis being performed.
-        For details, see config.py. 
-
+        A list of PopulationFit objects.
+    grid_parent : nibabel object
+        A nibabel object to use as the geometric basis for the statmap.  
+        The grid_parent (x,y,z) dim and pixdim will be used.
+        
     Returns
-    -------
-    cartesFileName : string
+    ------ 
+    cartes_filename : string
         The absolute path of the recasted pRF estimation output in Cartesian
         coordinates. 
-    polarFileName : string
+    plar_filename : string
         The absolute path of the recasted pRF estimation output in polar
-        coordinates.  
-
+        coordinates. 
+        
     """
+    
+    
     # load the gridParent
-    gridParent = nibabel.load(metaData['maskPath'])
-    dims = list(gridParent.get_shape())
-    dims.append(8)
-    pRF_polar = np.zeros(dims)
-    pRF_cartes = np.zeros(dims)
-
+    dims = list(grid_parent.shape)
+    dims = dims[0:3]
+    dims.append(6)
+    
+    # initialize the statmaps
+    polar = np.zeros(dims)
+    cartes = np.zeros(dims)
+    
     # extract the pRF model estimates from the results queue output
-    for job in output:
-        for voxel in job:
-            xi,yi,zi = voxel[0:3]
-            x,y,s,d = voxel[3:7]
-            stats = voxel[7]
-            slope,intercept,rval,pval,stderr = stats[:]
-            pRF_cartes[xi,yi,zi,:] = x,y,s,d,slope,stderr,rval,pval
-            pRF_polar[xi,yi,zi,:] = (np.mod(np.arctan2(x,y),2*np.pi),
-                                np.sqrt(x**2+y**2),s,d,slope,stderr,rval,pval)
-    
+    for fit in output:
+        
+        if fit.__dict__.has_key('rss'):
+        
+            cartes[fit.voxel_index] = (fit.x, 
+                                      fit.y,
+                                      fit.sigma,
+                                      fit.hrf_delay,
+                                      fit.rss,
+                                      fit.fit_stats[2])
+                                 
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
+                                     np.sqrt(fit.x**2+fit.y**2),
+                                     fit.sigma,
+                                     fit.hrf_delay,
+                                     fit.rss,
+                                     fit.fit_stats[2])
+                                 
     # get header information from the gridParent and update for the pRF volume
-    aff = gridParent.get_affine()
-    hdr = gridParent.get_header()
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
     hdr.set_data_shape(dims)
-    voxelDims = list(hdr.get_zooms())
-    voxelDims[-1] = 8
-    hdr.set_zooms(voxelDims)
-
-    # write the files
-    now = time.strftime('%Y%m%d_%H%M%S')
-    nif_polar = nibabel.Nifti1Image(pRF_polar,aff,header=hdr)
-    nif_polar.set_data_dtype('float32')
-    polarFileName = '%s/%s_polar_%s.nii.gz' %(metaData['outputPath'],
-                                              metaData['baseFileName'],now)
-    nif_cartes = nibabel.Nifti1Image(pRF_cartes,aff,header=hdr)
-    nif_cartes.set_data_dtype('float32')
-    cartesFileName = '%s/%s_cartes_%s.nii.gz' %(metaData['outputPath'],
-                                                metaData['baseFileName'],now)
     
-    if write:
-        nibabel.save(nif_polar,polarFileName)
-        nibabel.save(nif_cartes,cartesFileName)
-        return polarFileName,cartesFileName
-    else:
-        return pRF_cartes,pRF_polar
+    # recast as nifti
+    nif_polar = nibabel.Nifti1Image(polar,aff,header=hdr)
+    nif_polar.set_data_dtype('float32')
+   
+    nif_cartes = nibabel.Nifti1Image(cartes,aff,header=hdr)
+    nif_cartes.set_data_dtype('float32')
+    
+    return nif_cartes, nif_polar
 
 def recast_simulation_results_queue(output,funcData,metaData,write=True):
     """
