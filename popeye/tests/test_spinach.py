@@ -2,14 +2,14 @@ import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
 
-import popeye
+from popeye.visual_stimulus import generate_coordinate_matrices
 from popeye.spinach import MakeFastRF, MakeFastRFs, MakeFastPrediction
 
 def test_make_prf():
     xpixels = 100 # simulated screen width
     ypixels = 100 # simulated screen height
     ppd = 1 # simulated visual angle
-    scaleFactor = 1.0 # simulated stimulus resampling rate
+    scale_factor = 1.0 # simulated stimulus resampling rate
     
     xcenter = 0 # x coordinate of the pRF center
     ycenter = 0 # y coordinate of the pRF center
@@ -19,10 +19,10 @@ def test_make_prf():
                    # and a 1 sigma prf centered on (0,0)
                    
     # generate the visuotopic coordinates
-    dx,dy = popeye.utilities.generate_coordinate_matrices(xpixels,
-                                                          ypixels,
-                                                          ppd,
-                                                          scaleFactor)
+    dx,dy = generate_coordinate_matrices(xpixels,
+                                         ypixels,
+                                         ppd,
+                                         scale_factor)
     
     # generate a pRF at (0,0) and 1 sigma wide
     rf = MakeFastRF(dx, dy, xcenter, ycenter, sigma)
@@ -42,37 +42,36 @@ def test_make_stimulus_prediction():
     sigma = 10 # width of the pRF
     
     # generate the visuotopic coordinates
-    dx,dy = popeye.utilities.generate_coordinate_matrices(xpixels,
-                                                          ypixels,
-                                                          ppd,
-                                                          scaleFactor)
+    dx,dy = generate_coordinate_matrices(xpixels,
+                                         ypixels,
+                                         ppd,
+                                         scaleFactor)
     
     timeseries_length = 15 # number of frames to simulate our stimulus array
     
     # initialize the stimulus array
-    stimulus_array = np.zeros((xpixels, ypixels, timeseries_length)).astype(
-                                                                     'short')
+    stim_arr = np.zeros((xpixels, ypixels, timeseries_length)).astype('short')
     
     # make a circular mask appear for the first 5 frames
     xi,yi = np.nonzero(np.sqrt((dx-xcenter)**2 + (dy-ycenter)**2)<sigma)
-    stimulus_array[xi,yi,0:5] = 1
+    stim_arr[xi,yi,0:5] = 1
     
     # make an annulus appear for the next 5 frames
     xi,yi = np.nonzero(np.sqrt((dx-xcenter)**2 + (dy-ycenter)**2)>sigma)
-    stimulus_array[xi,yi,5:10] = 1
+    stim_arr[xi,yi,5:10] = 1
     
     # make a circular mask appear for the next 5 frames
     xi,yi = np.nonzero(np.sqrt((dx-xcenter)**2 + (dy-ycenter)**2)<sigma)
-    stimulus_array[xi,yi,10::] = 1
+    stim_arr[xi,yi,10::] = 1
     
     
     # make the response prediction
     response = MakeFastPrediction(dx,
-                                dy,
-                                stimulus_array,
-                                xcenter,
-                                ycenter,
-                                np.short(sigma))
+                                  dy,
+                                  stim_arr,
+                                  xcenter,
+                                  ycenter,
+                                  np.short(sigma))
                                 
     # make sure the RSS is 0
     step = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0])

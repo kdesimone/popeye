@@ -7,7 +7,7 @@ import nose.tools as nt
 import popeye.utilities as utils
 import popeye.gaussian as gaussian
 from popeye.base import PopulationModel, PopulationFit
-from popeye.stimulus import Stimulus, simulate_bar_stimulus
+from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 from popeye.spinach import MakeFastPrediction
 
 def test_double_gamma_hrf():
@@ -28,7 +28,7 @@ def test_double_gamma_hrf():
     
     npt.assert_almost_equal(diff_1, diff_2, 2)
     
-def test_error_function(stimulus):
+def test_error_function():
     """
     Test voxel-wise gaussian estimation function in popeye.estimation 
     using the stimulus and BOLD time-series data that ship with the 
@@ -49,7 +49,7 @@ def test_error_function(stimulus):
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # instantiate an instance of the Stimulus class
-    stimulus = Stimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
     bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
@@ -76,7 +76,7 @@ def test_error_function(stimulus):
     npt.assert_equal(test_results, 0.0)
 
 
-def test_adapative_brute_force_grid_search(stimulus):
+def test_adapative_brute_force_grid_search():
     """
     Test voxel-wise gaussian estimation function in popeye.estimation 
     using the stimulus and BOLD time-series data that ship with the 
@@ -97,7 +97,7 @@ def test_adapative_brute_force_grid_search(stimulus):
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # instantiate an instance of the Stimulus class
-    stimulus = Stimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
     bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
@@ -146,7 +146,7 @@ def test_gaussian_fit():
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # instantiate an instance of the Stimulus class
-    stimulus = Stimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
     bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))

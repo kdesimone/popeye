@@ -2,13 +2,13 @@ from __future__ import division
 
 import os
 
-import popeye.stimulus as utils
+import popeye.utilities as utils
 import numpy as np
 import numpy.testing as npt
 
 import nose.tools as nt
 
-from popeye.stimulus import generate_coordinate_matrices, resample_stimulus
+from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus
 
 
 def test_generate_coordinate_matrices():
