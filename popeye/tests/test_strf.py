@@ -38,7 +38,7 @@ def test_error_function():
     # stimulus features
     lo_freq = 100 # Hz
     hi_freq = 1000 # Hz
-    fs = 1000 # Hz
+    fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
     time_window = 0.5 # seconds
@@ -94,7 +94,7 @@ def test_ballpark_brute_force():
     # stimulus features
     lo_freq = 100 # Hz
     hi_freq = 1000 # Hz
-    fs = 1000 # Hz
+    fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
     time_window = 0.5 # seconds
@@ -143,7 +143,7 @@ def test_strf_fit():
     
     # stimulus features
     lo_freq = 100 # Hz
-    hi_freq = 10000 # Hz
+    hi_freq = 1000 # Hz
     fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
@@ -163,7 +163,6 @@ def test_strf_fit():
     
     # set up bounds for the grid search
     bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(0,tr_length),(-5,5))
-    epsilon = ((1),(1),(1),(1))
     
     # initialize the gaussian model
     strf_model = strf.SpectrotemporalModel(stimulus)
@@ -181,4 +180,4 @@ def test_strf_fit():
     
     # fit the response
     fit = strf.SpectrotemporalFit(response, strf_model, bounds, tr_length, [0,0,0], 0, False)
-
+    
