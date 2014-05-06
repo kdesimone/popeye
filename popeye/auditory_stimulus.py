@@ -17,21 +17,21 @@ import nibabel
 
 from popeye.base import StimulusModel
 
-def compute_stft(signal, frame_size=2**10, overlap=0.5, window=np.hanning):
+def compute_stft(signal, freq_window, overlap=0.95, window=np.hanning):
     
-    win = window(frame_size)
-    hop_size = int(frame_size - np.floor(overlap * frame_size))
+    win = window(freq_window)
+    hop_size = int(freq_window - np.floor(overlap * freq_window))
     
     # zeros at beginning (thus center of 1st window should be for sample nr. 0)
-    samples = np.append(np.zeros(np.floor(frame_size/2.0)), signal)
+    samples = np.append(np.zeros(np.floor(freq_window/2.0)), signal)
     
     # cols for windowing
-    cols = np.ceil( (len(samples) - frame_size) / float(hop_size)) + 1
+    cols = np.ceil( (len(samples) - freq_window) / float(hop_size)) + 1
     
     # zeros at end (thus samples can be fully covered by frames)
-    samples = np.append(samples, np.zeros(frame_size))
+    samples = np.append(samples, np.zeros(freq_window))
     
-    frames = stride_tricks.as_strided(samples, shape=(cols, frame_size), strides=(samples.strides[0]*hop_size, samples.strides[0])).copy()
+    frames = stride_tricks.as_strided(samples, shape=(cols, freq_window), strides=(samples.strides[0]*hop_size, samples.strides[0])).copy()
     frames *= win
     
     return np.fft.rfft(frames)
@@ -50,19 +50,6 @@ def logscale_stft(stft, sapmling_rate, scale, timebins):
     
     return log_stft
 
-def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
-    
-    theta = deg * pi/180
-    
-    a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
-    b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
-    c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
-    
-    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
-    
-    return Z
-
-
 # This should eventually be VisualStimulus, and there would be an abstract class layer
 # above this called Stimulus that would be generic for n-dimentional feature spaces.
 class AuditoryStimulus(StimulusModel):
@@ -70,7 +57,7 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, tr_length, time_window = 0.1, freq_factor=1.0, sampling_rate=44100, clip_number=0, roll_number=0):
+    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, freq_factor=1.0, sampling_rate=44100, clip_number=0, roll_number=0):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
@@ -82,6 +69,7 @@ class AuditoryStimulus(StimulusModel):
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
         self.clip_number = clip_number 
         self.roll_number = roll_number
+        self.freq_window = freq_window
         
         # trim and rotate stimulus is specified
         if self.clip_number != 0:
@@ -109,7 +97,7 @@ class AuditoryStimulus(StimulusModel):
     
     @auto_attr
     def stft(self):
-        return compute_stft(self.stim_arr)
+        return compute_stft(self.stim_arr, self.freq_window, )
     
     @auto_attr
     def timebins(self):
