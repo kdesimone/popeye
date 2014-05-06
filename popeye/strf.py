@@ -12,6 +12,8 @@ from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
 
+from dipy.core.onetime import auto_attr
+
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastPrediction
@@ -78,57 +80,13 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
     
     return Z
-    
-
-
-def error_function(parameters, response_ts, 
-                   time_coord, freq_coord, spectrogram,
-                   tr_length, num_timepoints, time_window):
-    
-    # unpack the tuple
-    freq_center, freq_sigma, time_sigma, hrf_delay = parameters[:]
-    
-    # if the frequency is out of range, abort with an inf
-    if np.abs(freq_center) > np.floor(np.max(freq_coord))-1:
-        return np.inf
-    if np.abs(freq_sigma) > np.floor(np.max(freq_coord))-1:
-        return np.inf
-    
-    # if the sigma_time is larger than TR, abort with an inf
-    if time_sigma > np.max(time_coord):
-        return np.inf
-        
-    # if the sigma is <= 0, abort with an inf
-    if freq_sigma <= 0:
-        return np.inf
-    if time_sigma <= 0:
-        return np.inf
-        
-    # if the HRF delay parameter is greater than 4 seconds, abort with an inf
-    if np.abs(hrf_delay) > 5:
-        return np.inf
-        
-    # otherwise generate a prediction
-    model_ts = compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
-                                time_coord, freq_coord, spectrogram,
-                                tr_length, num_timepoints, time_window,
-                                norm_func=utils.zscore)
-    
-    # compute the RSS
-    error = np.sum((model_ts-response_ts)**2)
-    
-    # catch NaN
-    if np.isnan(np.sum(error)):
-        return np.inf
-        
-    return error
 
 
 def compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay, 
                      time_coord, freq_coord, spectrogram,
                      tr_length, num_timepoints, time_window,
                      norm_func=utils.zscore):
-    
+                     
     # create the STRF
     g = gaussian_2D(time_coord, freq_coord, 0.5, freq_center, time_sigma, freq_sigma, 0)
     
@@ -167,47 +125,79 @@ def compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
     
     return model
 
-def adaptive_brute_force_grid_search(bounds, epsilon, rounds, response_ts,
-                                     time_coord, freq_coord, spectrogram, 
-                                     tr_length, num_timepoints, window_size):
-                                     
-                                     
-    # set initial pass to 1
-    pass_num = 1
+def error_function(parameters, response, 
+                   time_coord, freq_coord, spectrogram,
+                   tr_length, num_timepoints, time_window):
     
-    # make as many passes as the user specifies in rounds
-    while pass_num <= rounds:
-        
-        print(pass_num)
-        # get a fit estimate by sparsely sampling the 4-parameter space
-        phat = brute(error_function,
-                     args=(response_ts, time_coord, freq_coord, spectrogram, 
-                           tr_length, num_timepoints, window_size),
-                     ranges=bounds,
-                     Ns=5,
-                     finish=None)
-                     
-        # recompute the grid-search bounds by halving the sampling space
-        epsilon /= 2.0
-        bounds = ((phat[0]-epsilon,phat[0]+epsilon),
-                  (phat[1]-epsilon,phat[1]+epsilon),
-                  (phat[2]-epsilon,phat[2]+epsilon),
-                  (phat[3]-epsilon,phat[3]+epsilon))
-                  
-        # iterate the pass variable
-        pass_num += 1
-        
-    freq_center, freq_sigma, time_sigma, hrf_delay = phat[0], phat[1], phat[2], phat[3]
+    # unpack the tuple
+    freq_center, freq_sigma, time_sigma, hrf_delay = parameters[:]
     
+    # if the frequency is out of range, abort with an inf
+    if np.abs(freq_center) > np.floor(np.max(freq_coord))-1:
+        return np.inf
+    if np.abs(freq_sigma) > np.floor(np.max(freq_coord))-1:
+        return np.inf
+    
+    # if the sigma_time is larger than TR, abort with an inf
+    if time_sigma > np.max(time_coord):
+        return np.inf
+        
+    # if the sigma is <= 0, abort with an inf
+    if freq_sigma <= 0:
+        return np.inf
+    if time_sigma <= 0:
+        return np.inf
+        
+    # if the HRF delay parameter is greater than 5 seconds, abort with an inf
+    if np.abs(hrf_delay) > 5:
+        return np.inf
+        
+    # otherwise generate a prediction
+    model_ts = compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
+                                time_coord, freq_coord, spectrogram,
+                                tr_length, num_timepoints, time_window,
+                                norm_func=utils.zscore)
+    
+    # compute the RSS
+    error = np.sum((model_ts-response)**2)
+    
+    # catch NaN
+    if np.isnan(np.sum(error)):
+        return np.inf
+        
+    
+    print(error,(freq_center, freq_sigma, time_sigma, hrf_delay))
+        
+    return error
+
+def brute_force_search(bounds, response,
+                       time_coord, freq_coord, spectrogram, 
+                       tr_length, num_timepoints, time_window):
+    
+    [freq_center, freq_sigma, time_sigma, hrf_delay], err,  _, _ =\
+        brute(error_function,
+              args=(response, time_coord, freq_coord, spectrogram, 
+                    tr_length, num_timepoints, time_window),
+              ranges=bounds,
+              Ns=5,
+              finish=None,
+              full_output=True,
+              disp=None)
+    
+    # return the estimates
     return freq_center, freq_sigma, time_sigma, hrf_delay
 
+
 def gradient_descent_search(freq_center_0, freq_sigma_0, time_sigma_0, hrf_delay_0,
-                            error_function, response_ts, tr_length,
-                            time_coord, freq_coord, spectrogram):
+                            error_function, response,
+                            time_coord, freq_coord, spectrogram,
+                            tr_length, num_timepoints, time_window):
+                            
                             
     [freq_center, freq_sigma, time_sigma, hrf_delay], err,  _, _, _, warnflag =\
         fmin_powell(error_function,(freq_center_0, freq_sigma_0, time_sigma_0, hrf_delay_0),
-                    args=(response_ts, time_coord, freq_coord, spectrogram, tr_length),
+                    args=(response, time_coord, freq_coord, spectrogram,
+                          tr_length, num_timepoints, time_window),
                     full_output=True,
                     disp=False)
                     
@@ -220,26 +210,60 @@ class SpectrotemporalModel(PopulationModel):
     Gaussian population receptive field model.
     """
     
-    def __init__(self, stimulus):
+    def __init__(self, stim_arr):
         
         # this is a weird notation
-        PopulationModel.__init__(self, stimulus)
+        PopulationModel.__init__(self, stim_arr)
 
 
 class SpectrotemporalFit(PopulationFit):
     
-    def __init__(self, data, model, bounds, tr_length, voxel_index, uncorrected_rval, verbose=True):
-        
+    def __init__(self, data, model, bounds, epsilon, tr_length, voxel_index, uncorrected_rval, verbose=True):
         
         self.data = utils.zscore(data)
+        self.model = model
         self.bounds = bounds
+        self.epsilon = epsilon
         self.tr_length = tr_length
         self.voxel_index = voxel_index
         self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
         
 
-def main():
-    test_adaptive_brute_force_search()
-        
-        
+    @auto_attr
+    def ballpark_estimate(self):
+        return brute_force_search(self.bounds, self.data,
+                                  self.model.stimulus.time_coord,
+                                  self.model.stimulus.freq_coord,
+                                  self.model.stimulus.spectrogram,
+                                  self.model.stimulus.tr_length,
+                                  self.model.stimulus.num_timepoints,
+                                  self.model.stimulus.time_window)
+    
+    @auto_attr
+    def strf_estimate(self):
+        return gradient_descent_search(self.f0, self.fs0, self.ts0, self.hrf0,
+                                       error_function, self.data, 
+                                       self.model.stimulus.time_coord,
+                                       self.model.stimulus.freq_coord,
+                                       self.model.stimulus.spectrogram,
+                                       self.model.stimulus.tr_length,
+                                       self.model.stimulus.num_timepoints,
+                                       self.model.stimulus.time_window)
+    
+    @auto_attr
+    def f0(self):
+        return self.ballpark_estimate[0]
+    
+    @auto_attr
+    def fs0(self):
+        return self.ballpark_estimate[1]
+    
+    @auto_attr
+    def ts0(self):
+        return self.ballpark_estimate[2]
+
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark_estimate[3]
+                                                                         
