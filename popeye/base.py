@@ -20,3 +20,10 @@ class PopulationFit(object):
     def __init__(self, model, data):
         self.data = data
         self.model = model
+
+class StimulusModel(object):
+    """ Abstract class which holds the stimulus model
+    """
+
+    def __init__(self, stim_arr):
+        self.stim_arr = stim_arr
