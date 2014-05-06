@@ -36,14 +36,15 @@ def test_error_function():
     """
     
     # stimulus features
-    lo_freq = 1000 # Hz
-    hi_freq = 20000 # Hz
-    fs = 44100 # Hz
+    lo_freq = 100 # Hz
+    hi_freq = 1000 # Hz
+    fs = 1000 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
-    window_size = 0.01 # seconds
-    num_timepoints = np.floor(duration / tr_length)
+    time_window = 0.5 # seconds
+    freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
     
+    num_timepoints = np.floor(duration / tr_length)
     
     # sample the time from 0-duration by the fs
     time = np.linspace(0,duration,duration*fs)
@@ -52,35 +53,38 @@ def test_error_function():
     signal = chirp(time, lo_freq, duration, hi_freq, method='linear')
     
     # instantiate an instance of the Stimulus class
-    stimulus = AuditoryStimulus(signal, tr_length)
+    stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window)
     
     # set up bounds for the grid search
-    bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(0,duration),(-5,5))
+    bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(0,tr_length),(-5,5))
     
     # initialize the gaussian model
     strf_model = strf.SpectrotemporalModel(stimulus)
     
     # makeup a STRF estimate
-    freq_center = 2000 # center frequency
-    freq_sigma = 500 # frequency dispersion
-    time_sigma = 0.5 # # seconds
+    freq_center = 550 # center frequency
+    freq_sigma = 100 # frequency dispersion
+    time_sigma = 0.250 # # seconds
     hrf_delay = 0.0 # seconds
     
+    
+    # generate the modeled BOLD response
     response = strf.compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
                                      stimulus.time_coord, stimulus.freq_coord, stimulus.spectrogram,
-                                     tr_length, num_timepoints, window_size, norm_func=utils.zscore)
+                                     tr_length, num_timepoints, time_window, norm_func=utils.zscore)
+    
     
     
     test_results = strf.error_function([freq_center, freq_sigma, time_sigma, hrf_delay], response, 
                                         stimulus.time_coord, stimulus.freq_coord, stimulus.spectrogram, 
-                                        tr_length, num_timepoints, window_size)
+                                        tr_length, num_timepoints, time_window)
     
     
-    # assert equal to 3 decimal places
+    # assert equal
     npt.assert_equal(test_results, 0.0)
 
 
-def test_adapative_brute_force_grid_search():
+def test_ballpark_brute_force():
     """
     Test voxel-wise gaussian estimation function in popeye.estimation 
     using the stimulus and BOLD time-series data that ship with the 
@@ -93,7 +97,9 @@ def test_adapative_brute_force_grid_search():
     fs = 1000 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
-    window_size = 0.5 # seconds
+    time_window = 0.5 # seconds
+    freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
+    
     num_timepoints = np.floor(duration / tr_length)
     
     # sample the time from 0-duration by the fs
@@ -103,7 +109,7 @@ def test_adapative_brute_force_grid_search():
     signal = chirp(time, lo_freq, duration, hi_freq, method='linear')
     
     # instantiate an instance of the Stimulus class
-    stimulus = AuditoryStimulus(signal, tr_length)
+    stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window)
     
     # set up bounds for the grid search
     bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(0,tr_length),(-5,5))
@@ -120,15 +126,14 @@ def test_adapative_brute_force_grid_search():
     # generate the modeled BOLD response
     response = strf.compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
                                      stimulus.time_coord, stimulus.freq_coord, stimulus.spectrogram,
-                                     tr_length, num_timepoints, window_size, norm_func=utils.zscore)
+                                     tr_length, num_timepoints, time_window, norm_func=utils.zscore)
     
     # compute the initial guess with the adaptive brute-force grid-search
-    f0, fs0, ts0, hrf0 = strf.adaptive_brute_force_grid_search(bounds, 1, 3,
-                                                               response,
-                                                               stimulus.time_coord,
-                                                               stimulus.freq_coord,
-                                                               stimulus.spectrogram,
-                                                               tr_length, num_timepoints, window_size)
+    f0, fs0, ts0, hrf0 = strf.ballpark_brute_force_estimate(bounds, response,
+                                                            stimulus.time_coord,
+                                                            stimulus.freq_coord,
+                                                            stimulus.spectrogram,
+                                                            tr_length, num_timepoints, time_window)
                                                              
         
     # assert
@@ -137,45 +142,43 @@ def test_adapative_brute_force_grid_search():
 def test_strf_fit():
     
     # stimulus features
-    pixels_across = 800 
-    pixels_down = 600
-    viewing_distance = 38
-    screen_width = 25
-    thetas = np.arange(0,360,45)
-    num_steps = 30
-    ecc = 10
-    tr_length = 1.0
+    lo_freq = 100 # Hz
+    hi_freq = 10000 # Hz
+    fs = hi_freq*2 # Hz
+    duration = 100 # seconds
+    tr_length = 1.0 # seconds
+    time_window = 0.5 # seconds
+    freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
+    
+    num_timepoints = np.floor(duration / tr_length)
+    
+    # sample the time from 0-duration by the fs
+    time = np.linspace(0,duration,duration*fs)
     
     # create the sweeping bar stimulus in memory
-    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    signal = chirp(time, lo_freq, duration, hi_freq, method='linear')
     
     # instantiate an instance of the Stimulus class
-    stimulus = Stimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
+    stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window, sampling_rate=fs)
     
     # set up bounds for the grid search
-    bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
+    bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(0,tr_length),(-5,5))
+    epsilon = ((1),(1),(1),(1))
     
     # initialize the gaussian model
-    gaussian_model = strf.GaussianModel(stimulus)
+    strf_model = strf.SpectrotemporalModel(stimulus)
     
-    # generate a random pRF estimate
-    estimate = []
-    estimate.append(np.random.uniform(bounds[0][0],bounds[0][1]))
-    estimate.append(np.random.uniform(bounds[1][0],bounds[1][1]))
-    estimate.append(np.random.uniform(bounds[2][0],bounds[2][1]))
-    estimate.append(np.random.uniform(bounds[3][0],bounds[3][1]))
+    # makeup a STRF estimate
+    freq_center = 550 # center frequency
+    freq_sigma = 100 # frequency dispersion
+    time_sigma = 1 # # seconds
+    hrf_delay = 0.0 # seconds
     
-    # generate the modeled BOLD response`
-    response = MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
-    hrf = strf.double_gamma_hrf(estimate[3], 1)
-    response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
+    # generate the modeled BOLD response
+    response = strf.compute_model_ts(freq_center, freq_sigma, time_sigma, hrf_delay,
+                                     stimulus.time_coord, stimulus.freq_coord, stimulus.spectrogram,
+                                     tr_length, num_timepoints, time_window, norm_func=utils.zscore)
     
     # fit the response
-    gaussian_fit = strf.GaussianFit(response, gaussian_model, bounds, tr_length, [0,0,0], 0, False)
-    
-    # assert equivalence
-    nt.assert_almost_equal(gaussian_fit.x,estimate[0])
-    nt.assert_almost_equal(gaussian_fit.y,estimate[1])
-    nt.assert_almost_equal(gaussian_fit.sigma,estimate[2])
-    nt.assert_almost_equal(gaussian_fit.hrf_delay,estimate[3])
-    
+    fit = strf.SpectrotemporalFit(response, strf_model, bounds, tr_length, [0,0,0], 0, False)
+
