@@ -9,14 +9,13 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 from __future__ import division
 import ctypes
 
-from multiprocessing import Process, Queue, Array
-from multiprocessing.managers import BaseManager
-
 import numpy as np
 from scipy.misc import imresize
 from scipy.io import loadmat
 
 import nibabel
+
+from popeye.base import StimulusModel
 
 def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1):
     
@@ -172,6 +171,7 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
                 tr_num += 1
                 
     
+    # digitize the bar stimulus
     bar_digital = np.zeros_like(bar_stimulus)
     bar_digital[bar_stimulus > threshold] = 1
     bar_digital = np.short(bar_digital)
@@ -181,11 +181,16 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
 
 # This should eventually be VisualStimulus, and there would be an abstract class layer
 # above this called Stimulus that would be generic for n-dimentional feature spaces.
-class Stimulus(object):
+class VisualStimulus(StimulusModel):
     
     """ Abstract class for stimulus model """
     
-    def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor, clip_number=0, roll_number=0):
+    
+    def __init__(self, stim_arr, viewing_distance, screen_width, 
+                 scale_factor, clip_number=0, roll_number=0):
+        
+        # this is a weird notation
+        StimulusModel.__init__(self, stim_arr)
         
         # absorb the vars
         self.viewing_distance = viewing_distance
@@ -231,5 +236,3 @@ class Stimulus(object):
         
         self.stim_arr_coarse = np.memmap('%s%s.npy' %('/tmp/','stim_arr_coarse'),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
         self.stim_arr_coarse[:] = stim_arr_coarse[:]
-        
-        
