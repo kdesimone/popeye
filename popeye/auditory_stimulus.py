@@ -17,7 +17,7 @@ import nibabel
 
 from popeye.base import StimulusModel
 
-def compute_stft(signal, freq_window, overlap=0.95, window=np.hanning):
+def compute_stft(signal, freq_window, overlap=0.5, window=np.hanning):
     
     win = window(freq_window)
     hop_size = int(freq_window - np.floor(overlap * freq_window))
@@ -57,15 +57,22 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, freq_factor=1.0, sampling_rate=44100, clip_number=0, roll_number=0):
+    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, freq_factor=1.0, 
+                       sampling_rate=44100, tr_sampling_rate=100, scale_factor=1.0, clip_number=0, roll_number=0):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
+        
+        if time_window > tr_length / 2:
+            print("You must give a time window size in seconds that is half your TR length or less.")
+            return None
         
         # absorb the vars
         self.tr_length = tr_length # the TR in s
         self.freq_factor = freq_factor # the scaling factor of the freqs, i think its only for plotting
         self.sampling_rate = sampling_rate # the sampling rate of the wav
+        self.tr_sampling_rate = tr_sampling_rate
+        self.scale_factor = scale_factor
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
         self.clip_number = clip_number 
         self.roll_number = roll_number
@@ -83,21 +90,23 @@ class AuditoryStimulus(StimulusModel):
     
     @auto_attr
     def tr_times(self):
-        return np.arange(0, self.tr_length, self.time_window)
+        return np.linspace(self.all_freqs[0],self.all_freqs[-1],self.tr_sampling_rate)
+    
+    @auto_attr
+    def coordinate_matrices(self):
+        return np.meshgrid(self.tr_times, self.all_freqs)
     
     @auto_attr
     def freq_coord(self):
-         til = np.repeat(self.all_freqs,len(self.tr_times))
-         return np.reshape(til,(len(self.all_freqs),len(self.tr_times)))
+         return self.coordinate_matrices[1]
     
     @auto_attr
     def time_coord(self):
-        til = np.tile(self.tr_times,len(self.all_freqs))
-        return np.reshape(til,(len(self.all_freqs),len(self.tr_times)))
+        return self.coordinate_matrices[0]
     
     @auto_attr
     def stft(self):
-        return compute_stft(self.stim_arr, self.freq_window, )
+        return compute_stft(self.stim_arr, self.freq_window)
     
     @auto_attr
     def timebins(self):
@@ -117,7 +126,6 @@ class AuditoryStimulus(StimulusModel):
     @auto_attr
     def all_freqs(self):
         return np.abs(np.fft.fftfreq(self.freqbins*2, 1./self.sampling_rate)[:self.freqbins+1])
-        
     
     @auto_attr
     def scaled_freqs(self):
@@ -144,6 +152,10 @@ class AuditoryStimulus(StimulusModel):
         s = np.transpose(s)
         s /= np.max(s)
         return imresize(s,(len(self.all_freqs),len(self.all_times)))
+    
+    @auto_attr
+    def scaled_spectrogram(self):
+        return imresize(self.spectrogram,self.scale_factor)
         
         
         
