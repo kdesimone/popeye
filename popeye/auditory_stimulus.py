@@ -136,7 +136,7 @@ class AuditoryStimulus(StimulusModel):
             else:
                 freqs += [np.mean(self.all_freqs[self.scale[i]:self.scale[i+1]])]
         return freqs
-        
+    
     @auto_attr
     def all_times(self):
         return np.arange(0,self.num_timepoints,self.time_window)
@@ -151,18 +151,36 @@ class AuditoryStimulus(StimulusModel):
         s[s == -np.inf] = 0
         s = np.transpose(s)
         s /= np.max(s)
-        return imresize(s,(len(self.all_freqs),len(self.all_times)))
+        return imresize(s,(len(self.all_freqs), self.num_timepoints * self.tr_sampling_rate))
     
     @auto_attr
     def scaled_spectrogram(self):
-        return imresize(self.spectrogram,self.scale_factor)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        if self.scale_factor < 1:
+            return imresize(self.spectrogram,self.scale_factor)
+        else:
+            return None
+    
+    @auto_attr
+    def scaled_coordinate_matrices(self):
+        if self.scale_factor < 1:
+            ind = np.arange(0, len(self.all_freqs), 1/self.scale_factor).astype('int16')
+            freqs = self.all_freqs[ind]
+            X,Y = np.meshgrid(self.tr_times, self.all_freqs[ind])
+            return X,Y
+        else:
+            return None
+    
+    @auto_attr
+    def scaled_freq_coord(self):
+         return self.scaled_coordinate_matrices[1]
+         
+    @auto_attr
+    def scaled_time_coord(self):
+        return self.scaled_coordinate_matrices[0]
+    
+    @auto_attr
+    def scaled_num_timepoints(self):
+        if self.scale_factor < 1:
+            return self.scaled_spectrogram.shape[-1]
+        else:
+            return None
