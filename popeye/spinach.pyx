@@ -123,16 +123,73 @@ def MakeFastRF(np.ndarray[DTYPE2_t, ndim=2] degX,
                 rf[i,j] = exp(-d/s_factor2)
 
     return rf
-    
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def MakeFastGaussian2D(np.ndarray[DTYPE2_t, ndim=2] X,
+                       np.ndarray[DTYPE2_t, ndim=2] Y,
+                       DTYPE2_t x0,
+                       DTYPE2_t y0,
+                       DTYPE2_t sigma_x,
+                       DTYPE2_t sigma_y,
+                       DTYPE2_t degrees):
+
+    # cdef's
+    
+    # iterators
+    cdef int i,j,k
+    cdef DTYPE2_t s_factor2
+    cdef DTYPE2_t s_factor3
+    
+    # convert degress to radians
+    cdef DTYPE2_t theta = degrees * np.pi/180
+    
+    # figure out which sigma is bigger and limit our search to within that
+    if sigma_x > sigma_y:
+        s_factor2 = (2.0*sigma_x**2)
+        s_factor3 = (3.0*sigma_x)**2
+    else:
+        s_factor2 = (2.0*sigma_y**2)
+        s_factor3 = (3.0*sigma_y)**2
+    
+    # limiters on the the loops
+    cdef int xlim = X.shape[0] # for the python-for-range-loop -->
+                                  # c-for-loop optimization to kick in,
+                                  # range()'s argument must be some size of
+                                  # c-integer
+    cdef int ylim = Y.shape[1] # it might also optimize xrange, but im not
+                                  # sure, so i just stick with range.
+    
+    # distance from center ...
+    cdef DTYPE2_t d
+    
+    # set up the transformation matrix
+    cdef DTYPE2_t a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
+    cdef DTYPE2_t b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
+    cdef DTYPE2_t c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
+    
+    # # setup the output
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] rf = np.zeros((xlim,ylim),dtype=DTYPE2)
+
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            d = (X[i,j]-x0)**2 + (Y[i,j]-y0)**2
+            if d <= s_factor3:
+                rf[i,j] = np.exp( - (a*(X[i,j]-x0)**2 + 2*b*(X[i,j]-x0)*(Y[i,j]-y0) + c*(Y[i,j]-y0)**2))
+    
+    # return it
+    return rf
+       
+       
+       
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def MakeFastRFs(np.ndarray[DTYPE2_t, ndim=2] degX,
-                       np.ndarray[DTYPE2_t, ndim=2] degY,
-                       np.ndarray[DTYPE2_t, ndim=1] xs,
-                       np.ndarray[DTYPE2_t, ndim=1] ys,
-                       DTYPE2_t s):
+                np.ndarray[DTYPE2_t, ndim=2] degY,
+                np.ndarray[DTYPE2_t, ndim=1] xs,
+                np.ndarray[DTYPE2_t, ndim=1] ys,
+                DTYPE2_t s):
     # cdef's
     cdef int i,j,k # iteration variables
     cdef DTYPE2_t s_factor2 = (2.0*s**2) # precalculate these constants
