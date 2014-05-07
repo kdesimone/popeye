@@ -142,23 +142,23 @@ def test_ballpark_brute_force():
 def test_strf_fit():
     
     # stimulus features
-    lo_freq = 1 # Hz
+    lo_freq = 200 # Hz
     hi_freq = 1000 # Hz
-    fs = hi_freq * 2 # Hz
+    fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
     tr_sampling_rate = 3 # number of time-samples per TR to plot the STRF in
     time_window = 0.5 # seconds
-    freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
-    scale_factor = 0.25 # how much to downsample the spectrotemporal space
+    freq_window = 32 # this is 2x the number of freq bins we'll end up with in the spectrogram
+    scale_factor = 1.0 # how much to downsample the spectrotemporal space
     
     num_timepoints = np.floor(duration / tr_length)
     
     # sample the time from 0-duration by the fs
-    time = np.linspace(0,duration,duration*fs)
+    time = np.linspace(1,duration,duration*fs)
     
     # create the sweeping bar stimulus in memory
-    signal = chirp(time, lo_freq, duration, hi_freq, method='linear')
+    signal = chirp(time, lo_freq, duration/2, hi_freq, method='linear')
     
     # instantiate an instance of the Stimulus class
     stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window, sampling_rate=fs, 
@@ -189,4 +189,8 @@ def test_strf_fit():
     
     # fit the response
     fit = strf.SpectrotemporalFit(response, strf_model, bounds, tr_length, [0,0,0], 0, False)
+    f0, fs0, hrf0 = fit.strf_estimate[:]
+    
+    # assert
+    npt.assert_almost_equal([f0, fs0, hrf0],[freq_center,freq_sigma,hrf_delay],10)
     
