@@ -1,4 +1,6 @@
 import os
+import multiprocessing
+from itertools import repeat
 
 import numpy as np
 import numpy.testing as npt
@@ -47,7 +49,7 @@ def test_error_function():
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
-    # instantiate an instance of the Stimulus class
+    # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
@@ -95,7 +97,7 @@ def test_adapative_brute_force_grid_search():
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
-    # instantiate an instance of the Stimulus class
+    # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
@@ -137,14 +139,14 @@ def test_gaussian_fit():
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,45)
-    num_steps = 30
+    num_steps = 20
     ecc = 10
     tr_length = 1.0
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
-    # instantiate an instance of the Stimulus class
+    # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
     
     # set up bounds for the grid search
@@ -170,3 +172,64 @@ def test_gaussian_fit():
     nt.assert_almost_equal(gaussian_fit.sigma,estimate[2])
     nt.assert_almost_equal(gaussian_fit.hrf_delay,estimate[3])
     
+
+def test_parallel_fit():
+
+    # stimulus features
+    pixels_across = 800 
+    pixels_down = 600
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,45)
+    num_steps = 20
+    ecc = 10
+    tr_length = 1.0
+    num_voxels = 50
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, 0.05, 0, 0)
+    
+    # set up bounds for the grid search
+    bounds = [((-10,10),(-10,10),(0.25,5.25),(-5,5))]*num_voxels
+    indices = [(1,2,3)]*num_voxels
+    
+    # initialize the gaussian model
+    gaussian_model = gaussian.GaussianModel(stimulus)
+    
+    # generate a random pRF estimate
+    estimates = [(1,1,1,1)]*num_voxels
+    
+    # create the simulated time-series
+    timeseries = []
+    for estimate in estimates:
+        response = MakeFastPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
+        hrf = gaussian.double_gamma_hrf(estimate[3], 1)
+        response = utils.zscore(np.convolve(response,hrf)[0:len(response)])
+        timeseries.append(response)
+        
+    # package the data structure
+    dat = zip(timeseries,
+              repeat(gaussian_model,num_voxels),
+              bounds,
+              repeat(tr_length,num_voxels),
+              indices,
+              repeat(0.20,num_voxels),
+              repeat(False,num_voxels))
+              
+    # run analysis
+    num_cpus = multiprocessing.cpu_count()-1
+    pool = multiprocessing.Pool(num_cpus)
+    output = pool.map(gaussian.parallel_fit,dat)
+    pool.close()
+    pool.join()
+    
+    # assert equivalence
+    for gaussian_fit,estimate in zip(output,estimates):
+        nt.assert_almost_equal(gaussian_fit.x,estimate[0])
+        nt.assert_almost_equal(gaussian_fit.y,estimate[1])
+        nt.assert_almost_equal(gaussian_fit.sigma,estimate[2])
+        nt.assert_almost_equal(gaussian_fit.hrf_delay,estimate[3])
+
