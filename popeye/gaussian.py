@@ -12,6 +12,8 @@ from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
 
+from dipy.core.onetime import auto_attr
+
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastPrediction
@@ -67,8 +69,8 @@ def double_gamma_hrf(delay,TR):
             
     return hrf
 
-def compute_model_ts(x, y, sigma, hrf_delay, tr_length, deg_x, deg_y,
-                    stim_arr, norm_func=utils.zscore):
+def compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
+                    stim_arr, tr_length, norm_func=utils.zscore):
     
     # otherwise generate a prediction
     ts_stim = MakeFastPrediction(deg_x,
@@ -91,7 +93,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, tr_length, deg_x, deg_y,
     return model_ts
 
 
-def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
+def error_function(parameters, response, deg_x, deg_y, stim_arr, tr_length):
     """
     The objective function that yields a minimizeable error between the
     predicted and actual BOLD time-series.
@@ -117,7 +119,7 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
         A quadruplet model parameters including the pRF estimate (x,y,sigma)
         and the HRF delay (tau).
         
-    response_ts : ndarray
+    response : ndarray
         A vector of the actual BOLD time-series extacted from a single voxel
         coordinate.
         
@@ -166,10 +168,10 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
         return np.inf
         
     # otherwise generate a prediction
-    model_ts = compute_model_ts(x, y, sigma, hrf_delay, tr_length, deg_x, deg_y, stim_arr)
+    model_ts = compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y, stim_arr, tr_length)
     
     # compute the RSS
-    error = np.sum((model_ts-response_ts)**2)
+    error = np.sum((model_ts-response)**2)
     
     # catch NaN
     if np.isnan(np.sum(error)):
@@ -177,88 +179,34 @@ def error_function(parameters, response_ts, deg_x, deg_y, stim_arr, tr_length):
         
     return error
 
-def adaptive_brute_force_grid_search(bounds, epsilon, rounds, response_ts,
-                                     deg_x, deg_y, stim_arr, tr_length):
-    """ 
-    An adaptive brute force grid-search to generate a ball-park pRF estimate for
-    fine tuning via a gradient descent error minimization.
-    
-    
-    The adaptive brute-force grid-search sparsely samples the parameter space
-    and uses a down-sampled version of the stimulus and cooridnate matrices.
-    This is intended to yield an initial, ball-park solution that is then fed
-    into the more finely-tuned fmin_powell in the compute_prf_estimate method
-    below. 
-    
-    Parameters
-    ----------
-    bounds : tuple
-        A tuple of paired tuples for the upper and lower bounds of the model
-        parameters  e.g. ((-10,10),(-10,10),((0.25,5.25),(-4,4))
-    epsilon : int
-        The step-size for reducing the grid-search bounds on each iteration
-        through the adaptive brute-force search. 
-    rounds : int
-        The number of iterations through the adaptive brute-force search
-    response_ts : ndarray
-        A vector of the actual BOLD time-series extacted from a single voxel
-        coordinate.
-    deg_x : ndarray
-        An array representing the horizontal extent of the visual display in
-        terms of degrees of visual angle.
-    deg_y : ndarray
-        An array representing the vertical extent of the visual display in
-        terms of degrees of visual angle.
-    stim_arr : ndarray
-        Array_like means all those objects -- lists, nested lists, etc. --
-        that can be converted to an array.
-        
-    Returns
-    -------
-    error : float
-        The residual sum of squared errors computed between the predicted and
-        actual time-series. 
-        
-    """
-    
-    # set initial pass to 1
-    pass_num = 1
-    
-    # make as many passes as the user specifies in rounds
-    while pass_num <= rounds:
-        
-        # get a fit estimate by sparsely sampling the 4-parameter space
-        phat = brute(error_function,
-                     args=(response_ts, deg_x, deg_y, stim_arr, tr_length),
-                     ranges=bounds,
-                     Ns=5,
-                     finish=None)
-                 
-        # recompute the grid-search bounds by halving the sampling space
-        epsilon /= 2.0
-        bounds = ((phat[0]-epsilon,phat[0]+epsilon),
-                  (phat[1]-epsilon,phat[1]+epsilon),
-                  (phat[2]-epsilon,phat[2]+epsilon),
-                  (phat[3]-epsilon,phat[3]+epsilon))
-                  
-        # iterate the pass variable
-        pass_num += 1
-        
-    x, y, sigma, hrf_delay = phat[0], phat[1], phat[2], phat[3]
-    
-    return x, y, sigma, hrf_delay
-
-def gradient_descent_search(x, y, sigma, hrf_delay, tr_length,
-                            error_function, response_ts, 
-                            deg_x, deg_y, stim_arr):
+def gradient_descent_search(x0, y0, s0, hrf0,
+                            error_function, response, 
+                            deg_x, deg_y, stim_arr, tr_length):
                             
     [x, y, sigma, hrf_delay], err,  _, _, _, warnflag =\
-        fmin_powell(error_function,(x, y, sigma, hrf_delay),
-                    args=(response_ts,deg_x,deg_y,stim_arr, tr_length),
+        fmin_powell(error_function,(x0, y0, s0, hrf0),
+                    args=(response, deg_x, deg_y, stim_arr, tr_length),
                     full_output=True,
                     disp=False)
-
+    
     return x, y, sigma, hrf_delay
+
+def brute_force_search(bounds, response, error_function,
+                       deg_x, deg_y, stim_arr, 
+                       tr_length):
+
+    [x0, y0, s0, hrf0], err,  _, _ =\
+        brute(error_function,
+              args=(response, deg_x, deg_y, stim_arr, tr_length),
+              ranges=bounds,
+              Ns=5,
+              finish=None,
+              full_output=True,
+              disp=False)
+
+    # return the estimates
+    return x0, y0, s0, hrf0
+    
 
 # this method is used to simply multiprocessing.Pool interactions
 def parallel_fit(args):
@@ -301,10 +249,9 @@ class GaussianFit(object):
     """
     
     def __init__(self, data, model, bounds, tr_length, voxel_index, uncorrected_rval, verbose=True):
-        
-        tic = time.clock()
-        
+            
         self.data = utils.zscore(data)
+        self.model = model
         self.bounds = bounds
         self.tr_length = tr_length
         self.voxel_index = voxel_index
@@ -312,53 +259,68 @@ class GaussianFit(object):
         self.verbose = verbose
         
         
-        # fit
-        self.x0, self.y0, self.s0, self.h0 = adaptive_brute_force_grid_search(self.bounds, 1, 3, self.data,
-                                                                              model.stimulus.deg_x_coarse,
-                                                                              model.stimulus.deg_y_coarse,
-                                                                              model.stimulus.stim_arr_coarse,
-                                                                              self.tr_length)
         
-        # return the coarse model ts
-        coarse_model_ts = compute_model_ts(self.x0, self.y0, self.s0, self.h0, self.tr_length,
-                                           model.stimulus.deg_x,
-                                           model.stimulus.deg_y,
-                                           model.stimulus.stim_arr)
+    @auto_attr
+    def ballpark_estimate(self):
+        return brute_force_search(self.bounds, self.data, error_function,
+                                  self.model.stimulus.deg_x_coarse,
+                                  self.model.stimulus.deg_y_coarse,
+                                  self.model.stimulus.stim_arr_coarse,
+                                  self.tr_length)
+                                  
+    @auto_attr
+    def gaussian_estimate(self):
+        return gradient_descent_search(self.x0, self.y0, self.s0, self.hrf0,
+                                       error_function, self.data, 
+                                       self.model.stimulus.deg_x,
+                                       self.model.stimulus.deg_y,
+                                       self.model.stimulus.stim_arr,
+                                       self.tr_length)
+                                       
+    @auto_attr
+    def x0(self):
+        return self.ballpark_estimate[0]
         
-        coarse_fit_stats = linregress(self.data, coarse_model_ts)
+    @auto_attr
+    def y0(self):
+        return self.ballpark_estimate[1]
         
-        if coarse_fit_stats[2] > self.uncorrected_rval:
-            
-            
-            self.x, self.y, self.sigma, self.hrf_delay = gradient_descent_search(self.x0, self.y0, self.s0, self.h0,
-                                                                                 self.tr_length,
-                                                                                 error_function,
-                                                                                 self.data, 
-                                                                                 model.stimulus.deg_x,
-                                                                                 model.stimulus.deg_y,
-                                                                                 model.stimulus.stim_arr)
-                                                                             
-            # store the modeled timeseries
-            self.model_ts = compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.tr_length,
-                                             model.stimulus.deg_x,
-                                             model.stimulus.deg_y,
-                                             model.stimulus.stim_arr)
-            
-            
-            # store some fit metric
-            self.fit_stats = linregress(self.data,self.model_ts)
-            self.rss = np.sum((self.data - self.model_ts)**2)
-            
-            toc = time.clock()
-            
-            # print to screen if verbose
-            if self.verbose:
-                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
-                      %(self.voxel_index[0],
-                        self.voxel_index[1],
-                        self.voxel_index[2],
-                        toc-tic,
-                        self.rss,
-                        self.fit_stats[2]))
-            
+    @auto_attr
+    def s0(self):
+        return self.ballpark_estimate[2]
         
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark_estimate[3]
+        
+    @auto_attr
+    def x(self):
+        return self.gaussian_estimate[0]
+        
+    @auto_attr
+    def y(self):
+        return self.gaussian_estimate[1]
+        
+    @auto_attr
+    def sigma(self):
+        return self.gaussian_estimate[2]
+        
+    @auto_attr
+    def hrf_delay(self):
+        return self.gaussian_estimate[3]
+        
+    @auto_attr
+    def model_ts(self):
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay,
+                                self.model.stimulus.deg_x,
+                                self.model.stimulus.deg_y,
+                                self.model.stimulus.stim_arr,
+                                self.tr_length)
+    
+    @auto_attr
+    def fit_stats(self):
+        return linregress(self.data, self.model_ts)
+    
+    @auto_attr
+    def rss(self):
+        return np.sum((self.data - self.model_ts)**2)
