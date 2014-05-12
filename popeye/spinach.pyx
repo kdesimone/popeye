@@ -19,7 +19,7 @@ cdef extern from "math.h": # using a function from c's math.h
 @cython.wraparound(False)
 def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
                        np.ndarray[DTYPE2_t, ndim=2] degY,
-                       np.ndarray[short,ndim=3] stimArray,
+                       np.ndarray[DTYPE2_t, ndim=3] stimArray,
                        DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
 
     """
@@ -87,8 +87,8 @@ def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def MakeFastRF(np.ndarray[DTYPE2_t, ndim=2] degX,
-                       np.ndarray[DTYPE2_t, ndim=2] degY,
-                       DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
+               np.ndarray[DTYPE2_t, ndim=2] degY,
+               DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
     """
     
     """
