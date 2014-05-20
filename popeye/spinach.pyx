@@ -2,6 +2,8 @@ cimport cython
 from cython.parallel import prange, parallel, threadid
 import numpy as np
 cimport numpy as np
+from scipy.signal.sigtools import _correlateND
+
 
 DTYPE = np.int
 ctypedef np.int_t DTYPE_t
@@ -133,9 +135,7 @@ def MakeFastGaussian2D(np.ndarray[DTYPE2_t, ndim=2] X,
                        DTYPE2_t sigma_x,
                        DTYPE2_t sigma_y,
                        DTYPE2_t degrees):
-
-    # cdef's
-    
+                       
     # iterators
     cdef int i,j,k
     cdef DTYPE2_t s_factor2
@@ -180,8 +180,53 @@ def MakeFastGaussian2D(np.ndarray[DTYPE2_t, ndim=2] X,
     # return it
     return rf
        
-       
-       
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
+                            np.ndarray[DTYPE2_t, ndim=2] gaussian,
+                            DTYPE2_t freq_center,
+                            DTYPE2_t freq_sigma,
+                            DTYPE2_t hrf_delay,
+                            DTYPE_t num_timepoints):
+    
+    # iterators
+    cdef int i, j, tr_num, from_slice, to_slice
+    
+    # loop limiters
+    cdef int t_lim = spectrogram.shape[1]
+    cdef int f_lim = spectrogram.shape[0]
+    # cdef int t_window = gaussian.shape[1]
+    
+    # initialize arrays for the loops
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] g_vector = np.zeros(f_lim, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] f_vector = np.zeros(f_lim, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] tr_model = np.zeros(f_lim, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] conv = np.zeros(num_timepoints*2, dtype=DTYPE2)
+    # cdef np.ndarray[DTYPE2_t,ndim=2,mode='c'] sound_frame = np.zeros((f_lim,t_window), dtype=DTYPE2)
+    
+    for t in xrange(num_timepoints):
+        
+        # grab the frame from spectrogram that we'll analyze at this time-step
+        from_slice = t*4
+        to_slice = t*4 + t_lim/num_timepoints
+        
+        sound_frame = spectrogram[:,from_slice:to_slice]
+        if np.sum(sound_frame)>0:
+            
+            for f in xrange(f_lim):
+                
+                f_vector = sound_frame[f,:]
+                g_vector = gaussian[f,:]
+                
+                conv = np.convolve(f_vector,g_vector)
+                tr_model[f] = np.sum(conv)
+                
+            stim[t] = np.mean(tr_model)
+    
+    return stim
+        
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
