@@ -258,7 +258,20 @@ class GaussianFit(object):
         self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
         
+        tic = time.clock()
+        self.fit_stats;
+        toc = time.clock()
         
+        # print to screen if verbose
+        if self.verbose:
+            print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
+                  %(self.voxel_index[0],
+                    self.voxel_index[1],
+                    self.voxel_index[2],
+                    toc-tic,
+                    self.rss,
+                    self.fit_stats[2]))
+                    
         
     @auto_attr
     def ballpark_estimate(self):
