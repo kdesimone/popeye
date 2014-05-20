@@ -77,32 +77,44 @@ class AuditoryStimulus(StimulusModel):
         self.clip_number = clip_number 
         self.roll_number = roll_number
         self.freq_window = freq_window
+            
+        # share the arrays via memmap to reduce size
+        spectrogram = self.make_spectrogram()
+        self.spectrogram = np.memmap('%s%s.npy' %('/tmp/','spectrogram'),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
+        self.spectrogram[:] = spectrogram[:]
+        
+        time_coord, freq_coord = self.make_coordinate_matrices()
+        self.time_coord = np.memmap('%s%s.npy' %('/tmp/','time_coord'),dtype = np.double, mode = 'w+',shape = np.shape(time_coord))
+        self.time_coord[:] = time_coord[:]
+        
+        self.freq_coord = np.memmap('%s%s.npy' %('/tmp/','freq_coord'),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord))
+        self.freq_coord[:] = freq_coord[:]
         
         # trim and rotate stimulus is specified
-        if self.clip_number != 0:
-            stim_arr = stim_arr[:, :, self.clip_number::]
-        if self.roll_number != 0:
-            stim_arr = np.roll(stim_arr, self.roll_number, axis=-1)
-    
+        # if self.clip_number != 0:
+        #     stim_arr = stim_arr[self.clip_number*tr_length*self.sampling_rate::]
+        # if self.roll_number != 0:
+        #     stim_arr = np.roll(stim_arr, self.roll_number, axis=-1)
+                
     @auto_attr
     def num_timepoints(self):
-        return np.int(np.floor(self.stim_arr.shape[0]/self.sampling_rate))
+        return np.int(np.floor(self.stim_arr.shape[0]/self.sampling_rate/self.tr_length))
     
     @auto_attr
     def tr_times(self):
         return np.linspace(self.all_freqs[0],self.all_freqs[-1],self.tr_sampling_rate)
     
-    @auto_attr
-    def coordinate_matrices(self):
+    
+    def make_coordinate_matrices(self):
         return np.meshgrid(self.tr_times, self.all_freqs)
     
-    @auto_attr
-    def freq_coord(self):
-         return self.coordinate_matrices[1]
+    # @auto_attr
+    # def freq_coord(self):
+    #      return self.coordinate_matrices[1]
     
-    @auto_attr
-    def time_coord(self):
-        return self.coordinate_matrices[0]
+    # @auto_attr
+    # def time_coord(self):
+    #     return self.coordinate_matrices[0]
     
     @auto_attr
     def stft(self):
@@ -145,13 +157,14 @@ class AuditoryStimulus(StimulusModel):
     def log_stft(self):
         return logscale_stft(self.stft, self.sampling_rate, self.scale, self.timebins)
     
-    @auto_attr
-    def spectrogram(self):
+    def make_spectrogram(self):
         s = 20.*np.log10(np.abs(self.log_stft)/10e-6)
         s[s == -np.inf] = 0
         s = np.transpose(s)
         s /= np.max(s)
-        return imresize(s,(len(self.all_freqs), self.num_timepoints * self.tr_sampling_rate))
+        im = imresize(s,(len(self.all_freqs), self.num_timepoints * self.tr_sampling_rate))
+        
+        return im.astype('double')
     
     @auto_attr
     def scaled_spectrogram(self):
