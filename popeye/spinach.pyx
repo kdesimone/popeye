@@ -206,8 +206,6 @@ def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
     cdef int conv_i, conv_j, conv_window
     cdef DTYPE2_t conv_sum
     conv_window = (t_lim / num_timepoints)+(t_lim / num_timepoints)-1
-    # cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] conv = np.zeros(conv_window+conv_window-1, dtype=DTYPE2)
-    
     
     for t in xrange(num_timepoints):
         
@@ -224,11 +222,8 @@ def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
                 g_vector = gaussian[f,:]
                 conv_sum = 0
                 for conv_i in xrange(conv_window):
-                    # conv[i] = 0
                     for conv_j in xrange(conv_window):
-                        if conv_i-conv_j-1 > 0:
-                            # conv[i] = conv[i] + f_vector[conv_i] * g_vector[conv_i-conv_j+1]
-                            conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
+                        conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
                             
             stim[t] = conv_sum
     
