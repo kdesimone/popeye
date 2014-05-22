@@ -3,7 +3,7 @@ from cython.parallel import prange, parallel, threadid
 import numpy as np
 cimport numpy as np
 from scipy.signal.sigtools import _correlateND
-
+import ctypes
 
 DTYPE = np.int
 ctypedef np.int_t DTYPE_t
@@ -11,12 +11,11 @@ ctypedef np.int_t DTYPE_t
 DTYPE2 = np.double
 ctypedef np.double_t DTYPE2_t
 
-cdef extern from "math.h": # using a function from c's math.h
-    #double exp(double)
-    DTYPE2_t exp(DTYPE2_t)
-    # i don't know how to use ctypedef properly,
-    # so i always just use c-types, like double
-    
+# DTYPE3 = np.short
+# ctypedef np.short DTYPE3_t
+
+from libc.math cimport sin, cos, exp
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
@@ -270,4 +269,123 @@ def MakeFastRFs(np.ndarray[DTYPE2_t, ndim=2] degX,
 
     return rf
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def MakeFastGabor(np.ndarray[DTYPE2_t, ndim=2] X,
+                  np.ndarray[DTYPE2_t, ndim=2] Y,
+                  DTYPE2_t x0,
+                  DTYPE2_t y0,
+                  DTYPE2_t s0,
+                  DTYPE2_t theta,
+                  DTYPE2_t phi,
+                  DTYPE2_t cpd):
+                  
+    # cdef's
+    cdef int i,j,k # iteration variables
+    cdef DTYPE2_t s_factor2 = (2.0*s0**2) # precalculate these constants because
+                                         # i don't if the compiler would
+                                         # optimize this, so i'll just do it
+    cdef DTYPE2_t s_factor3 = (3.0*s0)**2
+
+    cdef int xlim = X.shape[0] # for the python-for-range-loop -->
+                                  # c-for-loop optimization to kick in,
+                                  # range()'s argument must be some size of
+                                  # c-integer
+    cdef int ylim = Y.shape[1] # it might also optimize xrange, but im not
+                                  # sure, so i just stick with range.
+
+
+    cdef DTYPE2_t pi_180 = np.pi/180
+    cdef DTYPE2_t theta_rad = theta * pi_180
+    cdef DTYPE2_t phi_rad = phi * pi_180
+    cdef DTYPE2_t pi_2 = np.pi * 2
+
+    cdef DTYPE2_t d # d for distance
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYt = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYf = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] grating = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gauss = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gabor = np.zeros((xlim,ylim),dtype=DTYPE2)
+
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+
+            # only compute inside the sigma*3
+            d = (X[i,j]-x0)**2 + (Y[i,j]-y0)**2
+            if d <= s_factor3:
+
+                # creating the grating
+                XYt[i,j] =  (X[i,j] * cos(theta_rad)) + (Y[i,j] * sin(theta_rad))
+                XYf[i,j] = XYt[i,j] * cpd * pi_2
+                grating[i,j] = sin(XYf[i,j] + phi_rad)
+
+                # create the gaussian
+                gauss[i,j] =  exp(-d/s_factor2)
+
+                # create the gabor
+                gabor[i,j] = gauss[i,j] * grating[i,j]
+
+    return gabor
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def MakeFastGaborPrediction(np.ndarray[DTYPE2_t, ndim=2] X,
+                            np.ndarray[DTYPE2_t, ndim=2] Y,
+                            np.ndarray[short, ndim=3] stim_arr,
+                            DTYPE2_t x0,
+                            DTYPE2_t y0,
+                            DTYPE2_t s0,
+                            DTYPE2_t theta,
+                            DTYPE2_t phi,
+                            DTYPE2_t cpd):
+                            
+    # cdef's
+    cdef int i,j,k # iteration variables
+    cdef DTYPE2_t s_factor2 = (2.0*s0**2) # precalculate these constants because
+                                         # i don't if the compiler would
+                                         # optimize this, so i'll just do it
+    cdef DTYPE2_t s_factor3 = (3.0*s0)**2
     
+    cdef int xlim = stim_arr.shape[0]
+    cdef int ylim = stim_arr.shape[1]
+    cdef int zlim = stim_arr.shape[2]
+    
+    cdef DTYPE2_t pi_180 = np.pi/180
+    cdef DTYPE2_t theta_rad = theta * pi_180
+    cdef DTYPE2_t phi_rad = phi * pi_180
+    cdef DTYPE2_t pi_2 = np.pi * 2
+    
+    cdef DTYPE2_t d # d for distance
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYt = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYf = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] grating = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gauss = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gabor = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] ts_stim = np.zeros(zlim,dtype=DTYPE2)
+    
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            
+            # only compute inside the sigma*3
+            d = (X[i,j]-x0)**2 + (Y[i,j]-y0)**2
+            if d <= s_factor3:
+                
+                # creating the grating
+                XYt[i,j] =  (X[i,j] * cos(theta_rad)) + (Y[i,j] * sin(theta_rad))
+                XYf[i,j] = XYt[i,j] * cpd * pi_2
+                grating[i,j] = sin(XYf[i,j] + phi_rad)
+                
+                # create the gaussian
+                gauss[i,j] =  exp(-d/s_factor2)
+                
+                # create the gabor
+                gabor[i,j] = gauss[i,j] * grating[i,j]
+                
+                # for each TR in the stimulus
+                for k in xrange(zlim):
+                    ts_stim[k] += stim_arr[i,j,k]*gabor[i,j]
+                        
+                
+    return ts_stim
+
