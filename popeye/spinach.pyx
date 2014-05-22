@@ -189,20 +189,25 @@ def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
                             DTYPE_t num_timepoints):
     
     # iterators
-    cdef int i, j, tr_num, from_slice, to_slice
+    cdef int t, f, tr_num, from_slice, to_slice
     
     # loop limiters
     cdef int t_lim = spectrogram.shape[1]
     cdef int f_lim = spectrogram.shape[0]
-    # cdef int t_window = gaussian.shape[1]
+    
     
     # initialize arrays for the loops
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] g_vector = np.zeros(f_lim, dtype=DTYPE2)
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] f_vector = np.zeros(f_lim, dtype=DTYPE2)
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] tr_model = np.zeros(f_lim, dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] conv = np.zeros(num_timepoints*2, dtype=DTYPE2)
-    # cdef np.ndarray[DTYPE2_t,ndim=2,mode='c'] sound_frame = np.zeros((f_lim,t_window), dtype=DTYPE2)
+    
+    # convolution variables
+    cdef int conv_i, conv_j, conv_window
+    cdef DTYPE2_t conv_sum
+    conv_window = (t_lim / num_timepoints)+(t_lim / num_timepoints)-1
+    # cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] conv = np.zeros(conv_window+conv_window-1, dtype=DTYPE2)
+    
     
     for t in xrange(num_timepoints):
         
@@ -217,15 +222,17 @@ def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
                 
                 f_vector = sound_frame[f,:]
                 g_vector = gaussian[f,:]
-                
-                conv = np.convolve(f_vector,g_vector)
-                tr_model[f] = np.sum(conv)
-                
-            stim[t] = np.mean(tr_model)
+                conv_sum = 0
+                for conv_i in xrange(conv_window):
+                    # conv[i] = 0
+                    for conv_j in xrange(conv_window):
+                        if conv_i-conv_j-1 > 0:
+                            # conv[i] = conv[i] + f_vector[conv_i] * g_vector[conv_i-conv_j+1]
+                            conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
+                            
+            stim[t] = conv_sum
     
     return stim
-        
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
