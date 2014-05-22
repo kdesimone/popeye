@@ -152,7 +152,7 @@ def test_strf_fit():
     tr_length = 1.0 # seconds
     tr_sampling_rate = 4 # number of time-samples per TR to plot the STRF in
     time_window = 0.5 # seconds
-    freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
+    freq_window = 64 # this is 2x the number of freq bins we'll end up with in the spectrogram
     scale_factor = 1.0 # how much to downsample the spectrotemporal space
     num_timepoints = np.floor(duration / tr_length)
     clip_number=10
@@ -168,9 +168,9 @@ def test_strf_fit():
     stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window, sampling_rate=fs, 
                                 tr_sampling_rate=tr_sampling_rate, scale_factor=scale_factor, clip_number=clip_number)
     
-    freq_center = 550 # center frequency
-    freq_sigma = 100 # frequency dispersion
-    hrf_delay = 0.0 # seconds
+    freq_center = 587 # center frequency
+    freq_sigma = 128 # frequency dispersion
+    hrf_delay = 0.97 # seconds
     
     # set up bounds for the grid search
     bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(-5,5))
