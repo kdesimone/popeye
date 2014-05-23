@@ -150,27 +150,28 @@ def test_strf_fit():
     fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
-    tr_sampling_rate = 4 # number of time-samples per TR to plot the STRF in
+    tr_sampling_rate = 10 # number of time-samples per TR to plot the STRF in
     time_window = 0.5 # seconds
-    freq_window = 64 # this is 2x the number of freq bins we'll end up with in the spectrogram
+    freq_window = 512 # this is 2x the number of freq bins we'll end up with in the spectrogram
     scale_factor = 1.0 # how much to downsample the spectrotemporal space
     num_timepoints = np.floor(duration / tr_length)
-    clip_number=10
+    clip_number = 0
+    blank_period = 10
     degrees = 0.0
     
     # sample the time from 0-duration by the fs
     time = np.linspace(1,duration,duration*fs)
     
     # create the sweeping bar stimulus in memory
-    signal = chirp(time, lo_freq, duration/2, hi_freq, method='linear')
+    signal = chirp(time, lo_freq, duration/4, hi_freq, method='linear')
     
     # instantiate an instance of the Stimulus class
     stimulus = AuditoryStimulus(signal, tr_length, freq_window, time_window, sampling_rate=fs, 
                                 tr_sampling_rate=tr_sampling_rate, scale_factor=scale_factor, clip_number=clip_number)
     
-    freq_center = 587 # center frequency
-    freq_sigma = 128 # frequency dispersion
-    hrf_delay = 0.97 # seconds
+    freq_center = 500 # center frequency
+    freq_sigma = 50 # frequency dispersion
+    hrf_delay = 0 # seconds
     
     # set up bounds for the grid search
     bounds = ((lo_freq, hi_freq),(lo_freq, hi_freq),(-5,5))
@@ -189,7 +190,6 @@ def test_strf_fit():
     
     # assert
     npt.assert_almost_equal([f0, fs0, hrf0],[freq_center,freq_sigma,hrf_delay],10)
-    
     
 def test_parallel_fit():
     
@@ -265,7 +265,3 @@ def test_parallel_fit():
         nt.assert_almost_equal(strf_fit.freq_center, estimate[0])
         nt.assert_almost_equal(strf_fit.freq_sigma, estimate[1])
         nt.assert_almost_equal(strf_fit.hrf_delay, estimate[2])
-
-
-
-

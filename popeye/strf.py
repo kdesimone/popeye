@@ -18,6 +18,8 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastGaussian2D, MakeFastAudioPrediction
 
+np.set_printoptions(suppress=True)
+
 def recast_estimation_results(output, grid_parent, write=True):
     """
     Recasts the output of the pRF estimation into two nifti_gz volumes.
@@ -153,34 +155,42 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     return Z
 
 
-def compute_model_ts_cython(freq_center, freq_sigma, hrf_delay, 
+def compute_model_ts(freq_center, freq_sigma, hrf_delay, 
                      time_coord, freq_coord, spectrogram,
                      tr_length, num_timepoints, clip_number,
                      norm_func=utils.zscore):
     
     # compute the STRF
-    g = MakeFastGaussian2D(time_coord, freq_coord, freq_coord.max()*0.5, freq_center, freq_coord.max()*0.5, freq_sigma, 0)
+    gaussian = MakeFastGaussian2D(time_coord, freq_coord, time_coord.max()*0.5, freq_center, time_coord.max()*0.5, freq_sigma, 0)
     
     # compute the stim
-    stim = MakeFastAudioPrediction(spectrogram, g, freq_center, freq_sigma, hrf_delay, num_timepoints)
+    stim = MakeFastAudioPrediction(spectrogram, gaussian, time_coord, freq_coord, freq_center, freq_sigma, hrf_delay, num_timepoints)
+    stim_norm = norm_func(stim)
     
     # convolve it with the HRF
     hrf = double_gamma_hrf(hrf_delay, tr_length)
-    model = np.convolve(stim, hrf)
-    model = norm_func(model[clip_number:len(stim)-clip_number])
+    model = np.convolve(stim_norm, hrf)[0:len(stim_norm)]
+    model_norm = norm_func(model)
+    
+    return model_norm
 
-    return model
-
-def compute_model_ts(freq_center, freq_sigma, hrf_delay, 
+def compute_model_ts_slow(freq_center, freq_sigma, hrf_delay, 
                      time_coord, freq_coord, spectrogram,
                      tr_length, num_timepoints, clip_number,
                      norm_func=utils.zscore):
+    
+    
+    time_center = freq_coord.max()*0.5
+    time_sigma = freq_coord.max()*0.5
                      
     # create the STRF
-    g = MakeFastGaussian2D(time_coord, freq_coord, freq_coord.max()*0.5, freq_center, freq_coord.max()*0.5, freq_sigma, 0)
+    g = MakeFastGaussian2D(time_coord, freq_coord, time_center, freq_center, time_sigma, freq_sigma, 0)
+    
+    s_factor_3 = (3.0*freq_sigma)**2
     
     # initialize the inter-TR stimulus model
     stim = np.zeros(num_timepoints)
+    
     
     # loop over each TR
     for tr in np.arange(0, spectrogram.shape[-1],spectrogram.shape[-1]/num_timepoints):
@@ -188,7 +198,7 @@ def compute_model_ts(freq_center, freq_sigma, hrf_delay,
         tr_num = tr/(spectrogram.shape[1]/num_timepoints)
         
         # initialize the intra-TR stimulus model
-        tr_model = np.zeros(spectrogram.shape[0])
+        tr_model = np.zeros(spectrogram.shape[0])        
         
         from_slice = tr
         to_slice = tr + spectrogram.shape[1]/num_timepoints
@@ -196,24 +206,29 @@ def compute_model_ts(freq_center, freq_sigma, hrf_delay,
         # grab the sound frame an normalize it to 1
         sound_frame = spectrogram[:,from_slice:to_slice]
         
-        # don't bother if its during a silence block
-        if np.sum(sound_frame)>0:
+        conv_sum = 0.0
+        
+        # loop over each frequency and convolve
+        for f in range(spectrogram.shape[0]):
             
-            # loop over each frequency and convolve
-            for f in range(len(tr_model)):
-                
-                f_vector = sound_frame[f,:]
-                g_vector = g[f,:]
-                
-                conv = np.convolve(f_vector,g_vector)
-                tr_model[f] = np.sum(conv)
-                
-            stim[tr_num] = np.mean(tr_model)
+            f_vector = sound_frame[f,:]
+            g_vector = g[f,:]
+            
+            # something is wrong here?????
+            for conv_i in np.arange(1,len(f_vector)):
+                d = (time_coord[f,conv_i]-time_coord[f,conv_i])**2 + (freq_coord[f,conv_i]-freq_center)**2
+                if d <= s_factor_3:
+                    for conv_j in np.arange(1,len(f_vector)):
+                        conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
+            
+        stim[tr_num] = np.mean(conv_sum)
+        
+    stim_norm = norm_func(stim)
     
     # convolve it with the HRF
     hrf = double_gamma_hrf(hrf_delay, tr_length)
-    model = np.convolve(stim, hrf)
-    model = norm_func(model[clip_number:len(stim)-clip_number])
+    model = np.convolve(stim_norm, hrf)[0:len(stim_norm)]
+    model_norm = norm_func(model)
     
     return model
 
@@ -248,6 +263,8 @@ def error_function(parameters, response,
     
     # compute the RSS
     error = np.sum((model_ts-response)**2)
+    
+    print("%.03f,%.03f,%.03f,%.03f" %(freq_center,freq_sigma,hrf_delay,error))
     
     # catch NaN
     if np.isnan(np.sum(error)):
@@ -336,6 +353,7 @@ class SpectrotemporalFit(PopulationFit):
         self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
         
+        # just make sure that all data is inside the mask
         tic = time.clock()
         self.fit_stats;
         toc = time.clock()
