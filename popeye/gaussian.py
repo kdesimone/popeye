@@ -8,92 +8,48 @@ import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
+
 from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
+from scipy.signal import decimate
+from scipy.interpolate import interp1d
+import scipy.signal as ss
+
 
 from dipy.core.onetime import auto_attr
 
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import MakeFastPrediction
-
-def double_gamma_hrf(delay,TR):
-    """
-    The double-gamma hemodynamic reponse function (HRF) used to convolve with
-    the stimulus time-series.
-    
-    The user specifies only the delay of the peak and under-shoot The delay
-    shifts the peak and under-shoot by a variable number of seconds.  The other
-    parameters are hard-coded.  The HRF delay is modeled for each voxel
-    independently.  The double-gamme HRF andhard-coded values are based on
-    previous work (Glover, 1999).
-    
-    
-    Parameters
-    ----------
-    delay : float
-        The delay of the HRF peak and under-shoot.
-    
-    TR : float
-        The length of the repetition time in seconds.
-        
-        
-    Returns
-    -------
-    hrf : ndarray
-        The hemodynamic response function to convolve with the stimulus
-        time-series.
-    
-    
-    Reference
-    ----------
-    Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
-    fMRI. NeuroImage 9: 416 429.
-    
-    """
-    
-    # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 6.0/TR+delay/TR
-    beta_1 = 1.0
-    c = 0.2
-    alpha_2 = 16.0/TR+delay/TR
-    beta_2 = 1.0
-    
-    t = np.arange(0,33/TR,TR)
-    scale = 1
-    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
-                      np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
-                      /gamma( alpha_2 ) ) )
-            
-    return hrf
+from popeye.spinach import MakeFastGaussPrediction
 
 def compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
-                    stim_arr, tr_length, norm_func=utils.zscore):
+                    stim_arr, tr_length, frames_per_tr, 
+                    norm_func=utils.zscore):
     
     # otherwise generate a prediction
-    ts_stim = MakeFastPrediction(deg_x,
-                                 deg_y,
-                                 stim_arr,
-                                 x,
-                                 y,
-                                 sigma)
+    ts_stim = MakeFastGaussPrediction(deg_x,
+                                      deg_y,
+                                      stim_arr,
+                                      x,
+                                      y,
+                                      sigma)
     
-    # compute the hrf
-    hrf = double_gamma_hrf(hrf_delay, tr_length)
-    
-    # convolve and trim
-    model_ts = np.convolve(ts_stim, hrf)
-    model_ts = model_ts[0:stim_arr.shape[-1]]
-    
-    # normalized it
-    model_ts = norm_func(model_ts)
-    
-    return model_ts
+    # convolve it
+    hrf = utils.double_gamma_hrf(hrf_delay, tr_length, frames_per_tr)
+
+    # normalize it
+    model = norm_func(ss.fftconvolve(ts_stim, hrf, 'same'))
+
+    # decimate it
+    if frames_per_tr > 1:
+        model = ss.decimate(model, int(frames_per_tr), 1)
+
+    return model
 
 
-def error_function(parameters, response, deg_x, deg_y, stim_arr, tr_length):
+def error_function(parameters, response, deg_x, deg_y, 
+                   stim_arr, tr_length, frames_per_tr, ppd):
     """
     The objective function that yields a minimizeable error between the
     predicted and actual BOLD time-series.
@@ -110,7 +66,7 @@ def error_function(parameters, response, deg_x, deg_y, stim_arr, tr_length):
     returned.
     
     This function makes use of the Cython optimising static compiler.
-    MakeFastPrediction is written in Cython and computes the pre HRF convolved
+    MakeFastGaussPrediction is written in Cython and computes the pre HRF convolved
     model time-series.
     
     Parameters
@@ -148,19 +104,21 @@ def error_function(parameters, response, deg_x, deg_y, stim_arr, tr_length):
     
     # unpack the tuple
     x, y, sigma, hrf_delay = parameters[:]
+     
+    visuotopic_limiter = 12 # np.floor(np.min((deg_x.max(),deg_y.max())))-2
     
     # if the x or y are off the screen, abort with an inf
-    if np.abs(x) > np.floor(np.max(deg_x))-1:
+    if np.abs(x) > visuotopic_limiter:
         return np.inf
-    if np.abs(y) > np.floor(np.max(deg_y))-1:
+    if np.abs(y) > visuotopic_limiter:
+        return np.inf
+    
+    # you can't have a sigma smaller than a pixel
+    if sigma < 1./ppd:
         return np.inf
         
     # if the sigma is larger than the screen width, abort with an inf
-    if np.abs(sigma) > np.floor(np.max(deg_y))-1:
-        return np.inf
-        
-    # if the sigma is <= 0, abort with an inf
-    if sigma <= 0:
+    if np.abs(sigma) > visuotopic_limiter:
         return np.inf
         
     # if the HRF delay parameter is greater than 4 seconds, abort with an inf
@@ -168,24 +126,30 @@ def error_function(parameters, response, deg_x, deg_y, stim_arr, tr_length):
         return np.inf
         
     # otherwise generate a prediction
-    model_ts = compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y, stim_arr, tr_length)
+    model_ts = compute_model_ts(x, y, sigma, hrf_delay, deg_x, deg_y,
+                                stim_arr, tr_length, frames_per_tr)
+    
+    
+    
+    # if the model returns NaN, abort with inf ... this hapens if sigma is too small
+    if np.any(np.isnan(model_ts)):
+        return np.inf
     
     # compute the RSS
     error = np.sum((model_ts-response)**2)
     
-    # catch NaN
-    if np.isnan(np.sum(error)):
-        return np.inf
-        
+    txt = '%.03g,%.03g,%.03g,%.03g,%.03g' %(error,x,y,sigma,hrf_delay)
+    # print(txt)
+    
     return error
 
-def gradient_descent_search(x0, y0, s0, hrf0,
-                            error_function, response, 
-                            deg_x, deg_y, stim_arr, tr_length):
+def gradient_descent_search(x0, y0, s0, hrf0,error_function, 
+                            response, deg_x, deg_y, stim_arr, 
+                            tr_length, frames_per_tr, ppd):
                             
     [x, y, sigma, hrf_delay], err,  _, _, _, warnflag =\
         fmin_powell(error_function,(x0, y0, s0, hrf0),
-                    args=(response, deg_x, deg_y, stim_arr, tr_length),
+                    args=(response, deg_x, deg_y, stim_arr, tr_length, frames_per_tr, ppd),
                     full_output=True,
                     disp=False)
     
@@ -193,11 +157,11 @@ def gradient_descent_search(x0, y0, s0, hrf0,
 
 def brute_force_search(bounds, response, error_function,
                        deg_x, deg_y, stim_arr, 
-                       tr_length):
+                       tr_length, frames_per_tr, ppd):
 
     [x0, y0, s0, hrf0], err,  _, _ =\
         brute(error_function,
-              args=(response, deg_x, deg_y, stim_arr, tr_length),
+              args=(response, deg_x, deg_y, stim_arr, tr_length, frames_per_tr, ppd),
               ranges=bounds,
               Ns=5,
               finish=None,
@@ -248,7 +212,7 @@ class GaussianFit(object):
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, data, model, bounds, tr_length, voxel_index, uncorrected_rval, verbose=True):
+    def __init__(self, data, model, bounds, tr_length, voxel_index, uncorrected_rval, verbose=True, auto_fit=True):
             
         self.data = utils.zscore(data)
         self.model = model
@@ -258,19 +222,23 @@ class GaussianFit(object):
         self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
         
-        tic = time.clock()
-        self.fit_stats;
-        toc = time.clock()
-        
-        # print to screen if verbose
-        if self.verbose:
-            print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
-                  %(self.voxel_index[0],
-                    self.voxel_index[1],
-                    self.voxel_index[2],
-                    toc-tic,
-                    self.rss,
-                    self.fit_stats[2]))
+        if auto_fit:
+            tic = time.clock()
+            # print('ballparking...')
+            self.ballpark_estimate;
+            # print('estimating...')
+            self.gaussian_estimate;
+            toc = time.clock()
+            
+            # print to screen if verbose
+            if self.verbose:
+                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
+                      %(self.voxel_index[0],
+                        self.voxel_index[1],
+                        self.voxel_index[2],
+                        toc-tic,
+                        self.rss,
+                        self.fit_stats[2]))
                     
         
     @auto_attr
@@ -279,7 +247,9 @@ class GaussianFit(object):
                                   self.model.stimulus.deg_x_coarse,
                                   self.model.stimulus.deg_y_coarse,
                                   self.model.stimulus.stim_arr_coarse,
-                                  self.tr_length)
+                                  self.tr_length,
+                                  self.model.stimulus.frames_per_tr,
+                                  self.model.stimulus.ppd * self.model.stimulus.scale_factor)
                                   
     @auto_attr
     def gaussian_estimate(self):
@@ -288,7 +258,9 @@ class GaussianFit(object):
                                        self.model.stimulus.deg_x,
                                        self.model.stimulus.deg_y,
                                        self.model.stimulus.stim_arr,
-                                       self.tr_length)
+                                       self.tr_length,
+                                       self.model.stimulus.frames_per_tr,
+                                       self.model.stimulus.ppd)
                                        
     @auto_attr
     def x0(self):
@@ -328,7 +300,8 @@ class GaussianFit(object):
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
-                                self.tr_length)
+                                self.tr_length,
+                                self.model.stimulus.frames_per_tr)
     
     @auto_attr
     def fit_stats(self):

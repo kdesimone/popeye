@@ -11,6 +11,7 @@ import numpy as np
 from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
+import scipy.signal as ss
 
 from dipy.core.onetime import auto_attr
 
@@ -89,57 +90,6 @@ def recast_estimation_results(output, grid_parent, write=True):
     nif.set_data_dtype('float32')
     
     return nif
- 
-def double_gamma_hrf(delay,TR):
-    """
-    The double-gamma hemodynamic reponse function (HRF) used to convolve with
-    the stimulus time-series.
-    
-    The user specifies only the delay of the peak and under-shoot The delay
-    shifts the peak and under-shoot by a variable number of seconds.  The other
-    parameters are hard-coded.  The HRF delay is modeled for each voxel
-    independently.  The double-gamme HRF andhard-coded values are based on
-    previous work (Glover, 1999).
-    
-    
-    Parameters
-    ----------
-    delay : float
-        The delay of the HRF peak and under-shoot.
-    
-    TR : float
-        The length of the repetition time in seconds.
-        
-        
-    Returns
-    -------
-    hrf : ndarray
-        The hemodynamic response function to convolve with the stimulus
-        time-series.
-    
-    
-    Reference
-    ----------
-    Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
-    fMRI. NeuroImage 9: 416 429.
-    
-    """
-    
-    # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 6.0/TR+delay/TR
-    beta_1 = 1.0
-    c = 0.2
-    alpha_2 = 16.0/TR+delay/TR
-    beta_2 = 1.0
-    
-    t = np.arange(0,33/TR,TR)
-    scale = 1
-    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
-                      np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
-                      /gamma( alpha_2 ) ) )
-            
-    return hrf
 
 # this is actually not used, but it serves as the model for the cython function ...
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
@@ -157,7 +107,7 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
 
 def compute_model_ts(freq_center, freq_sigma, hrf_delay, 
                      time_coord, freq_coord, spectrogram,
-                     tr_length, num_timepoints, clip_number,
+                     tr_length, num_timepoints,
                      norm_func=utils.zscore):
     
     # compute the STRF
@@ -168,16 +118,16 @@ def compute_model_ts(freq_center, freq_sigma, hrf_delay,
     stim_norm = norm_func(stim)
     
     # convolve it with the HRF
-    hrf = double_gamma_hrf(hrf_delay, tr_length)
-    model = np.convolve(stim_norm, hrf)[0:len(stim_norm)]
+    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
+    model = ss.fftconvolve(stim_norm, hrf, 'same')
     model_norm = norm_func(model)
     
     return model_norm
 
 def compute_model_ts_slow(freq_center, freq_sigma, hrf_delay, 
-                     time_coord, freq_coord, spectrogram,
-                     tr_length, num_timepoints, clip_number,
-                     norm_func=utils.zscore):
+                          time_coord, freq_coord, spectrogram,
+                          tr_length, num_timepoints,
+                          norm_func=utils.zscore):
     
     
     time_center = freq_coord.max()*0.5
@@ -227,14 +177,14 @@ def compute_model_ts_slow(freq_center, freq_sigma, hrf_delay,
     
     # convolve it with the HRF
     hrf = double_gamma_hrf(hrf_delay, tr_length)
-    model = np.convolve(stim_norm, hrf)[0:len(stim_norm)]
+    model = norm_func(ss.fftconvolve(stim_norm, hrf, 'same'))
     model_norm = norm_func(model)
     
     return model
 
 def error_function(parameters, response, 
                    time_coord, freq_coord, spectrogram,
-                   tr_length, num_timepoints, clip_number):
+                   tr_length, num_timepoints):
     
     # unpack the tuple
     freq_center, freq_sigma, hrf_delay = parameters[:]
@@ -250,7 +200,7 @@ def error_function(parameters, response,
     # if the sigma is <= 0, abort with an inf
     if freq_sigma <= 0:
         return np.inf
-
+        
     # if the HRF delay parameter is greater than 5 seconds, abort with an inf
     if np.abs(hrf_delay) > 5:
         return np.inf
@@ -258,13 +208,12 @@ def error_function(parameters, response,
     # otherwise generate a prediction
     model_ts = compute_model_ts(freq_center, freq_sigma, hrf_delay,
                                 time_coord, freq_coord, spectrogram,
-                                tr_length, num_timepoints, clip_number,
-                                norm_func=utils.zscore)
+                                tr_length, num_timepoints, norm_func=utils.zscore)
     
     # compute the RSS
     error = np.sum((model_ts-response)**2)
     
-    print("%.03f,%.03f,%.03f,%.03f" %(freq_center,freq_sigma,hrf_delay,error))
+    # print("%.03f,%.03f,%.03f,%.03f" %(freq_center,freq_sigma,hrf_delay,error))
     
     # catch NaN
     if np.isnan(np.sum(error)):
@@ -274,12 +223,12 @@ def error_function(parameters, response,
 
 def brute_force_search(bounds, response,
                        time_coord, freq_coord, spectrogram, 
-                       tr_length, num_timepoints, time_window, clip_number):
+                       tr_length, num_timepoints):
     
     [freq_center, freq_sigma, hrf_delay], err,  _, _ =\
         brute(error_function,
               args=(response, time_coord, freq_coord, spectrogram, 
-                    tr_length, num_timepoints, clip_number),
+                    tr_length, num_timepoints),
               ranges=bounds,
               Ns=5,
               finish=None,
@@ -293,13 +242,13 @@ def brute_force_search(bounds, response,
 def gradient_descent_search(freq_center_0, freq_sigma_0, hrf_delay_0,
                             error_function, response,
                             time_coord, freq_coord, spectrogram,
-                            tr_length, num_timepoints, clip_number):
+                            tr_length, num_timepoints):
                             
                             
     [freq_center, freq_sigma, hrf_delay], err,  _, _, _, warnflag =\
         fmin_powell(error_function,(freq_center_0, freq_sigma_0, hrf_delay_0),
                     args=(response, time_coord, freq_coord, spectrogram,
-                          tr_length, num_timepoints, clip_number),
+                          tr_length, num_timepoints),
                     full_output=True,
                     disp=False)
                     
@@ -375,10 +324,7 @@ class SpectrotemporalFit(PopulationFit):
                                   self.model.stimulus.freq_coord,
                                   self.model.stimulus.spectrogram,
                                   self.model.stimulus.tr_length,
-                                  self.model.stimulus.num_timepoints,
-                                  self.model.stimulus.time_window,
-                                  self.model.stimulus.clip_number)
-    
+                                  self.model.stimulus.num_timepoints)
     @auto_attr
     def strf_estimate(self):
         return gradient_descent_search(self.f0, self.fs0, self.hrf0,
@@ -387,9 +333,7 @@ class SpectrotemporalFit(PopulationFit):
                                        self.model.stimulus.freq_coord,
                                        self.model.stimulus.spectrogram,
                                        self.model.stimulus.tr_length,
-                                       self.model.stimulus.num_timepoints,
-                                       self.model.stimulus.clip_number)
-    
+                                       self.model.stimulus.num_timepoints)
     @auto_attr
     def f0(self):
         return self.ballpark_estimate[0]
@@ -405,11 +349,11 @@ class SpectrotemporalFit(PopulationFit):
     @auto_attr
     def freq_center(self):
         return self.strf_estimate[0]
-
+        
     @auto_attr
     def freq_sigma(self):
         return self.strf_estimate[1]
-
+        
     @auto_attr
     def hrf_delay(self):
         return self.strf_estimate[2]
@@ -421,9 +365,7 @@ class SpectrotemporalFit(PopulationFit):
                                 self.model.stimulus.freq_coord,
                                 self.model.stimulus.spectrogram,
                                 self.model.stimulus.tr_length,
-                                self.model.stimulus.num_timepoints,
-                                self.model.stimulus.clip_number)
-                                
+                                self.model.stimulus.num_timepoints)                                
     @auto_attr
     def fit_stats(self):
         return linregress(self.data, self.model_ts)

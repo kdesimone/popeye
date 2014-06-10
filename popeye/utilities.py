@@ -10,6 +10,60 @@ import sys, os, time
 import numpy as np
 import nibabel
 from scipy.misc import imresize
+from scipy.special import gamma
+
+def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
+    """
+    The double-gamma hemodynamic reponse function (HRF) used to convolve with
+    the stimulus time-series.
+    
+    The user specifies only the delay of the peak and under-shoot The delay
+    shifts the peak and under-shoot by a variable number of seconds.  The other
+    parameters are hard-coded.  The HRF delay is modeled for each voxel
+    independently.  The double-gamme HRF andhard-coded values are based on
+    previous work (Glover, 1999).
+    
+    
+    Parameters
+    ----------
+    delay : float
+        The delay of the HRF peak and under-shoot.
+    tr_length : float
+        The length of the repetition time in seconds.
+    frames_per_tr : int
+        The number number of stimulus frames that are used during a single functional volume.
+        
+        
+    Returns
+    -------
+    hrf : ndarray
+        The hemodynamic response function to convolve with the stimulus
+        time-series.
+    
+    
+    Reference
+    ----------
+    Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
+    fMRI. NeuroImage 9: 416 429.
+    
+    """
+    
+    # add delay to the peak and undershoot params (alpha 1 and 2)
+    alpha_1 = 6.0/tr_length+delay/tr_length
+    beta_1 = 1.0
+    c = 0.2
+    alpha_2 = 16.0/tr_length+delay/tr_length
+    beta_2 = 1.0
+    
+    t = np.arange(0,33/tr_length,tr_length/frames_per_tr)
+    scale = 1
+    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
+                      np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
+                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
+                      /gamma( alpha_2 ) ) )
+            
+    return hrf
+
 
 def recast_estimation_results(output, grid_parent, write=True):
     """
@@ -359,3 +413,62 @@ def randomize_voxels(voxels):
     randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
     
     return randomized_voxels
+
+def smooth(x,window_len=11,window='hanning'):
+    """smooth the data using a window with requested size.
+
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal 
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+
+    input:
+        x: the input signal 
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+
+    see also: 
+
+    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+    scipy.signal.lfilter
+
+    TODO: the window parameter could be the window itself if an array instead of a string
+    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    """
+
+    if x.ndim != 1:
+        raise ValueError, "smooth only accepts 1 dimension arrays."
+
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size."
+
+
+    if window_len<3:
+        return x
+
+
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+
+
+    s=numpy.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+    #print(len(s))
+    if window == 'flat': #moving average
+        w=numpy.ones(window_len,'d')
+    else:
+        w=eval('numpy.'+window+'(window_len)')
+
+    y=numpy.convolve(w/w.sum(),s,mode='valid')
+    return y
+
+
