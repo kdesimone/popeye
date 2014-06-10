@@ -57,8 +57,8 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, freq_factor=1.0, 
-                       sampling_rate=44100, tr_sampling_rate=100, scale_factor=1.0, clip_number=0, roll_number=0):
+    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, 
+                 freq_factor=1.0, sampling_rate=44100, tr_sampling_rate=100, scale_factor=1.0):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
@@ -71,11 +71,9 @@ class AuditoryStimulus(StimulusModel):
         self.tr_length = tr_length # the TR in s
         self.freq_factor = freq_factor # the scaling factor of the freqs, i think its only for plotting
         self.sampling_rate = sampling_rate # the sampling rate of the wav
-        self.tr_sampling_rate = tr_sampling_rate
+        self.tr_sampling_rate = tr_sampling_rate # the number of samples from a single TR
         self.scale_factor = scale_factor
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
-        self.clip_number = clip_number 
-        self.roll_number = roll_number
         self.freq_window = freq_window
             
         # share the arrays via memmap to reduce size
@@ -89,16 +87,10 @@ class AuditoryStimulus(StimulusModel):
         
         self.freq_coord = np.memmap('%s%s.npy' %('/tmp/','freq_coord'),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord))
         self.freq_coord[:] = freq_coord[:]
-        
-        # trim and rotate stimulus is specified
-        # if self.clip_number != 0:
-        #     stim_arr = stim_arr[self.clip_number*tr_length*self.sampling_rate::]
-        # if self.roll_number != 0:
-        #     stim_arr = np.roll(stim_arr, self.roll_number, axis=-1)
                 
     @auto_attr
     def num_timepoints(self):
-        return np.int(np.floor(self.stim_arr.shape[0]/self.sampling_rate/self.tr_length))
+        return np.int(self.stim_arr.shape[0]/self.sampling_rate)
     
     @auto_attr
     def tr_times(self):
