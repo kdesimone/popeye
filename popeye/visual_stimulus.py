@@ -94,7 +94,14 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]))
     
     for tr in np.arange(dims[-1]):
-        resampled_arr[:,:,tr] = imresize(stim_arr[:,:,tr], scale_factor)
+        
+        # resize it
+        f = imresize(stim_arr[:,:,tr], scale_factor, interp='cubic')
+        
+        # normalize it to the same range as the non-resampled frames
+        f *= np.max(stim_arr[:,:,tr]) / np.max(f)
+        
+        resampled_arr[:,:,tr] = f
     
     return resampled_arr.astype('short')
     
@@ -187,7 +194,7 @@ class VisualStimulus(StimulusModel):
     
     
     def __init__(self, stim_arr, viewing_distance, screen_width, 
-                 scale_factor, clip_number=0, roll_number=0):
+                 scale_factor, frames_per_tr = 1):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
@@ -196,14 +203,7 @@ class VisualStimulus(StimulusModel):
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
         self.scale_factor = scale_factor
-        self.clip_number = clip_number
-        self.roll_number = roll_number
-        
-        # trim and rotate stimulus is specified
-        if self.clip_number != 0:
-            stim_arr = stim_arr[:, :, self.clip_number::]
-        if self.roll_number != 0:
-            stim_arr = np.roll(stim_arr, self.roll_number, axis=-1)
+        self.frames_per_tr = frames_per_tr
         
         # ascertain stimulus features
         self.pixels_across = np.shape(stim_arr)[1]
