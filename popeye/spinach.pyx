@@ -18,10 +18,10 @@ from libc.math cimport sin, cos, exp
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def MakeFastPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
-                       np.ndarray[DTYPE2_t, ndim=2] degY,
-                       np.ndarray[DTYPE2_t, ndim=3] stimArray,
-                       DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
+def MakeFastGaussPrediction(np.ndarray[DTYPE2_t, ndim=2] degX,
+                            np.ndarray[DTYPE2_t, ndim=2] degY,
+                            np.ndarray[short, ndim=3] stimArray,
+                            DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
 
     """
     Predict a time-series of a voxels response, for a specific Gaussian
@@ -402,4 +402,3 @@ def MakeFastGaborPrediction(np.ndarray[DTYPE2_t, ndim=2] X,
                         
                 
     return ts_stim
-
