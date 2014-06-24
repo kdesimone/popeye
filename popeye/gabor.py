@@ -40,7 +40,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, theta, phi, cpd,
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length, frames_per_tr)
     
     # normalize it
-    model = norm_func(ss.fftconvolve(ts_stim, hrf, 'same'))
+    model = norm_func(ss.fftconvolve(ts_stim, hrf)[0:len(ts_stim)])
 
     # decimate it
     model = ss.decimate(model, int(frames_per_tr), 1)

@@ -45,7 +45,7 @@ def test_gaussian_fit():
     # generate the modeled BOLD response`
     stim = MakeFastGaussPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
     hrf = utils.double_gamma_hrf(estimate[3], tr_length, frames_per_tr)
-    response = utils.zscore(ss.fftconvolve(stim,hrf,'same'))
+    response = utils.zscore(ss.fftconvolve(stim,hrf)[0:len(stim)])
     
     # fit the response
     gaussian_fit = gaussian.GaussianFit(response, gaussian_model, bounds, tr_length, [0,0,0], 0, False)
@@ -93,7 +93,7 @@ def test_parallel_gaussian_fit():
     for estimate in estimates:
         stim = MakeFastGaussPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
         hrf = utils.double_gamma_hrf(estimate[3], tr_length, frames_per_tr)
-        response = utils.zscore(ss.fftconvolve(stim,hrf,'same'))
+        response = utils.zscore(ss.fftconvolve(stim,hrf)[0:len(stim)])
         timeseries.append(response)
         
     # package the data structure
