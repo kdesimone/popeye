@@ -16,12 +16,12 @@ from popeye.spinach import MakeFastGaussPrediction
 def test_gaussian_fit():
     
     # stimulus features
-    pixels_across = 800 
-    pixels_down = 600
-    viewing_distance = 38
-    screen_width = 25
+    pixels_across = 500 
+    pixels_down = 500
+    viewing_distance = 20
+    screen_width = 10
     thetas = np.arange(0,360,45)
-    num_steps = 20
+    num_steps = 10
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
@@ -34,7 +34,8 @@ def test_gaussian_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, frames_per_tr)
     
     # set up bounds for the grid search
-    bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
+    search_bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
+    fit_bounds = ((-12,12),(-12,12),(stimulus.ppd*stimulus.scale_factor,12),(-5,5))
     
     # initialize the gaussian model
     gaussian_model = gaussian.GaussianModel(stimulus)
@@ -48,7 +49,7 @@ def test_gaussian_fit():
     response = utils.zscore(ss.fftconvolve(stim,hrf)[0:len(stim)])
     
     # fit the response
-    gaussian_fit = gaussian.GaussianFit(response, gaussian_model, bounds, tr_length, [0,0,0], 0, False)
+    gaussian_fit = gaussian.GaussianFit(response, gaussian_model, search_bounds, fit_bounds, tr_length, [0,0,0], 0, False)
     
     # assert equivalence
     nt.assert_almost_equal(gaussian_fit.x,estimate[0])
@@ -60,12 +61,12 @@ def test_gaussian_fit():
 def test_parallel_gaussian_fit():
 
     # stimulus features
-    pixels_across = 800 
-    pixels_down = 600
-    viewing_distance = 38
-    screen_width = 25
+    pixels_across = 500 
+    pixels_down = 500
+    viewing_distance = 20
+    screen_width = 10
     thetas = np.arange(0,360,45)
-    num_steps = 20
+    num_steps = 10
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
@@ -79,7 +80,10 @@ def test_parallel_gaussian_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, frames_per_tr)
     
     # set up bounds for the grid search
-    bounds = [((-10,10),(-10,10),(0.25,5.25),(-5,5))]*num_voxels
+    search_bounds = [((-10,10),(-10,10),(0.25,5.25),(-5,5))]*num_voxels
+    fit_bounds = [((-12,12),(-12,12),(stimulus.ppd*stimulus.scale_factor,12),(-5,5))]*num_voxels
+    
+    # make fake voxel indices
     indices = [(1,2,3)]*num_voxels
     
     # initialize the gaussian model
@@ -99,7 +103,8 @@ def test_parallel_gaussian_fit():
     # package the data structure
     dat = zip(timeseries,
               repeat(gaussian_model,num_voxels),
-              bounds,
+              search_bounds,
+              fit_bounds,
               repeat(tr_length,num_voxels),
               indices,
               repeat(0.20,num_voxels),
