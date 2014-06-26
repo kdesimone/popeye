@@ -11,6 +11,55 @@ import numpy as np
 import nibabel
 from scipy.misc import imresize
 from scipy.special import gamma
+from scipy.optimize import brute, fmin_powell
+
+# generic gradient descent
+def gradient_descent_search(parameters, args, fit_bounds, response,
+                            error_function, objective_function):
+                            
+    estimate, err,  _, _, _, warnflag =\
+        fmin_powell(error_function, parameters,
+                    args=(args, fit_bounds, response, objective_function),
+                    full_output=True,
+                    disp=False)
+    
+    return estimate
+
+def brute_force_search(args, search_bounds, fit_bounds, response,
+                       error_function, objective_function):
+                       
+    estimate, err,  _, _ =\
+        brute(error_function,
+              args=(args, fit_bounds, response, objective_function),
+              ranges=search_bounds,
+              Ns=5,
+              finish=None,
+              full_output=True,
+              disp=False)
+              
+    return estimate
+
+# generic error function
+def error_function(parameters, args, bounds, response, func):
+    
+    # check ifparameters are inside bounds
+    for p, b in zip(parameters,bounds):
+        
+        # if not return an inf
+        if b[0] and b[0] > p:
+            print np.inf
+        if b[1] and b[1] < p:
+            print np.inf
+    
+    # merge the parameters and arguments
+    ensemble = []
+    ensemble.extend(parameters)
+    ensemble.extend(args)
+    
+    # compute the RSS
+    error = np.sum((response-func(*ensemble))**2)
+    
+    return error
 
 def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
     """
@@ -67,10 +116,10 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
 
 def recast_estimation_results(output, grid_parent, write=True):
     """
-    Recasts the output of the pRF estimation into two nifti_gz volumes.
+    Recasts the output of the prf estimation into two nifti_gz volumes.
     
     Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the pRF estimation for each voxel.  The pRF estimates are
+    output of the prf estimation for each voxel.  The prf estimates are
     expressed in both polar and Cartesian coordinates.  If the default value
     for the `write` parameter is set to False, then the function returns the
     arrays without writing the nifti files to disk.  Otherwise, if `write` is
@@ -96,10 +145,10 @@ def recast_estimation_results(output, grid_parent, write=True):
     Returns
     ------ 
     cartes_filename : string
-        The absolute path of the recasted pRF estimation output in Cartesian
+        The absolute path of the recasted prf estimation output in Cartesian
         coordinates. 
     plar_filename : string
-        The absolute path of the recasted pRF estimation output in polar
+        The absolute path of the recasted prf estimation output in polar
         coordinates. 
         
     """
@@ -114,7 +163,7 @@ def recast_estimation_results(output, grid_parent, write=True):
     polar = np.zeros(dims)
     cartes = np.zeros(dims)
     
-    # extract the pRF model estimates from the results queue output
+    # extract the prf model estimates from the results queue output
     for fit in output:
         
         if fit.__dict__.has_key('rss'):
@@ -133,7 +182,7 @@ def recast_estimation_results(output, grid_parent, write=True):
                                      fit.rss,
                                      fit.fit_stats[2])
                                  
-    # get header information from the gridParent and update for the pRF volume
+    # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
     hdr = grid_parent.get_header()
     hdr.set_data_shape(dims)
@@ -166,7 +215,7 @@ def recast_simulation_results_queue(output,funcData,metaData,write=True):
         2 neural RF estimate
         3 HRF delay
         4 visuotopic scatter
-        5 SSE between pRF and nRF gaussian
+        5 SSE between prf and nRF gaussian
         6 correlation of the model-actual fit
         7 percent change from old to new sigma
         
@@ -182,10 +231,10 @@ def recast_simulation_results_queue(output,funcData,metaData,write=True):
     Returns
     -------
     cartesFileName : string
-        The absolute path of the recasted pRF estimation output in Cartesian
+        The absolute path of the recasted prf estimation output in Cartesian
         coordinates. 
     polarFileName : string
-        The absolute path of the recasted pRF estimation output in polar
+        The absolute path of the recasted prf estimation output in polar
         coordinates. 
         
     """
@@ -202,10 +251,10 @@ def recast_simulation_results_queue(output,funcData,metaData,write=True):
     for job in output:
         for voxel in job:
             xi,yi,zi = voxel[0:3]
-            x, y = funcData['pRF_cartes'][xi,yi,zi,0:2]
-            phi, rho = funcData['pRF_polar'][xi,yi,zi,0:2]
-            d = funcData['pRF_cartes'][xi,yi,zi,3]
-            rval = funcData['pRF_cartes'][xi,yi,zi,6]
+            x, y = funcData['prf_cartes'][xi,yi,zi,0:2]
+            phi, rho = funcData['prf_polar'][xi,yi,zi,0:2]
+            d = funcData['prf_cartes'][xi,yi,zi,3]
+            rval = funcData['prf_cartes'][xi,yi,zi,6]
             sigma = voxel[3]
             SSE = voxel[4]
             meanScatter = voxel[5]
@@ -246,11 +295,11 @@ def recast_simulation_results_queue(output,funcData,metaData,write=True):
 
 def multiprocessor(targetMethod,stimData,funcData,metaData):
     """
-    Uses the multiprocessing toolbox to parallize the voxel-wise pRF estimation
+    Uses the multiprocessing toolbox to parallize the voxel-wise prf estimation
     across a user-specified number of cpus.
 
     Each voxel is treated as the atomic unit.  Collections of voxels are sent
-    to each of the user-specified allocated cpus for pRF estimation.
+    to each of the user-specified allocated cpus for prf estimation.
     Currently, the strategy is to use multiprocessing.Process to start each
     batch of voxels on a given cpu.  The results of each are written to a
     multiprocessing.Queue object, collected into a list of results, and
@@ -264,7 +313,7 @@ def multiprocessor(targetMethod,stimData,funcData,metaData):
         data.  For details, see config.py 
 
     funcData : ndarray
-        A 4D numpy array containing the functional data to be used for the pRF
+        A 4D numpy array containing the functional data to be used for the prf
         estimation. For details, see config.py 
 
     metaData : dict
@@ -274,7 +323,7 @@ def multiprocessor(targetMethod,stimData,funcData,metaData):
     Returns
     -------
     output : list
-        A list of multiprocessing.Queue objects that house the pRF estimates
+        A list of multiprocessing.Queue objects that house the prf estimates
         for all the voxels analyzed as specified in `metaData`.  The `output`
         will be a list whose length is equal to the number of cpus specified in
         `metaData`.
@@ -391,7 +440,7 @@ def randomize_voxels(voxels):
     """Returns a set of 3D coordinates that are randomized.
     
     Since the brain is highly spatially correlated and because computational time increases with
-    increases in the pRF size, we randomize the voxel order so that a particular core doesn't get
+    increases in the prf size, we randomize the voxel order so that a particular core doesn't get
     stuck with a disproportionately high number of voxels whose sigma values are large.
     
     Parameters
