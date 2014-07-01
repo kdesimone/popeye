@@ -387,7 +387,7 @@ def percent_change(ts, ax=-1):
 
     Examples
     --------
-
+    >>> np.set_printoptions(precision=4)  # for doctesting
     >>> ts = np.arange(4*5).reshape(4,5)
     >>> ax = 0
     >>> percent_change(ts,ax)
