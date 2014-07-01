@@ -27,6 +27,7 @@ install:
     # Temporary solution to travis issue #155
     # https://github.com/travis-ci/travis-cookbooks/issues/155
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
+    - sudo pip install coverage
     - cd ..
     - $PYTHON setup.py build
     - sudo $PYTHON setup.py install
