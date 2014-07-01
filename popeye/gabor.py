@@ -13,7 +13,7 @@ from scipy.stats import linregress
 from scipy.interpolate import interp1d
 import scipy.signal as ss
 
-from dipy.core.onetime import auto_attr
+from popeye.onetime import auto_attr
 
 import popeye.utilities as utils
 from popeye import gaussian
