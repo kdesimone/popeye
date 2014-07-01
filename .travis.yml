@@ -36,4 +36,3 @@ script:
     - cd for_test
        cp ../.coveragerc . ;
         nosetests$PYSUF --with-doctest --with-coverage `$PYTHON -c "import os; import popeye; print(os.path.dirname(popeye.__file__))"` ;
-      fi
