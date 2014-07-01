@@ -1,6 +1,6 @@
 [run]
 branch = True
 source = popeye
-include = */popeye/*
+include = popeye
 omit =
     */setup.py
