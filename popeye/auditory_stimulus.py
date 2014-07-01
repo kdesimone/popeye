@@ -12,7 +12,7 @@ import ctypes
 import numpy as np
 from numpy.lib import stride_tricks
 from scipy.misc import imresize
-from dipy.core.onetime import auto_attr
+from popeye.onetime import auto_attr
 import nibabel
 
 from popeye.base import StimulusModel

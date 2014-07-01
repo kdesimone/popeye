@@ -383,7 +383,7 @@ class ApiDocWriter(object):
                                                    dirpath))
 
             # Normally, we'd only iterate over dirnames, but since
-            # dipy does not import a whole bunch of modules we'll
+            # popeye does not import a whole bunch of modules we'll
             # include those here as well (the *.py filenames).
             filenames = [f[:-3] for f in filenames if
                          f.endswith('.py') and not f.startswith('__init__')]

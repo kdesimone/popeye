@@ -73,6 +73,6 @@ if len(needs_setuptools.intersection(sys.argv)) > 0:
 if 'setuptools' in sys.modules:
     opts['zip_safe'] = False
 
-# Now call the actual setup function
+# Now call the actual setup function  
 if __name__ == '__main__':
     setup(**opts)

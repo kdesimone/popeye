@@ -7,7 +7,7 @@ from scipy.special import gamma
 from scipy.optimize import fmin_powell, fmin, brute
 from scipy.stats import linregress
 
-from popeye.spinach import MakeFastPrediction
+from popeye.spinach import MakeFastGaussPrediction
 import popeye.utilities as utils
 
 def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
@@ -168,7 +168,7 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
                                                           stim_arr_coarse)
                                                           
       # regenerate the best-fit for computing the threshold
-      ts_stim = MakeFastPrediction(deg_x_coarse,
+      ts_stim = MakeFastGaussPrediction(deg_x_coarse,
                                    deg_y_coarse,
                                    stim_arr_coarse,
                                    x0,
@@ -203,7 +203,7 @@ def voxel_prf(ts_vox, deg_x_coarse, deg_y_coarse,
              and not np.isinf(err)):
              
               # regenerate the best-fit for computing the threshold
-              ts_stim = MakeFastPrediction(deg_x_fine,
+              ts_stim = MakeFastGaussPrediction(deg_x_fine,
                                           deg_y_fine,
                                           stim_arr_fine,
                                           x,
