@@ -45,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Popeye'
-copyright = u'2014, Kevin Desimone'
+copyright = u'2014, Kevin DeSimone'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -188,7 +188,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'Popeye.tex', u'Popeye Documentation',
-   u'Kevin Desimone', 'manual'),
+   u'Kevin DeSimone', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -218,7 +218,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'popeye', u'Popeye Documentation',
-     [u'Kevin Desimone'], 1)
+     [u'Kevin DeSimone'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -232,7 +232,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Popeye', u'Popeye Documentation',
-   u'Kevin Desimone', 'Popeye', 'One line description of project.',
+   u'Kevin DeSimone', 'Popeye', 'One line description of project.',
    'Miscellaneous'),
 ]
 
