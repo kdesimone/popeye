@@ -5,6 +5,85 @@ import nose.tools as nt
 import numpy.testing as npt
 from scipy.special import gamma
 
+def test_error_function():
+    
+    # create a parameter to estimate
+    params = (1.248,10.584)
+    
+    # we don't need any additional arguments
+    args = ('blah',)
+    
+    # we don't need to specify bounds for the error function
+    fit_bounds = ()
+    
+    # create a simple function to transform the parameters
+    func = lambda x, y, arg: np.arange(x,x+100)*y
+    
+    # create a "response"
+    response = func(params[0], params[1], args)
+    
+    # assert 0 error
+    npt.assert_equal(utils.error_function(params,args,fit_bounds,response,func),0)
+
+def test_gradient_descent_search():
+    
+    # create a parameter to estimate
+    params = (1.248,10.584)
+    
+    # we don't need any additional arguments
+    args = ('blah',)
+    
+    # we need to define some search bounds
+    search_bounds = ((0,10),(5,15))
+    
+    # we don't need to specify bounds for the error function
+    fit_bounds = ()
+    
+    # create a simple function to transform the parameters
+    func = lambda x, y, arg: np.arange(x,x+100)*y
+    
+    # create a "response"
+    response = func(params[0], params[1], args)
+    
+    # get the ball-park estimate
+    p0 = utils.brute_force_search(args, search_bounds, fit_bounds,
+                                  response, utils.error_function, func)
+                                        
+    
+    # get the fine estimate
+    estimate = utils.gradient_descent_search(p0, args, fit_bounds, response,
+                                             utils.error_function, func)
+    
+    # assert that the estimate is equal to the parameter
+    npt.assert_almost_equal(params, estimate)
+
+def test_brute_force_search():
+    
+    # create a parameter to estimate
+    params = (5,10)
+    
+    # we don't need any additional arguments
+    args = ('blah',)
+    
+    # we need to define some search bounds
+    search_bounds = ((0,10),(5,15))
+    
+    # we don't need to specify bounds for the error function
+    fit_bounds = ()
+    
+    # create a simple function to transform the parameters
+    func = lambda x, y, arg: np.arange(x,x+100)*y
+    
+    # create a "response"
+    response = func(params[0], params[1], args)
+    
+    estimate = utils.brute_force_search(args, search_bounds, fit_bounds,
+                                        response, utils.error_function, func)
+                                        
+    # assert that the estimate is equal to the parameter
+    npt.assert_equal(params, estimate)
+    
+
 def test_double_gamma_hrf():
     """
     Test voxel-wise gabor estimation function in popeye.estimation 
