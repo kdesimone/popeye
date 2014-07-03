@@ -16,7 +16,7 @@ from scipy.optimize import brute, fmin_powell
 # generic gradient descent
 def gradient_descent_search(parameters, args, fit_bounds, response,
                             error_function, objective_function):
-                            
+    
     estimate, err,  _, _, _, warnflag =\
         fmin_powell(error_function, parameters,
                     args=(args, fit_bounds, response, objective_function),
@@ -40,10 +40,10 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
     return estimate
 
 # generic error function
-def error_function(parameters, args, bounds, response, func):
+def error_function(params, args, bounds, response, func):
     
     # check ifparameters are inside bounds
-    for p, b in zip(parameters,bounds):
+    for p, b in zip(params,bounds):
         
         # if not return an inf
         if b[0] and b[0] > p:
@@ -53,7 +53,7 @@ def error_function(parameters, args, bounds, response, func):
     
     # merge the parameters and arguments
     ensemble = []
-    ensemble.extend(parameters)
+    ensemble.extend(params)
     ensemble.extend(args)
     
     # compute the RSS
