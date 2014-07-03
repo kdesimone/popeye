@@ -35,7 +35,7 @@ def test_gaussian_fit():
     
     # set up bounds for the grid search
     search_bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5))
-    fit_bounds = ((-12,12),(-12,12),(stimulus.ppd*stimulus.scale_factor,12),(-5,5))
+    fit_bounds = ((-12,12),(-12,12),(1/(stimulus.ppd*stimulus.scale_factor),12),(-5,5))
     
     # initialize the gaussian model
     gaussian_model = gaussian.GaussianModel(stimulus)
