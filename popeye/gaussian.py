@@ -19,7 +19,7 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastGaussPrediction
 
-def compute_model_ts(x, y, sigma, hrf_delay, 
+def compute_model_ts(x, y, sigma, hrf_delay, beta,
                      deg_x, deg_y, stim_arr, 
                      tr_length, frames_per_tr):
     
@@ -31,11 +31,20 @@ def compute_model_ts(x, y, sigma, hrf_delay,
                                       y,
                                       sigma)
     
-    # convolve it
+    # hrf baseline for normalizing
+    hrf_base = utils.double_gamma_hrf(0, tr_length, frames_per_tr)
+    
+    # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length, frames_per_tr)
     
-    # normalize it
-    model = utils.zscore(ss.fftconvolve(ts_stim, hrf)[0:len(ts_stim)])
+    # normalize the HRF
+    hrf_norm = utils.normalize(hrf,np.min(hrf_base),np.max(hrf_base))
+    
+    # convolve it with the stimulus
+    model = ss.fftconvolve(ts_stim, hrf_norm)[0:len(ts_stim)]
+    
+    # scale it
+    model *= beta
     
     # decimate it
     if frames_per_tr > 1:
@@ -87,7 +96,7 @@ class GaussianFit(object):
     
     def __init__(self, data, model, search_bounds, fit_bounds, tr_length, voxel_index, uncorrected_rval, verbose=True, auto_fit=True):
             
-        self.data = utils.zscore(data)
+        self.data = data
         self.model = model
         self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
@@ -129,7 +138,7 @@ class GaussianFit(object):
                                   
     @auto_attr
     def gaussian_estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.beta0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -156,6 +165,10 @@ class GaussianFit(object):
     @auto_attr
     def hrf0(self):
         return self.ballpark_estimate[3]
+    
+    @auto_attr
+    def beta0(self):
+        return self.ballpark_estimate[4]
         
     @auto_attr
     def x(self):
@@ -172,10 +185,14 @@ class GaussianFit(object):
     @auto_attr
     def hrf_delay(self):
         return self.gaussian_estimate[3]
+    
+    @auto_attr
+    def beta(self):
+        return self.gaussian_estimate[4]
         
     @auto_attr
     def model_ts(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.beta,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
