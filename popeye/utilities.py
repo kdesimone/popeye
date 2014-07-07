@@ -13,6 +13,17 @@ from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell
 
+# normalize to a specific range
+def normalize(array, imin=-1, imax=1):
+    dmin = array.min()
+    dmax = array.max()
+    array -= dmin
+    array *= imax - imin
+    array /= dmax - dmin
+    array += imin
+    return array
+    
+
 # generic gradient descent
 def gradient_descent_search(parameters, args, fit_bounds, response,
                             error_function, objective_function):
@@ -47,9 +58,9 @@ def error_function(params, args, bounds, response, func):
         
         # if not return an inf
         if b[0] and b[0] > p:
-            print np.inf
+            return np.inf
         if b[1] and b[1] < p:
-            print np.inf
+            return np.inf
     
     # merge the parameters and arguments
     ensemble = []
@@ -110,7 +121,7 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
                   ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
                       /gamma( alpha_2 ) ) )
-            
+        
     return hrf
 
 
