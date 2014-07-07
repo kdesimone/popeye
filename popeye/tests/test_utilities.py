@@ -5,6 +5,22 @@ import nose.tools as nt
 import numpy.testing as npt
 from scipy.special import gamma
 
+def test_normalize():
+    
+    # create an array
+    arr = np.arange(0,100)
+    
+    # create new bounds
+    lo = -50
+    hi = 50
+    
+    # rescale the array
+    arr_new = utils.normalize(arr, lo, hi)
+    
+    # assert equivalence
+    npt.assert_equal(np.min(arr_new), lo)
+    npt.assert_equal(np.max(arr_new), hi)
+
 def test_error_function():
     
     # create a parameter to estimate
@@ -48,7 +64,6 @@ def test_gradient_descent_search():
     # get the ball-park estimate
     p0 = utils.brute_force_search(args, search_bounds, fit_bounds,
                                   response, utils.error_function, func)
-                                        
     
     # get the fine estimate
     estimate = utils.gradient_descent_search(p0, args, fit_bounds, response,
