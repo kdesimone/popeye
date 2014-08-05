@@ -31,17 +31,11 @@ def compute_model_ts(x, y, sigma, hrf_delay, beta,
                                       y,
                                       sigma)
     
-    # hrf baseline for normalizing
-    hrf_base = utils.double_gamma_hrf(0, tr_length, frames_per_tr)
-    
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length, frames_per_tr)
     
-    # normalize the HRF
-    hrf_norm = utils.normalize(hrf,np.min(hrf_base),np.max(hrf_base))
-    
     # convolve it with the stimulus
-    model = ss.fftconvolve(ts_stim, hrf_norm)[0:len(ts_stim)]
+    model = ss.fftconvolve(ts_stim, hrf)[0:len(ts_stim)]
     
     # scale it
     model *= beta
@@ -94,7 +88,8 @@ class GaussianFit(object):
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, data, model, search_bounds, fit_bounds, tr_length, voxel_index, uncorrected_rval, verbose=True, auto_fit=True):
+    def __init__(self, data, model, search_bounds, fit_bounds, tr_length, 
+                 voxel_index, uncorrected_rval, verbose=True, auto_fit=True):
             
         self.data = data
         self.model = model
@@ -104,11 +99,12 @@ class GaussianFit(object):
         self.voxel_index = voxel_index
         self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
+        self.auto_fit = auto_fit
         
-        if auto_fit:
+        if self.auto_fit:
             tic = time.clock()
             self.ballpark_estimate;
-            self.gaussian_estimate;
+            self.estimate;
             toc = time.clock()
             
             # print to screen if verbose
@@ -137,7 +133,7 @@ class GaussianFit(object):
                                   
                                   
     @auto_attr
-    def gaussian_estimate(self):
+    def estimate(self):
         return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.beta0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
@@ -172,26 +168,26 @@ class GaussianFit(object):
         
     @auto_attr
     def x(self):
-        return self.gaussian_estimate[0]
+        return self.estimate[0]
         
     @auto_attr
     def y(self):
-        return self.gaussian_estimate[1]
+        return self.estimate[1]
         
     @auto_attr
     def sigma(self):
-        return self.gaussian_estimate[2]
+        return self.estimate[2]
         
     @auto_attr
     def hrf_delay(self):
-        return self.gaussian_estimate[3]
+        return self.estimate[3]
     
     @auto_attr
     def beta(self):
-        return self.gaussian_estimate[4]
+        return self.estimate[4]
         
     @auto_attr
-    def model_ts(self):
+    def prediction(self):
         return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.beta,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
@@ -201,8 +197,8 @@ class GaussianFit(object):
     
     @auto_attr
     def fit_stats(self):
-        return linregress(self.data, self.model_ts)
+        return linregress(self.data, self.prediction)
     
     @auto_attr
     def rss(self):
-        return np.sum((self.data - self.model_ts)**2)
+        return np.sum((self.data - self.prediction)**2)
