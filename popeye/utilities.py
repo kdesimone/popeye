@@ -12,6 +12,7 @@ import nibabel
 from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell
+from scipy.integrate import romb, trapz
 
 # normalize to a specific range
 def normalize(array, imin=-1, imax=1):
@@ -43,7 +44,7 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
         brute(error_function,
               args=(args, fit_bounds, response, objective_function),
               ranges=search_bounds,
-              Ns=5,
+              Ns=4,
               finish=None,
               full_output=True,
               disp=False)
@@ -51,7 +52,7 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
     return estimate
 
 # generic error function
-def error_function(params, args, bounds, response, func):
+def error_function(params, args, bounds, response, func, debug=True):
     
     # check ifparameters are inside bounds
     for p, b in zip(params,bounds):
@@ -70,9 +71,13 @@ def error_function(params, args, bounds, response, func):
     # compute the RSS
     error = np.sum((response-func(*ensemble))**2)
     
+    # print for debugging
+    if debug:
+        print(params, error)
+    
     return error
 
-def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
+def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     """
     The double-gamma hemodynamic reponse function (HRF) used to convolve with
     the stimulus time-series.
@@ -99,8 +104,8 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
     hrf : ndarray
         The hemodynamic response function to convolve with the stimulus
         time-series.
-    
-    
+        
+        
     Reference
     ----------
     Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
@@ -121,7 +126,9 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0):
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
                   ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
                       /gamma( alpha_2 ) ) )
-        
+                      
+    hrf /= integrator(hrf)
+    
     return hrf
 
 
@@ -168,7 +175,7 @@ def recast_estimation_results(output, grid_parent, write=True):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(6)
+    dims.append(7)
     
     # initialize the statmaps
     polar = np.zeros(dims)
@@ -183,6 +190,7 @@ def recast_estimation_results(output, grid_parent, write=True):
                                       fit.y,
                                       fit.sigma,
                                       fit.hrf_delay,
+                                      fit.beta,
                                       fit.rss,
                                       fit.fit_stats[2])
                                  
@@ -190,6 +198,7 @@ def recast_estimation_results(output, grid_parent, write=True):
                                      np.sqrt(fit.x**2+fit.y**2),
                                      fit.sigma,
                                      fit.hrf_delay,
+                                     fit.beta,
                                      fit.rss,
                                      fit.fit_stats[2])
                                  
