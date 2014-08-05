@@ -219,20 +219,20 @@ class VisualStimulus(StimulusModel):
         deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
         # share the arrays via memmap to reduce size
-        self.deg_x = np.memmap('%s%s.npy' %('/tmp/','deg_x'),dtype = np.double, mode = 'w+',shape = np.shape(deg_x))
+        self.deg_x = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(deg_x))
         self.deg_x[:] = deg_x[:]
         
-        self.deg_y = np.memmap('%s%s.npy' %('/tmp/','deg_y'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
+        self.deg_y = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
         self.deg_y[:] = deg_y[:]
         
-        self.deg_x_coarse = np.memmap('%s%s.npy' %('/tmp/','deg_x_coarse'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
+        self.deg_x_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
         self.deg_x_coarse[:] = deg_x_coarse[:]
         
-        self.deg_y_coarse = np.memmap('%s%s.npy' %('/tmp/','deg_y_coarse'),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
+        self.deg_y_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
         self.deg_y_coarse[:] = deg_y_coarse[:]
         
-        self.stim_arr = np.memmap('%s%s.npy' %('/tmp/','stim_arr'),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr))
+        self.stim_arr = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr))
         self.stim_arr[:] = stim_arr[:]
         
-        self.stim_arr_coarse = np.memmap('%s%s.npy' %('/tmp/','stim_arr_coarse'),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
+        self.stim_arr_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr_coarse',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
         self.stim_arr_coarse[:] = stim_arr_coarse[:]
