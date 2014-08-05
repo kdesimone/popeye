@@ -56,7 +56,7 @@ def coeff_of_determination(data, model, axis=-1):
     return 100 * (1 - (ss_err/ss_tot))
 
 
-def kfold_xval(stimulus, data, folds, *fit_args, **fit_kwargs):
+def kfold_xval(model, data, folds, *fit_args, **fit_kwargs):
     
     # fold the data
     div_by_folds =  np.mod(data.shape[-1], folds)
@@ -78,8 +78,8 @@ def kfold_xval(stimulus, data, folds, *fit_args, **fit_kwargs):
     order = np.random.permutation(data.shape[-1])
     
     # Grab the full-sized stimulus arrays
-    stim_arr = stimulus.stim_arr.copy()
-    stim_arr_coarse = stimulus.stim_arr_coarse.copy()
+    stim_arr = model.stimulus.stim_arr.copy()
+    stim_arr_coarse = model.stimulus.stim_arr_coarse.copy()
         
     # Do the thing
     for k in range(folds):
@@ -95,7 +95,7 @@ def kfold_xval(stimulus, data, folds, *fit_args, **fit_kwargs):
         left_in_stim_arr_coarse = stim_arr_coarse[...,fold_mask]
         
         # initialize a left-in Model to estimate the model parameters
-        left_in_stimulus = deepcopy(stimulus)
+        left_in_stimulus = deepcopy(model.stimulus)
         left_in_stimulus.stim_arr = left_in_stim_arr.copy()
         left_in_stimulus.stim_arr_coarse = left_in_stim_arr_coarse.copy()
         left_in_model = model.__class__(left_in_stimulus)
@@ -106,7 +106,7 @@ def kfold_xval(stimulus, data, folds, *fit_args, **fit_kwargs):
         left_out_stim_arr_coarse = stim_arr_coarse[...,~fold_mask]
         
         # initialize a left-in Model to estimate the model parameters
-        left_out_stimulus = deepcopy(stimulus)
+        left_out_stimulus = deepcopy(model.stimulus)
         left_out_stimulus.stim_arr = left_out_stim_arr.copy()
         left_out_stimulus.stim_arr_coarse = left_out_stim_arr_coarse.copy()
         left_out_model = model.__class__(left_out_stimulus)
@@ -120,7 +120,6 @@ def kfold_xval(stimulus, data, folds, *fit_args, **fit_kwargs):
         
         # transfer the parameter estimates to the left-out fit and make a prediction on those points
         left_out_fit.estimate = left_in_fit.estimate
-        left_out_fit.prediction;
         
         # fill the run-wide prediction values with the left-out predictions ...
         prediction[..., fold_idx] = left_out_fit.prediction
