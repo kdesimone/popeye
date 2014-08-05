@@ -57,8 +57,9 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, tr_length, freq_window = 2**10, time_window = 0.1, 
-                 freq_factor=1.0, sampling_rate=44100, tr_sampling_rate=100, scale_factor=1.0):
+    def __init__(self, stim_arr, tr_length, freq_window = 2**10,
+                 time_window = 0.1, freq_factor=1.0, sampling_rate=44100,
+                 tr_sampling_rate=100, scale_factor=1.0):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
@@ -75,17 +76,17 @@ class AuditoryStimulus(StimulusModel):
         self.scale_factor = scale_factor
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
         self.freq_window = freq_window
-            
+        
         # share the arrays via memmap to reduce size
         spectrogram = self.make_spectrogram()
-        self.spectrogram = np.memmap('%s%s.npy' %('/tmp/','spectrogram'),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
+        self.spectrogram = np.memmap('%s%s_%s.npy' %('/tmp/','spectrogram',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
         self.spectrogram[:] = spectrogram[:]
         
         time_coord, freq_coord = self.make_coordinate_matrices()
-        self.time_coord = np.memmap('%s%s.npy' %('/tmp/','time_coord'),dtype = np.double, mode = 'w+',shape = np.shape(time_coord))
+        self.time_coord = np.memmap('%s%s_%s.npy' %('/tmp/','time_coord',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord))
         self.time_coord[:] = time_coord[:]
         
-        self.freq_coord = np.memmap('%s%s.npy' %('/tmp/','freq_coord'),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord))
+        self.freq_coord = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord))
         self.freq_coord[:] = freq_coord[:]
                 
     @auto_attr
