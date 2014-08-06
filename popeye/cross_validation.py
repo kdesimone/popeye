@@ -56,7 +56,10 @@ def coeff_of_determination(data, model, axis=-1):
     return 100 * (1 - (ss_err/ss_tot))
 
 
-def kfold_xval(model, data, folds, *fit_args, **fit_kwargs):
+def kfold_xval(model, fit, folds, fit_args):
+    
+    # extract the data
+    data = fit.data
     
     # fold the data
     div_by_folds =  np.mod(data.shape[-1], folds)
@@ -75,7 +78,8 @@ def kfold_xval(model, data, folds, *fit_args, **fit_kwargs):
     prediction = np.zeros(data.shape[-1])
     
     # We are going to leave out some randomly chosen samples in each iteration
-    order = np.random.permutation(data.shape[-1])
+    # order = np.random.permutation(data.shape[-1])
+    order = np.arange(data.shape[-1])
     
     # Grab the full-sized stimulus arrays
     stim_arr = model.stimulus.stim_arr.copy()
@@ -111,14 +115,24 @@ def kfold_xval(model, data, folds, *fit_args, **fit_kwargs):
         left_out_stimulus.stim_arr_coarse = left_out_stim_arr_coarse.copy()
         left_out_model = model.__class__(left_out_stimulus)
         
-        # initialize the Fits for the left-in and left-out with auto-fit turned off
-        left_in_fit = fit.__class__(left_in_data, left_in_model, *fit_args, **fit_kwargs)
-        left_out_fit = fit.__class__(left_out_data, left_out_model, *fit_args, **fit_kwargs)
+        # initialize the left-in fit object
+        ensemble = []
+        ensemble.append(left_in_data)
+        ensemble.append(left_in_model)
+        ensemble.extend(fit_args)
+        left_in_fit = fit.__class__(*ensemble)
         
-        # fit the left-in model
+        # initialize the left-in fit object
+        ensemble = []
+        ensemble.append(left_out_data)
+        ensemble.append(left_out_model)
+        ensemble.extend(fit_args)
+        left_out_fit = fit.__class__(*ensemble)
+        
+        # fit the left-in fit object
         left_in_fit.prediction;
         
-        # transfer the parameter estimates to the left-out fit and make a prediction on those points
+        # transfer the parameter estimates from the left-in fit to the left-out fit
         left_out_fit.estimate = left_in_fit.estimate
         
         # fill the run-wide prediction values with the left-out predictions ...
