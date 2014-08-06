@@ -52,7 +52,7 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
     return estimate
 
 # generic error function
-def error_function(params, args, bounds, response, func, debug=True):
+def error_function(params, args, bounds, response, func, debug=False):
     
     # check ifparameters are inside bounds
     for p, b in zip(params,bounds):
