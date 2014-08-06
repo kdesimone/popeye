@@ -56,10 +56,7 @@ def coeff_of_determination(data, model, axis=-1):
     return 100 * (1 - (ss_err/ss_tot))
 
 
-def kfold_xval(model, fit, folds, fit_args):
-    
-    # extract the data
-    data = fit.data
+def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
     
     # fold the data
     div_by_folds =  np.mod(data.shape[-1], folds)
@@ -78,13 +75,16 @@ def kfold_xval(model, fit, folds, fit_args):
     prediction = np.zeros(data.shape[-1])
     
     # We are going to leave out some randomly chosen samples in each iteration
-    # order = np.random.permutation(data.shape[-1])
-    order = np.arange(data.shape[-1])
+    order = np.random.permutation(data.shape[-1])
+    # order = np.arange(data.shape[-1])
     
     # Grab the full-sized stimulus arrays
     stim_arr = model.stimulus.stim_arr.copy()
     stim_arr_coarse = model.stimulus.stim_arr_coarse.copy()
-        
+    
+    # initilize a list of predictions
+    predictions = []
+    
     # Do the thing
     for k in range(folds):
         
@@ -93,49 +93,35 @@ def kfold_xval(model, fit, folds, fit_args):
         fold_idx = order[k*n_in_fold:(k+1)*n_in_fold]
         fold_mask[fold_idx] = False
         
-        # grab the left-in data and stimulus
-        left_in_data = data[...,fold_mask]
-        left_in_stim_arr = stim_arr[...,fold_mask]
-        left_in_stim_arr_coarse = stim_arr_coarse[...,fold_mask]
+        # grab the left-in data
+        left_in_data = np.mean(data[...,fold_mask],axis=1)
         
-        # initialize a left-in Model to estimate the model parameters
-        left_in_stimulus = deepcopy(model.stimulus)
-        left_in_stimulus.stim_arr = left_in_stim_arr.copy()
-        left_in_stimulus.stim_arr_coarse = left_in_stim_arr_coarse.copy()
-        left_in_model = model.__class__(left_in_stimulus)
-        
-        # grab the left-out data and stimulus
-        left_out_data = data[...,~fold_mask]
-        left_out_stim_arr = stim_arr[...,~fold_mask]
-        left_out_stim_arr_coarse = stim_arr_coarse[...,~fold_mask]
-        
-        # initialize a left-in Model to estimate the model parameters
-        left_out_stimulus = deepcopy(model.stimulus)
-        left_out_stimulus.stim_arr = left_out_stim_arr.copy()
-        left_out_stimulus.stim_arr_coarse = left_out_stim_arr_coarse.copy()
-        left_out_model = model.__class__(left_out_stimulus)
+        # grab the left-out data
+        left_out_data = np.mean(data[...,~fold_mask],axis=1)
         
         # initialize the left-in fit object
         ensemble = []
         ensemble.append(left_in_data)
-        ensemble.append(left_in_model)
+        ensemble.append(model)
         ensemble.extend(fit_args)
-        left_in_fit = fit.__class__(*ensemble)
-        
-        # initialize the left-in fit object
+        ensemble.extend(fit_kwargs.values())
+        left_in_fit = Fit(*ensemble)
+                
+        # initialize the left-out fit object
         ensemble = []
         ensemble.append(left_out_data)
-        ensemble.append(left_out_model)
+        ensemble.append(model)
         ensemble.extend(fit_args)
-        left_out_fit = fit.__class__(*ensemble)
+        ensemble.extend(fit_kwargs.values())
+        left_out_fit = Fit(*ensemble)
         
         # fit the left-in fit object
         left_in_fit.prediction;
         
-        # transfer the parameter estimates from the left-in fit to the left-out fit
+        # transfer the parameter estimates and return prediction from
         left_out_fit.estimate = left_in_fit.estimate
         
-        # fill the run-wide prediction values with the left-out predictions ...
-        prediction[..., fold_idx] = left_out_fit.prediction
+        # store the prediction
+        predictions.append(left_in_fit.prediction)
     
-    return prediction
+    return predictions
