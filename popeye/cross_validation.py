@@ -114,13 +114,7 @@ def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
         ensemble.extend(fit_args)
         ensemble.extend(fit_kwargs.values())
         left_out_fit = Fit(*ensemble)
-        
-        # fit the left-in fit object
-        left_in_fit.prediction;
-        
-        # transfer the parameter estimates and return prediction from
-        left_out_fit.estimate = left_in_fit.estimate
-        
+
         # store the prediction
         predictions.append(left_in_fit.prediction)
     
