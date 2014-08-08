@@ -58,6 +58,43 @@ def coeff_of_determination(data, model, axis=-1):
 
 def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
     
+    """
+    Perform k-fold cross-validation to generate out-of-sample predictions for
+    each measurement.
+    
+    Parameters
+    ----------
+    model : class instance of a Model
+    
+    data : ndarray
+    
+    Fit : the Fit class that will be instantiated with the left-in and left-out datasets.
+    
+    folds : int
+        The number of divisions to apply to the data
+        
+    fit_args :
+        Additional arguments to the model initialization
+        
+    fit_kwargs :
+        Additional key-word arguments to the model initialization
+        
+    Notes
+    -----
+    This function assumes that a prediction API is implemented in the Fit
+    class from which a prediction is conducted. That is, the Fit object that gets
+    generated upon fitting the model needs to have a `prediction` method, which
+    receives a functional time-series and a Model class instance as input 
+    and produces a predicted signal as output.
+    
+    References
+    ----------
+    .. [1] Rokem, A., Chan, K.L. Yeatman, J.D., Pestilli, F., Mezer, A.,
+       Wandell, B.A., 2014. Evaluating the accuracy of diffusion models at
+       multiple b-values with cross-validation. ISMRM 2014.
+    """
+    
+    
     # fold the data
     div_by_folds =  np.mod(data.shape[-1], folds)
     
@@ -114,7 +151,7 @@ def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
         ensemble.extend(fit_args)
         ensemble.extend(fit_kwargs.values())
         left_out_fit = Fit(*ensemble)
-
+        
         # store the prediction
         predictions.append(left_in_fit.prediction)
     
