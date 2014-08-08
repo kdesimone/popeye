@@ -10,7 +10,7 @@ import scipy.signal as ss
 
 import popeye.utilities as utils
 import popeye.gaussian as gaussian
-import popeye.cross_validation as xval
+import popeye.xvalidation as xval
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 from popeye.spinach import MakeFastGaussPrediction
 
