@@ -56,7 +56,7 @@ def coeff_of_determination(data, model, axis=-1):
     return 100 * (1 - (ss_err/ss_tot))
 
 
-def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
+def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     
     """
     Perform k-fold cross-validation to generate out-of-sample predictions for
@@ -64,7 +64,10 @@ def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
     
     Parameters
     ----------
-    model : class instance of a Model
+    models : list of instances of Model
+        A list containing the Model instances to be handed to Fit.  If the length of `models` is
+        1, then it is assumed that `data` is composed of either a single run of data or of multiple
+        runs with the same, repeated stimulus presented.  
     
     data : ndarray
     
@@ -113,29 +116,61 @@ def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
     
     # We are going to leave out some randomly chosen samples in each iteration
     order = np.random.permutation(data.shape[-1])
-    # order = np.arange(data.shape[-1])
-    
-    # Grab the full-sized stimulus arrays
-    stim_arr = model.stimulus.stim_arr.copy()
-    stim_arr_coarse = model.stimulus.stim_arr_coarse.copy()
     
     # initilize a list of predictions
     predictions = []
+    dat = []
     
     # Do the thing
     for k in range(folds):
         
-        # select the timepoints for this fold
+        # Select the timepoints for this fold
         fold_mask = np.ones(data.shape[-1], dtype=bool)
         fold_idx = order[k*n_in_fold:(k+1)*n_in_fold]
         fold_mask[fold_idx] = False
         
-        # grab the left-in data
-        left_in_data = np.mean(data[...,fold_mask],axis=1)
+        # Grab the left-in data and concatenate the runs
+        left_in_data = np.reshape(data[...,fold_mask], data.shape[0]*2, order='F')
         
-        # grab the left-out data
-        left_out_data = np.mean(data[...,~fold_mask],axis=1)
+        # Grab the left-out data and concatenate the runs
+        left_out_data = np.reshape(data[...,~fold_mask], data.shape[0]*2, order='F')
         
+        # If there is only 1 model specified, repeat it over the concatenated functionals
+        if len(models) == 1:
+            
+            # Grab the stimulus instance from one of the models
+            stimulus = deepcopy(models[0].stimulus)
+            
+            # Tile it according to the number of runs ...
+            stimulus.stim_arr = np.tile(stimulus.stim_arr.copy(), folds)
+            stimulus.stim_arr_coarse = np.tile(stimulus.stim_arr_coarse.copy(), folds)
+            
+            # Create a new Model instance
+            model = models[0].__class__(stimulus)
+        
+        # otherwise, concatenate each of the unique stimuli
+        elif len(models) == data.shape[-1]:
+            
+            # Grab the stimulus instance from one of the models
+            stimulus = deepcopy(models[fold_idx[0]].stimulus)
+            
+            # Grab the first model in the fold
+            stim_arr_cat = stimulus.stim_arr
+            stim_arr_coarse_cat = stimulus.stim_arr_coarse
+            
+            # Grab the remaining models in the fold
+            for f in fold_idx[1::]:
+                
+                stim_arr_cat = np.concatenate((stim_arr_cat, models[f].stimulus.stim_arr.copy()), axis=-1)
+                stim_arr_coarse_cat = np.concatenate((stim_arr_coarse_cat, models[f].stimulus.stim_arr_coarse.copy()), axis=-1)
+            
+            # Put the concatenated arrays into the Stimulus instance
+            stimulus.stim_arr = stim_arr_cat
+            stimulus.stim_arr_coarse = stim_arr_coarse_cat
+            
+            # Create a new Model instance
+            model = models[0].__class__(stimulus)
+            
         # initialize the left-in fit object
         ensemble = []
         ensemble.append(left_in_data)
@@ -152,7 +187,13 @@ def kfold_xval(model, data, Fit, folds, fit_args, fit_kwargs):
         ensemble.extend(fit_kwargs.values())
         left_out_fit = Fit(*ensemble)
         
+        # run the left-in Fit
+        left_out_fit.estimate = left_in_fit.estimate
+        
         # store the prediction
-        predictions.append(left_in_fit.prediction)
+        predictions.append(left_out_fit.prediction)
+        
+        # store the left-out data
+        dat.append(left_out_fit.data)
     
-    return predictions
+    return dat, predictions
