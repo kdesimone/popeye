@@ -8,4 +8,4 @@ from .version import  __version__
 from . import visual_stimulus
 from . import utilities
 from . import gaussian
-from . import cross_validation
+from . import xvalidation
