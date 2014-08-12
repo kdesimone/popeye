@@ -40,7 +40,7 @@ def test_kfold_xval():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.05
-    num_runs = 10
+    num_runs = 4
     folds = 2
     
     # create the sweeping bar stimulus in memory
@@ -65,6 +65,7 @@ def test_kfold_xval():
     
     # create a series of "runs"
     data = np.zeros((stimulus.stim_arr.shape[-1],num_runs))
+    
     for r in range(num_runs):
         
         # make the stim time-series
@@ -81,9 +82,10 @@ def test_kfold_xval():
     
     
     # get predictions out for each of the folds ...
-    predictions = xval.kfold_xval(model, data, gaussian.GaussianFit, folds, fit_args, fit_kwargs)
+    models = np.tile(model,num_runs)
+    left_out_data, predictions = xval.kfold_xval(models, data, gaussian.GaussianFit, folds, fit_args, fit_kwargs)
     
     # assert the coeff of determination is 100 for each prediction
     for k in range(folds):
-        cod = xval.coeff_of_determination(np.mean(data,axis=1), predictions[k])
-        nt.assert_equal(cod,100)
+        cod = xval.coeff_of_determination(left_out_data[k], predictions[k])
+        npt.assert_almost_equal(cod,100, 4)
