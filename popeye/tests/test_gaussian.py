@@ -38,7 +38,7 @@ def test_gaussian_fit():
     fit_bounds = ((-12,12),(-12,12),(1/(stimulus.ppd*stimulus.scale_factor),12),(-5,5),(0.1,1e2))
     
     # initialize the gaussian model
-    gaussian_model = gaussian.GaussianModel(stimulus)
+    model = gaussian.GaussianModel(stimulus)
     
     # generate a random pRF estimate
     estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
@@ -49,22 +49,18 @@ def test_gaussian_fit():
     # create the HRF
     hrf = utils.double_gamma_hrf(estimate[3], tr_length, frames_per_tr)
     
-    # normalize it using the baseline HRF (0 delay)
-    hrf_base = utils.double_gamma_hrf(0, tr_length, frames_per_tr)
-    hrf_norm = utils.normalize(hrf,np.min(hrf_base),np.max(hrf_base))
-    
     # simulate the BOLD response
-    response = ss.fftconvolve(stim,hrf_norm)[0:len(stim)] * estimate[-1]
+    data = ss.fftconvolve(stim,hrf)[0:len(stim)] * estimate[-1]
     
     # fit the response
-    gaussian_fit = gaussian.GaussianFit(response, gaussian_model, search_bounds, fit_bounds, tr_length, [0,0,0], 0, False)
+    fit = gaussian.GaussianFit(data, model, search_bounds, fit_bounds, tr_length, [0,0,0], 0, False)
     
     # assert equivalence
-    nt.assert_almost_equal(gaussian_fit.x,estimate[0])
-    nt.assert_almost_equal(gaussian_fit.y,estimate[1])
-    nt.assert_almost_equal(gaussian_fit.sigma,estimate[2])
-    nt.assert_almost_equal(gaussian_fit.hrf_delay,estimate[3])
-    nt.assert_almost_equal(gaussian_fit.beta,estimate[4])
+    nt.assert_almost_equal(fit.x,estimate[0])
+    nt.assert_almost_equal(fit.y,estimate[1])
+    nt.assert_almost_equal(fit.sigma,estimate[2])
+    nt.assert_almost_equal(fit.hrf_delay,estimate[3])
+    nt.assert_almost_equal(fit.beta,estimate[4])
     
 
 def test_parallel_gaussian_fit():
