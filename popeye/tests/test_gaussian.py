@@ -53,7 +53,7 @@ def test_gaussian_fit():
     data = ss.fftconvolve(stim,hrf)[0:len(stim)] * estimate[-1]
     
     # fit the response
-    fit = gaussian.GaussianFit(data, model, search_bounds, fit_bounds, tr_length, [0,0,0], 0, False)
+    fit = gaussian.GaussianFit(data, model, search_bounds, fit_bounds, tr_length)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x,estimate[0])
