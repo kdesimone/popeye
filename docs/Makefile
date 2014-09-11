@@ -165,4 +165,12 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 upload:
-	$(RSYNC) _build/html/* _build/latex/*.pdf $*,$(WWW)
+	git checkout -b temp-branch
+	make html
+	git add _build/html
+	git commit -a -m"New version of the docs"
+	git checkout gh-pages
+	git merge -X theirs temp-branch -m"Merging temp-branch"
+	git push upstream gh-pages
+	git branch -d temp-branch
+	git checkout master
