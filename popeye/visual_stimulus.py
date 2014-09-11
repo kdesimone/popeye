@@ -13,8 +13,6 @@ import numpy as np
 from scipy.misc import imresize
 from scipy.io import loadmat
 
-import nibabel
-
 from popeye.base import StimulusModel
 
 def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1):
@@ -104,18 +102,6 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
         resampled_arr[:,:,tr] = f
     
     return resampled_arr.astype('short')
-    
-def load_stimulus_file(stim_path):
-    
-    if stim_path.endswith('.npy'):
-        stim_arr = np.load(stim_path)
-    elif stim_path.endswith('.mat'):
-        file_name = stim_path.split("/")[-1]
-        stim_arr = loadmat(file_name)[file_name]
-    elif stim_path.endswith('.nii.gz'):
-        stim_arr = nibabel.load(stim_path).get_data()
-    
-    return stim_arr.astype('short')
 
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     
