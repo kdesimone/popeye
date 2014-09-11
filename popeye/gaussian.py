@@ -17,7 +17,7 @@ from popeye.onetime import auto_attr
 
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import MakeFastGaussPrediction
+from popeye.spinach import MakeFastGaussPrediction, MakeFastRF
 
 def compute_model_ts(x, y, sigma, hrf_delay, beta,
                      deg_x, deg_y, stim_arr, 
@@ -88,8 +88,8 @@ class GaussianFit(object):
     Gaussian population receptive field model fitting
     """
     
-    def __init__(self, data, model, search_bounds, fit_bounds, tr_length, 
-                 voxel_index, uncorrected_rval, verbose=True, auto_fit=True):
+    def __init__(self, data, model, search_bounds, fit_bounds, tr_length,
+                 voxel_index=None, verbose=True, auto_fit=True):
             
         self.data = data
         self.model = model
@@ -97,7 +97,6 @@ class GaussianFit(object):
         self.fit_bounds = fit_bounds
         self.tr_length = tr_length
         self.voxel_index = voxel_index
-        self.uncorrected_rval = uncorrected_rval
         self.verbose = verbose
         self.auto_fit = auto_fit
         
@@ -202,3 +201,9 @@ class GaussianFit(object):
     @auto_attr
     def rss(self):
         return np.sum((self.data - self.prediction)**2)
+    
+    @auto_attr
+    def receptive_field(self):
+        return MakeFastRF(self.model.stimulus.deg_x,
+                          self.model.stimulus.deg_y,
+                          self.x, self.y, self.sigma)
