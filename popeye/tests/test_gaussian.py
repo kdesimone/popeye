@@ -7,7 +7,6 @@ import numpy.testing as npt
 import nose.tools as nt
 import scipy.signal as ss
 
-
 import popeye.utilities as utils
 import popeye.gaussian as gaussian
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
@@ -95,7 +94,8 @@ def test_parallel_gaussian_fit():
     gaussian_model = gaussian.GaussianModel(stimulus)
     
     # generate a random pRF estimate
-    estimates = [(1,1,1,1,1.2)]*num_voxels
+    estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
+    estimates = [estimate]*num_voxels
     
     # create the simulated time-series
     timeseries = []
@@ -107,12 +107,8 @@ def test_parallel_gaussian_fit():
         # create the HRF
         hrf = utils.double_gamma_hrf(estimate[3], tr_length, frames_per_tr)
         
-        # normalize it using the baseline HRF (0 delay)
-        hrf_base = utils.double_gamma_hrf(0, tr_length, frames_per_tr)
-        hrf_norm = utils.normalize(hrf,np.min(hrf_base),np.max(hrf_base))
-        
         # simulate the BOLD response
-        response = ss.fftconvolve(stim,hrf_norm)[0:len(stim)] * estimate[-1]
+        response = ss.fftconvolve(stim,hrf)[0:len(stim)] * estimate[-1]
         
         # append it
         timeseries.append(response)
@@ -124,8 +120,8 @@ def test_parallel_gaussian_fit():
               fit_bounds,
               repeat(tr_length,num_voxels),
               indices,
-              repeat(0.20,num_voxels),
-              repeat(False,num_voxels))
+              repeat(True,num_voxels),
+              repeat(True,num_voxels))
               
     # run analysis
     pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
