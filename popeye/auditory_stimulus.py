@@ -7,7 +7,7 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 
 """
 from __future__ import division
-import ctypes
+import ctypes, gc
 
 import numpy as np
 from numpy.lib import stride_tricks
@@ -50,6 +50,32 @@ def logscale_stft(stft, sapmling_rate, scale, timebins):
     
     return log_stft
 
+
+def generate_spectrogram(log_stft, all_freqs, num_timepoints, tr_sampling_rate):
+    
+    s = 20.*np.log10(np.abs(log_stft)/10e-6)
+    s[s == -np.inf] = 0
+    s = np.transpose(s)
+    s /= np.max(s)
+    im = imresize(s,(len(all_freqs), num_timepoints * tr_sampling_rate))
+    
+    return im
+    
+def generate_coordinate_matrices(tr_times, all_freqs):
+    
+    return np.meshgrid(tr_times, all_freqs)
+
+def rescale_frequencies(stimulus, scale_factor):
+    
+    dims = stimulus.shape
+    scale_x = np.int(dims[0]*scale_factor)
+    scale_y = dims[1]
+    dims = (scale_x,scale_y)
+    
+    return imresize(stimulus, dims)
+    
+    
+
 # This should eventually be VisualStimulus, and there would be an abstract class layer
 # above this called Stimulus that would be generic for n-dimentional feature spaces.
 class AuditoryStimulus(StimulusModel):
@@ -77,18 +103,35 @@ class AuditoryStimulus(StimulusModel):
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
         self.freq_window = freq_window
         
-        # share the arrays via memmap to reduce size
-        spectrogram = self.make_spectrogram()
-        self.spectrogram = np.memmap('%s%s_%s.npy' %('/tmp/','spectrogram',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
+        # share the arrays via memmap to reduce size  CHANGE THESE TO SINGLE?
+        spectrogram = generate_spectrogram(self.log_stft, self.all_freqs, self.num_timepoints, self.tr_sampling_rate)
+        self.spectrogram = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
         self.spectrogram[:] = spectrogram[:]
         
-        time_coord, freq_coord = self.make_coordinate_matrices()
-        self.time_coord = np.memmap('%s%s_%s.npy' %('/tmp/','time_coord',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord))
+        time_coord, freq_coord = generate_coordinate_matrices(self.tr_times, self.all_freqs)
+        self.time_coord = np.memmap('%s%s_%d.npy' %('/tmp/','time_coord',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord))
         self.time_coord[:] = time_coord[:]
         
-        self.freq_coord = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord))
+        self.freq_coord = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord',self.__hash__()),dtype = np.double , mode = 'w+',shape = np.shape(freq_coord))
         self.freq_coord[:] = freq_coord[:]
-                
+        
+        # create coarse versions of these
+        spectrogram_coarse = rescale_frequencies(spectrogram, self.scale_factor)
+        self.spectrogram_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram_coarse))
+        self.spectrogram_coarse[:] = spectrogram_coarse[:]
+        
+        time_coord_coarse = rescale_frequencies(time_coord, self.scale_factor)
+        self.time_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','time_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord_coarse))
+        self.time_coord_coarse[:] = time_coord_coarse[:]
+        
+        freq_coord_coarse = rescale_frequencies(freq_coord, self.scale_factor)
+        self.freq_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord_coarse))
+        self.freq_coord_coarse[:] = time_coord_coarse[:]
+        
+        # collect garbage
+        gc.collect()
+        
+        
     @auto_attr
     def num_timepoints(self):
         return np.int(self.stim_arr.shape[0]/self.sampling_rate)
@@ -96,18 +139,6 @@ class AuditoryStimulus(StimulusModel):
     @auto_attr
     def tr_times(self):
         return np.linspace(self.all_freqs[0],self.all_freqs[-1],self.tr_sampling_rate)
-    
-    
-    def make_coordinate_matrices(self):
-        return np.meshgrid(self.tr_times, self.all_freqs)
-    
-    # @auto_attr
-    # def freq_coord(self):
-    #      return self.coordinate_matrices[1]
-    
-    # @auto_attr
-    # def time_coord(self):
-    #     return self.coordinate_matrices[0]
     
     @auto_attr
     def stft(self):
@@ -150,14 +181,6 @@ class AuditoryStimulus(StimulusModel):
     def log_stft(self):
         return logscale_stft(self.stft, self.sampling_rate, self.scale, self.timebins)
     
-    def make_spectrogram(self):
-        s = 20.*np.log10(np.abs(self.log_stft)/10e-6)
-        s[s == -np.inf] = 0
-        s = np.transpose(s)
-        s /= np.max(s)
-        im = imresize(s,(len(self.all_freqs), self.num_timepoints * self.tr_sampling_rate))
-        
-        return im.astype('double')
     
     @auto_attr
     def scaled_spectrogram(self):
