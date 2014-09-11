@@ -56,8 +56,9 @@ def parallel_fit(args):
     fit_bounds = args[3]
     tr_length = args[4]
     voxel_index = args[5]
-    uncorrected_rval = args[6]
+    auto_fit = args[6]
     verbose = args[7]
+    
     
     # fit the data
     fit = GaussianFit(response,
@@ -66,7 +67,7 @@ def parallel_fit(args):
                       fit_bounds,
                       tr_length,
                       voxel_index,
-                      uncorrected_rval,
+                      auto_fit,
                       verbose)
     return fit
 
@@ -108,6 +109,12 @@ class GaussianFit(object):
             
             # print to screen if verbose
             if self.verbose:
+                
+                # if no voxel index is specified we need something for the print
+                if self.voxel_index is None:
+                    self.voxel_index = (0,0,0)
+                
+                # print
                 print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
                       %(self.voxel_index[0],
                         self.voxel_index[1],
