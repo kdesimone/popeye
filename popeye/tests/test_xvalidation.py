@@ -60,7 +60,7 @@ def test_kfold_xval_repeated_runs():
     estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
 
     # create the args context for calling the Fit class
-    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0], 0]
+    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0]]
     fit_kwargs = {'auto_fit': False, 'verbose' : False}    
 
     # create a series of "runs"
@@ -123,8 +123,8 @@ def test_kfold_xval_unique_runs():
     estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
     
     # create the args context for calling the Fit class
-    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0], 0]
-    fit_kwargs = {'auto_fit': False, 'verbose' : False}    
+    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0],]
+    fit_kwargs = {'auto_fit': False, 'verbose' : False}
     
     # create a series of "runs"
     data = np.zeros((stimulus.stim_arr.shape[-1],num_runs))
