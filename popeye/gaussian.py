@@ -24,7 +24,6 @@ def compute_model_ts(x, y, sigma, hrf_delay, beta,
     """
     The objective function for GaussianFi class.
     
-    s
     Parameters
     ----------
     x : float

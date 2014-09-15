@@ -77,13 +77,14 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     stim_arr : ndarray
         Array_like means all those objects -- lists, nested lists, etc. --
         that can be converted to an array.
+    
     scale_factor : float
         The scale factor by which the stimulus is resampled.  The scale factor
         must be a float, and must be greater than 0.
         
     Returns
     -------
-    resampledStim : ndarray
+    resampled_arr : ndarray
         An array that is resampled according to the user-specified scale factor.
     """
     
@@ -105,18 +106,106 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
 
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     
-    theta = degrees*2*np.pi/360
+    """
+    A utility function for creating a two-dimensional Gaussian.
+    
+    This function served as the model for the Cython implementation of a
+    generator of two-dimensional Gaussians.
+    
+    X : ndarray
+        The coordinate array for the horizontal dimension of the display.
+        
+    Y : ndarray
+        The coordinate array for the the vertical dimension of the display.
+    
+    x0 : float
+        The location of the center of the Gaussian on the horizontal axis.
+        
+    y0 : float
+        The location of the center of the Gaussian on the verticala axis.
+    
+    sigma_x : float
+        The dispersion of the Gaussian over the horizontal axis.
+    
+    sigma_y : float
+        The dispersion of the Gaussian over the vertical axis.
+    
+    degrees : float
+        The orientation of the two-dimesional Gaussian (degrees).
+    
+    amplitude : float
+        The amplitude of the two-dimensional Gaussian.
+    
+    Returns
+    -------
+    gauss : ndarray
+        The two-dimensional Gaussian.
+    
+    """
+    
+    
+    theta = degrees*2*np.pi/180
     
     a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
     b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
     c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
     
-    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
+    gauss = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
     
-    return Z
+    return gauss
 
 def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, 
                          thetas, num_steps, stim_ecc, blanks=True, threshold = 0.33):
+
+    """
+    A utility function for creating a sweeping bar stimulus in memory.
+    
+    This function creates a standard retinotopic mapping stimulus, the 
+    sweeping bar. The user specifies some of the display and stimulus
+    parameters. This is particularly useful for writing tests and simulating
+    responses of visually driven voxels.
+    
+    pixels_across : int
+        The number of pixels along the horizontal dimension of the display.
+        
+    pixels_down : int
+        The number of pixels along the vertical dimension of the display.
+    
+    viewing_distance : float
+        The distance between the participant and the display (cm).
+    
+    screen_width : float
+        The width of the display (cm). This is used to compute the visual angle
+        for determining the pixels per degree of visual angle.
+    
+    thetas : array-like
+        An array containing the orientations of the bars that will sweep
+        across the display.  For example `thetas = np.arange(0,360,360/8)`.
+    
+    num_steps : int
+        The number of steps the bar makes on each sweep through the visual field.
+    
+    stim_ecc : float
+        The distance from fixation each bar sweep begins and ends (degees).
+    
+    blanks : bool
+        A flag determining whether there are blank periods inserted at the beginning
+        and the end of the stimulus run.
+    
+    threshold : float
+        The bar stimulus is created by thresholding a very oblong two-dimensional 
+        Gaussian at various orientations.
+    
+    Returns
+    -------
+    bar : ndarray
+        An array containing the bar stimulus. The array is three-dimensional, with the
+        first two dimensions representing the size of the display and the third
+        dimension representing time.
+    
+    
+    """
+    
     
     # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
@@ -165,31 +254,55 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
                 
     
     # digitize the bar stimulus
-    bar_digital = np.zeros_like(bar_stimulus)
-    bar_digital[bar_stimulus > threshold] = 1
-    bar_digital = np.short(bar_digital)
+    bar = np.zeros_like(bar_stimulus)
+    bar[bar_stimulus > threshold] = 1
+    bar = np.short(bar)
     
-    return bar_digital
+    return bar
 
 
 # This should eventually be VisualStimulus, and there would be an abstract class layer
 # above this called Stimulus that would be generic for n-dimentional feature spaces.
 class VisualStimulus(StimulusModel):
     
-    """ Abstract class for stimulus model """
+    """ A child of the StimulusModel class for visual stimuli. """
     
     
-    def __init__(self, stim_arr, viewing_distance, screen_width, 
-                 scale_factor, frames_per_tr = 1):
+    def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor):
         
-        # this is a weird notation
+        """
+        
+        A child of the StimulusModel class for visual stimuli.
+        
+        
+        Paramaters
+        ----------
+        
+        stim_arr : ndarray
+            An array containing the visual stimulus at the native resolution. The 
+            visual stimulus is assumed to be three-dimensional (x,y,time).
+        
+        viewing_distance : float
+            The distance between the participant and the display (cm).
+            
+        screen_width : float
+            The width of the display (cm). This is used to compute the visual angle
+            for determining the pixels per degree of visual angle.
+        
+        scale_factor : float
+            The downsampling rate for ball=parking a solution. The `stim_arr` is
+            downsampled so as to speed up the fitting procedure.  The final model
+            estimates will be derived using the non-downsampled stimulus.
+        
+        """
+        
+        
         StimulusModel.__init__(self, stim_arr)
         
         # absorb the vars
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
         self.scale_factor = scale_factor
-        self.frames_per_tr = frames_per_tr
         
         # ascertain stimulus features
         self.pixels_across = np.shape(stim_arr)[1]
@@ -197,7 +310,7 @@ class VisualStimulus(StimulusModel):
         self.run_length = np.shape(stim_arr)[2]
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
-        # create down-sampled stimulus
+        # create downsampled stimulus
         stim_arr_coarse = resample_stimulus(stim_arr,self.scale_factor)
         
         # generate the coordinate matrices
