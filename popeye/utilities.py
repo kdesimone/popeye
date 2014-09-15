@@ -246,7 +246,7 @@ def error_function(parameters, args, bounds, data, objective_function, debug=Fal
     
     return error
 
-def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
+def double_gamma_hrf(delay, tr_length, integrator=trapz):
     
     """
     The double-gamma hemodynamic reponse function (HRF) used to convolve with
@@ -263,12 +263,14 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     ----------
     delay : float
         The delay of the HRF peak and under-shoot.
+        
     tr_length : float
         The length of the repetition time in seconds.
-    frames_per_tr : int
-        The number number of stimulus frames that are used during a 
-        single functional volume.
-        
+    
+    integrator : callable
+        The integration function for normalizing the units of the HRF 
+        so that the area under the curve is the same for differently
+        delayed HRFs.
         
     Returns
     -------
@@ -291,7 +293,7 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     alpha_2 = 16.0/tr_length+delay/tr_length
     beta_2 = 1.0
     
-    t = np.arange(0,33/tr_length,tr_length/frames_per_tr)
+    t = np.arange(0,33,tr_length)
     scale = 1
     hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
@@ -432,6 +434,7 @@ def zscore(time_series, axis=-1):
     zt : ndarray
         the renormalized time series array
     """
+    
     time_series = np.asarray(time_series)
     et = time_series.mean(axis=axis)
     st = time_series.std(axis=axis)
