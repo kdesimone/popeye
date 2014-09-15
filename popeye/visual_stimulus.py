@@ -293,7 +293,7 @@ class VisualStimulus(StimulusModel):
             The downsampling rate for ball=parking a solution. The `stim_arr` is
             downsampled so as to speed up the fitting procedure.  The final model
             estimates will be derived using the non-downsampled stimulus.
-        
+            
         """
         
         
