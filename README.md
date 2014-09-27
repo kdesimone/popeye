@@ -1,3 +1,10 @@
+.. -*- mode: rst -*-
+
+|Travis|_
+
+.. |Travis| image:: https://api.travis-ci.org/kdesimone/popeye.png?branch=master
+.. _Travis: https://travis-ci.org/kdesimone/popeye/
+
 popeye
 ============
 
