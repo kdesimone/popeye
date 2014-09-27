@@ -16,6 +16,30 @@ from scipy.integrate import romb, trapz
 
 # normalize to a specific range
 def normalize(array, imin=-1, imax=1):
+    
+    """
+    A short-hand function for normalizing an array to a desired range.
+
+    Parameters
+    ----------
+    array : ndarray
+        An array to be normalized.
+
+    imin : float
+        The desired minimum value in the output array.  Default: -1
+        
+    imax : float
+        The desired maximum value in the output array.  Default: 1
+    
+
+    Returns
+    -------
+    array : ndarray
+        The normalized array with imin and imax as the minimum and 
+        maximum values.
+    """
+    
+    
     dmin = array.min()
     dmax = array.max()
     array -= dmin
@@ -26,25 +50,142 @@ def normalize(array, imin=-1, imax=1):
     
 
 # generic gradient descent
-def gradient_descent_search(parameters, args, fit_bounds, response,
+def gradient_descent_search(parameters, args, fit_bounds, data,
                             error_function, objective_function):
+                            
+    """
+    A generic gradient-descent error minimization function.
+    
+    The values inside `parameters` are used as a seed-point for a 
+    gradient-descent error minimization procedure [1]_.  The user must 
+    also supply an `objective_function` for producing a model prediction
+    and an `error_function` for relating that prediction to the actual,
+    measured `data`.
+    
+    In addition, the user may also supply  `fit_bounds`, containing pairs 
+    of upper and lower bounds for each of the values in parameters. 
+    If `fit_bounds` is specified, the error minimization procedure in 
+    `error_function` will return an Inf whether the parameters exceed the 
+    minimum or maxmimum values specified in `fit_bounds`.
+    
+    
+    Parameters
+    ----------
+    parameters : tuple
+        A tuple of values representing a model setting.
+        
+    args : tuple
+        Extra arguments to `objective_function` beyond those in `parameters`.
+    
+    fit_bounds : tuple
+        A tuple containing the upper and lower bounds for each parameter
+        in `parameters`.  If a parameter is not bounded, simply use
+        `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
+        bound the first parameter to be any positive number while the
+        second parameter would be bounded between -10 and 10.
+        
+    data : ndarray
+        The actual, measured time-series against which the model is fit.
+    
+    error_function : callable
+        The error function that relates the model prediction to the 
+        measure data.  The error function returns a float that represents
+        the residual sum of squared errors between the prediction and the
+        data.
+        
+    objective_function : callable
+        The objective function that takes `parameters` and `args` and 
+        proceduces a model time-series.
+        
+    Returns
+    -------
+    estimate : tuple
+        The model solution given `parameters` and `objective_function`.
+    
+    
+    References
+    ----------
+    
+    .. [1] Fletcher, R., Powell, M.J.D. (1963) A rapidly convergent descent 
+    method for minimization. Compututation Journal 6: 163–168.
+    
+    """
     
     estimate, err,  _, _, _, warnflag =\
         fmin_powell(error_function, parameters,
-                    args=(args, fit_bounds, response, objective_function),
+                    args=(args, fit_bounds, data, objective_function),
                     full_output=True,
                     disp=False)
     
     return estimate
 
-def brute_force_search(args, search_bounds, fit_bounds, response,
+def brute_force_search(args, search_bounds, fit_bounds, data,
                        error_function, objective_function):
+                       
+    """
+    A generic brute-force grid-search error minimization function.
+    
+    The user specifies an `objective_function` and the corresponding
+    `args` for generating a model prediction.  The `brute_force_search`
+    uses `search_bounds` to dictact the bounds for evenly sample the 
+    parameter space.  
+    
+    In addition, the user must also supply  `fit_bounds`, containing pairs 
+    of upper and lower bounds for each of the values in parameters. 
+    If `fit_bounds` is specified, the error minimization procedure in 
+    `error_function` will return an Inf whether the parameters exceed the 
+    minimum or maxmimum values specified in `fit_bounds`.
+    
+    The output of `brute_force_search` can be used as a seed-point for
+    the fine-tuned solutions from `gradient_descent_search`.
+    
+    
+    Parameters
+    ----------
+    args : tuple
+        Arguments to `objective_function` that yield a model prediction.
+        
+    search_bounds : tuple
+        A tuple indicating the search space for the brute-force grid-search.
+        The tuple contains pairs of upper and lower bounds for exploring a
+        given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
+        search the first dimension from -10 to 10 and the second from 0 to 5.  
+        These values cannot be None. 
+        
+        For more information, see `scipy.optimize.brute`.
+        
+    fit_bounds : tuple
+        A tuple containing the upper and lower bounds for each parameter
+        in `parameters`.  If a parameter is not bounded, simply use
+        `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
+        bound the first parameter to be any positive number while the
+        second parameter would be bounded between -10 and 10.
+        
+    data : ndarray
+       The actual, measured time-series against which the model is fit.
+       
+    error_function : callable
+       The error function that relates the model prediction to the 
+       measure data.  The error function returns a float that represents
+       the residual sum of squared errors between the prediction and the
+       data.
+       
+    objective_function : callable
+      The objective function that takes `parameters` and `args` and 
+      proceduces a model time-series.
+      
+    Returns
+    -------
+    estimate : tuple
+       The model solution given `parameters` and `objective_function`.
+   
+    """
                        
     estimate, err,  _, _ =\
         brute(error_function,
               args=(args, fit_bounds, response, objective_function),
               ranges=search_bounds,
-              Ns=5,
+              Ns=4,
               finish=None,
               full_output=True,
               disp=False)
@@ -52,10 +193,38 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
     return estimate
 
 # generic error function
-def error_function(params, args, bounds, response, func, debug=True):
+def error_function(parameters, args, bounds, data, objective_function, debug=False):
+    
+    """
+    A generic error function with bounding.
+    
+
+    Parameters
+    ----------
+    parameters : tuple
+        A tuple of values representing a model setting.
+    
+    args : tuple
+        Extra arguments to `objective_function` beyond those in `parameters`.
+    
+    data : ndarray
+       The actual, measured time-series against which the model is fit.
+        
+    objective_function : callable
+        The objective function that takes `parameters` and `args` and 
+        proceduces a model time-series.
+    
+    debug : bool
+        Useful for debugging a model, will print the parameters and error.
+     
+    Returns
+    -------
+    error : float
+        The residual sum of squared errors between the prediction and data.
+    """
     
     # check ifparameters are inside bounds
-    for p, b in zip(params,bounds):
+    for p, b in zip(parameters,bounds):
         
         # if not return an inf
         if b[0] and b[0] > p:
@@ -65,41 +234,43 @@ def error_function(params, args, bounds, response, func, debug=True):
     
     # merge the parameters and arguments
     ensemble = []
-    ensemble.extend(params)
+    ensemble.extend(parameters)
     ensemble.extend(args)
     
     # compute the RSS
-    error = np.sum((response-func(*ensemble))**2)
-    # error = 1 - np.corrcoef(response,func(*ensemble))[0,1]
-    
+    error = np.sum((response-objective_function(*ensemble))**2)
     
     # print for debugging
     if debug:
-        print(params, error)
+        print(parameters, error)
     
     return error
 
-def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
+def double_gamma_hrf(delay, tr_length, integrator=trapz):
+    
     """
     The double-gamma hemodynamic reponse function (HRF) used to convolve with
     the stimulus time-series.
     
-    The user specifies only the delay of the peak and under-shoot The delay
-    shifts the peak and under-shoot by a variable number of seconds.  The other
-    parameters are hard-coded.  The HRF delay is modeled for each voxel
-    independently.  The double-gamme HRF andhard-coded values are based on
-    previous work (Glover, 1999).
+    The user specifies only the delay of the peak and under-shoot.  
+    The delay shifts the peak and under-shoot by a variable number of 
+    seconds. The other parameters are hard-coded. The HRF delay is 
+    modeled for each voxel independently. The double-gamme HRF and 
+    hard-coded values are based on previous work [1]_.
     
     
     Parameters
     ----------
     delay : float
         The delay of the HRF peak and under-shoot.
+        
     tr_length : float
         The length of the repetition time in seconds.
-    frames_per_tr : int
-        The number number of stimulus frames that are used during a single functional volume.
-        
+    
+    integrator : callable
+        The integration function for normalizing the units of the HRF 
+        so that the area under the curve is the same for differently
+        delayed HRFs.
         
     Returns
     -------
@@ -116,13 +287,13 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 5.0/tr_length+delay/tr_length
+    alpha_1 = 6.0/tr_length+delay/tr_length
     beta_1 = 1.0
     c = 0.2
-    alpha_2 = 15.0/tr_length+delay/tr_length
+    alpha_2 = 16.0/tr_length+delay/tr_length
     beta_2 = 1.0
     
-    t = np.arange(0,33/tr_length,tr_length/frames_per_tr)
+    t = np.arange(0,33,tr_length)
     scale = 1
     hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
@@ -132,188 +303,6 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     hrf /= integrator(hrf)
     
     return hrf
-
-
-def recast_estimation_results(output, grid_parent, write=True):
-    """
-    Recasts the output of the prf estimation into two nifti_gz volumes.
-    
-    Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the prf estimation for each voxel.  The prf estimates are
-    expressed in both polar and Cartesian coordinates.  If the default value
-    for the `write` parameter is set to False, then the function returns the
-    arrays without writing the nifti files to disk.  Otherwise, if `write` is
-    True, then the two nifti files are written to disk.
-    
-    Each voxel contains the following metrics: 
-    
-        0 x / polar angle
-        1 y / eccentricity
-        2 sigma
-        3 HRF delay
-        4 RSS error of the model fit
-        5 correlation of the model fit
-        
-    Parameters
-    ----------
-    output : list
-        A list of PopulationFit objects.
-    grid_parent : nibabel object
-        A nibabel object to use as the geometric basis for the statmap.  
-        The grid_parent (x,y,z) dim and pixdim will be used.
-        
-    Returns
-    ------ 
-    cartes_filename : string
-        The absolute path of the recasted prf estimation output in Cartesian
-        coordinates. 
-    plar_filename : string
-        The absolute path of the recasted prf estimation output in polar
-        coordinates. 
-        
-    """
-    
-    
-    # load the gridParent
-    dims = list(grid_parent.shape)
-    dims = dims[0:3]
-    dims.append(7)
-    
-    # initialize the statmaps
-    polar = np.zeros(dims)
-    cartes = np.zeros(dims)
-    
-    # extract the prf model estimates from the results queue output
-    for fit in output:
-        
-        if fit.__dict__.has_key('rss'):
-        
-            cartes[fit.voxel_index] = (fit.x, 
-                                      fit.y,
-                                      fit.sigma,
-                                      fit.hrf_delay,
-                                      fit.beta,
-                                      fit.rss,
-                                      fit.fit_stats[2])
-                                 
-            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
-                                     np.sqrt(fit.x**2+fit.y**2),
-                                     fit.sigma,
-                                     fit.hrf_delay,
-                                     fit.beta,
-                                     fit.rss,
-                                     fit.fit_stats[2])
-                                 
-    # get header information from the gridParent and update for the prf volume
-    aff = grid_parent.get_affine()
-    hdr = grid_parent.get_header()
-    hdr.set_data_shape(dims)
-    
-    # recast as nifti
-    nif_polar = nibabel.Nifti1Image(polar,aff,header=hdr)
-    nif_polar.set_data_dtype('float32')
-   
-    nif_cartes = nibabel.Nifti1Image(cartes,aff,header=hdr)
-    nif_cartes.set_data_dtype('float32')
-    
-    return nif_cartes, nif_polar
-
-def recast_simulation_results_queue(output,funcData,metaData,write=True):
-    """
-    Recasts the output of the neural RF (nRF) simulation into two nifti_gz
-    volumes. 
-    
-    Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the nRF simulation for each voxel.  The nRF estimates are
-    expressed in both polar and Cartesian coordinates.  If the default value
-    for the `write` parameter is set to False, then the function returns the
-    arrays without writing the nifti files to disk.  Otherwise, if `write` is
-    True, then the two nifti files are written to disk. 
-
-    Each voxel contains the following metrics:
-    
-        0 x / polar angle
-        1 y / eccentricity
-        2 neural RF estimate
-        3 HRF delay
-        4 visuotopic scatter
-        5 SSE between prf and nRF gaussian
-        6 correlation of the model-actual fit
-        7 percent change from old to new sigma
-        
-    Parameters
-    ----------
-    output : list
-        A collection of multiprocessing.Queue objects, with one object per voxel.
-    metaData : dict
-        A dictionary containing meta-data about the analysis being performed.
-        For details, see config.py. 
-        
-        
-    Returns
-    -------
-    cartesFileName : string
-        The absolute path of the recasted prf estimation output in Cartesian
-        coordinates. 
-    polarFileName : string
-        The absolute path of the recasted prf estimation output in polar
-        coordinates. 
-        
-    """
-    
-    # load the gridParent
-    gridParent = nibabel.load(metaData['maskPath'])
-    dims = list(gridParent.get_shape())
-    dims.append(8)
-    nRF_polar = np.zeros(dims)
-    nRF_cartes = np.zeros(dims)
-    
-    
-    # extract the nRF model estimates from the results queue output
-    for job in output:
-        for voxel in job:
-            xi,yi,zi = voxel[0:3]
-            x, y = funcData['prf_cartes'][xi,yi,zi,0:2]
-            phi, rho = funcData['prf_polar'][xi,yi,zi,0:2]
-            d = funcData['prf_cartes'][xi,yi,zi,3]
-            rval = funcData['prf_cartes'][xi,yi,zi,6]
-            sigma = voxel[3]
-            SSE = voxel[4]
-            meanScatter = voxel[5]
-            percentChange = voxel[6]
-            nRF_cartes[xi,yi,zi,:] = (x, y, sigma, d, meanScatter, SSE, rval,
-                                      percentChange)
-            nRF_polar[xi,yi,zi,:] = (phi, rho, sigma, d, meanScatter, SSE, rval,
-                                     percentChange)
-            
-    # get header information from the gridParent and update for the nRF volume
-    aff = gridParent.get_affine()
-    hdr = gridParent.get_header()
-    hdr.set_data_shape(dims)
-    voxelDims = list(hdr.get_zooms())
-    voxelDims[-1] = 8
-    hdr.set_zooms(voxelDims)
-        
-    # write the files
-    now = time.strftime('%Y%m%d_%H%M%S')
-    nif_polar = nibabel.Nifti1Image(nRF_polar,aff,header=hdr)
-    nif_polar.set_data_dtype('float32')
-    polarFileName = '%s/%s_polar_ts%d.nii.gz'%(metaData['outputPath'],
-                                               metaData['baseFileName'],
-                                               metaData['temporal_smooth'])
-
-    nif_cartes = nibabel.Nifti1Image(nRF_cartes,aff,header=hdr)
-    nif_cartes.set_data_dtype('float32')
-    cartesFileName = '%s/%s_cartes_ts%d.nii.gz' %(metaData['outputPath'],
-                                                  metaData['baseFileName'],
-                                                  metaData['temporal_smooth'])
-    
-    if write:
-        nibabel.save(nif_polar,polarFileName)
-        nibabel.save(nif_cartes,cartesFileName)
-        return polarFileName,cartesFileName
-    else:
-        return nRF_cartes,nRF_polar
 
 def multiprocessor(targetMethod,stimData,funcData,metaData):
     """
@@ -445,6 +434,7 @@ def zscore(time_series, axis=-1):
     zt : ndarray
         the renormalized time series array
     """
+    
     time_series = np.asarray(time_series)
     et = time_series.mean(axis=axis)
     st = time_series.std(axis=axis)
@@ -484,62 +474,3 @@ def randomize_voxels(voxels):
     randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
     
     return randomized_voxels
-
-def smooth(x,window_len=11,window='hanning'):
-    """smooth the data using a window with requested size.
-
-    This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
-    (with the window size) in both ends so that transient parts are minimized
-    in the begining and end part of the output signal.
-
-    input:
-        x: the input signal 
-        window_len: the dimension of the smoothing window; should be an odd integer
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
-
-    output:
-        the smoothed signal
-
-    example:
-
-    t=linspace(-2,2,0.1)
-    x=sin(t)+randn(len(t))*0.1
-    y=smooth(x)
-
-    see also: 
-
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
-
-    TODO: the window parameter could be the window itself if an array instead of a string
-    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-    """
-
-    if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
-
-    if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
-
-
-    if window_len<3:
-        return x
-
-
-    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
-
-
-    s=numpy.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
-    #print(len(s))
-    if window == 'flat': #moving average
-        w=numpy.ones(window_len,'d')
-    else:
-        w=eval('numpy.'+window+'(window_len)')
-
-    y=numpy.convolve(w/w.sum(),s,mode='valid')
-    return y
-
-
