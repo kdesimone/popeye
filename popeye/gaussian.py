@@ -10,7 +10,7 @@ warnings.simplefilter("ignore")
 import numpy as np
 
 from scipy.stats import linregress
-from scipy.signal import fft_convolve
+from scipy.signal import fftconvolve
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
