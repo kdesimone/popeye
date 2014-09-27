@@ -14,7 +14,7 @@ ctypedef np.double_t DTYPE2_t
 # DTYPE3 = np.short
 # ctypedef np.short DTYPE3_t
 
-from libc.math cimport sin, cos, exp
+from libc.math cimport sin, cos, exp, sqrt
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -107,7 +107,7 @@ def MakeFastRF(np.ndarray[DTYPE2_t, ndim=2] degX,
                                   # sure, so i just stick with range.
     cdef DTYPE2_t d # d for distance
 
-    # now that we are using cython, arithmetic using c-types is fast, so we
+    # now that we are using cython, arithmetic using c-types is fast, so wei
     # aren't restricted to using array operations and vectorization for speed
     # then, we don't have to use intermediate lists/arrays, and just apply the
     # result once we find a "good" index (i,j).
@@ -178,7 +178,58 @@ def MakeFastGaussian2D(np.ndarray[DTYPE2_t, ndim=2] X,
     
     # return it
     return rf
-       
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def MakeFast_1D_Audio_Prediction(DTYPE_t freq_center, DTYPE_t freq_sigma,
+                                 np.ndarray[DTYPE2_t, ndim=2] spectrogram,
+                                 np.ndarray[DTYPE2_t, ndim=1] gaussian,
+                                 np.ndarray[DTYPE2_t, ndim=1] times,
+                                 np.ndarray[DTYPE2_t, ndim=1] freqs,
+                                 DTYPE_t num_timepoints):
+    
+    # typedef counters etc
+    cdef int t_ind, f_ind, tr
+    cdef int f_lim = spectrogram.shape[0]
+    cdef int t_lim = spectrogram.shape[1]
+    
+    # output stuff
+    cdef DTYPE2_t gauss_sum = 0.0
+    cdef DTYPE2_t counter = 0.0
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
+    cdef np.ndarray[long,ndim=1,mode='c'] ind
+    
+    # censoring calculatings
+    cdef DTYPE2_t s_factor2, d
+    s_factor3 = (3.0*freq_sigma)**2
+    
+    # main loop
+    for tr in xrange(num_timepoints-1):
+        
+        # empty the tally
+        gauss_sum = 0.0
+        counter = 0.0
+        
+        ind = np.nonzero((times <= tr+1) & (times>tr))[0]
+        
+        # time loop
+        for t_ind in xrange(len(ind)):
+            
+            # freq loop
+            for f_ind in xrange(f_lim):
+                
+                # don't compute points outside 3 sigmas
+                d = sqrt((freqs[f_ind] - freq_center)**2)
+                if d <= s_factor3:
+                    
+                    # multiply that by the spectrogram at our time and freq bin
+                    gauss_sum += gaussian[f_ind] * spectrogram[f_ind,ind[t_ind]]
+                    counter += 1
+                
+        stim[tr] = gauss_sum
+    
+    return stim
+                                 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
@@ -187,57 +238,54 @@ def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
                             np.ndarray[DTYPE2_t, ndim=2] freq_coord,
                             DTYPE2_t freq_center,
                             DTYPE2_t freq_sigma,
-                            DTYPE2_t hrf_delay,
                             DTYPE_t num_timepoints):
     
     # iterators
-    cdef int t, f, tr_num, from_slice, to_slice
-    
-    # loop limiters
-    cdef int t_lim = spectrogram.shape[1]
-    cdef int f_lim = spectrogram.shape[0]
-    
-    cdef int time_bins = t_lim/num_timepoints
+    cdef int t, f, tr_num, from_slice, to_slice, conv_i, conv_j
+    cdef DTYPE2_t conv_sum
     
     # limit our computations to meaningful portions of the gaussian
     s_factor_3 = (3.0*freq_sigma)**2
     
+    # loop limiters
+    cdef int t_lim = spectrogram.shape[1]
+    cdef int f_lim = spectrogram.shape[0]
+    cdef int frames_per_tr = t_lim/num_timepoints
+    
     # initialize arrays for the loops
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] g_vector = np.zeros(time_bins, dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] f_vector = np.zeros(time_bins, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] g_vector = np.zeros(frames_per_tr, dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] f_vector = np.zeros(frames_per_tr, dtype=DTYPE2)
     
-    # convolution variables
-    cdef int conv_i, conv_j, conv_window
-    cdef DTYPE2_t conv_sum
-    conv_window = time_bins + time_bins - 1
-    
-    for t in xrange(num_timepoints):
+    # loop over each TR
+    for tr in np.arange(frames_per_tr, t_lim,t_lim/num_timepoints):
         
-        # grab the frame from spectrogram that we'll analyze at this time-step
-        from_slice = t * time_bins
-        to_slice = t * time_bins + time_bins
-        
+        tr_num = tr/(t_lim/num_timepoints)
+        from_slice = tr - frames_per_tr/2
+        to_slice = tr + frames_per_tr/2
+                
         # grab the sound frame an normalize it to 1
         sound_frame = spectrogram[:,from_slice:to_slice]
         
-        # initialize the convolution tally
         conv_sum = 0.0
         
         # loop over each frequency and convolve
-        for f in range(spectrogram.shape[0]):
+        for f in range(f_lim):
             
             f_vector = sound_frame[f,:]
             g_vector = gaussian[f,:]
             
-            # something is wrong here?????
-            for conv_i in xrange(1,time_bins):
+            # the hard way
+            for conv_i in np.arange(frames_per_tr):
                 d = (time_coord[f,conv_i]-time_coord[f,conv_i])**2 + (freq_coord[f,conv_i]-freq_center)**2
                 if d <= s_factor_3:
-                    for conv_j in xrange(1,time_bins):
+                    for conv_j in np.arange(frames_per_tr):
                         conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
-                        
-        stim[t] = np.mean(conv_sum)
+            
+            # the easy way
+            # conv_sum += np.sum(ss.fftconvolve(g_vector,f_vector))
+            
+        stim[tr_num] = np.mean(conv_sum)
         
     return stim
 

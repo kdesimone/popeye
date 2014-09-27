@@ -10,7 +10,7 @@ import nose.tools as nt
 from scipy.signal import chirp
 
 import popeye.utilities as utils
-import popeye.strf_no_noise as strf
+import popeye.strf as strf
 from popeye.auditory_stimulus import AuditoryStimulus
 from popeye.spinach import MakeFastGaussian2D, MakeFastAudioPrediction
 
@@ -73,10 +73,10 @@ def test_strf_fit():
     # stimulus features
     lo_freq = 200 # Hz
     hi_freq = 12000 # Hz
-    fs = 44100.0 # Hz
+    fs = hi_freq*2 # Hz
     duration = 100 # seconds
     tr_length = 1.0 # seconds
-    tr_sampling_rate = 10 # number of time-samples per TR to plot the STRF in
+    tr_sampling_rate = 1 # number of time-samples per TR to plot the STRF in
     time_window = 0.5 # seconds
     freq_window = 256 # this is 2x the number of freq bins we'll end up with in the spectrogram
     scale_factor = 1.0 # how much to downsample the spectrotemporal space

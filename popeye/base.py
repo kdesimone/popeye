@@ -5,6 +5,8 @@ Base-classes for poulation encoding models and fits.
 
 """
 
+import numpy as np
+
 
 class PopulationModel(object):
     """ Abstract class which holds the stimulus model
@@ -26,4 +28,11 @@ class StimulusModel(object):
     """
 
     def __init__(self, stim_arr):
-        self.stim_arr = stim_arr
+        pass
+        
+        # self.stim_arr = stim_arr
+        
+        # share the arrays via memmap to reduce size
+        self.stim_arr = np.memmap('%s%s_%d.npy' %('/tmp/','stim_arr',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(stim_arr))
+        self.stim_arr[:] = stim_arr[:]
+        stim_arr = []

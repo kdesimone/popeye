@@ -12,15 +12,17 @@ import numpy as np
 from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
-import scipy.signal as ss
+from scipy.signal import fftconvolve
 from scipy.misc import imresize
+from scipy.ndimage.filters import median_filter
+from scipy.integrate import romb, trapz
 
 import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import MakeFastGaussian2D, MakeFastAudioPrediction
+from popeye.spinach import MakeFastGaussian2D, MakeFastAudioPrediction, MakeFast_1D_Audio_Prediction
 
 def recast_estimation_results(output, grid_parent, write=True):
     """
@@ -75,8 +77,8 @@ def recast_estimation_results(output, grid_parent, write=True):
         
         if fit.__dict__.has_key('fit_stats'):
             
-            nii_out[fit.voxel_index] = (fit.freq_center, 
-                                        fit.freq_sigma,
+            nii_out[fit.voxel_index] = (fit.center_freq, 
+                                        fit.bandwidth,
                                         fit.hrf_delay,
                                         fit.rss,
                                         fit.fit_stats[2])
@@ -105,89 +107,55 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     
     return Z
 
-
-def compute_model_ts(freq_center, freq_sigma, hrf_delay,
-                     time_coord, freq_coord, stimulus_spectrogram,
-                     tr_length, num_timepoints,
-                     norm_func=utils.zscore):
+def gaussian_1D(freqs, center_freq, bandwidth, integrator=trapz):
     
-    # compute the STRF
-    gaussian = MakeFastGaussian2D(time_coord, freq_coord, time_coord.max()*0.5, freq_center, time_coord.max()*0.5, freq_sigma, 0)
+    sd = bandwidth/2/np.sqrt(2*np.log(2))
     
-    # compute the stim and z-score it
-    stim = MakeFastAudioPrediction(stimulus_spectrogram, gaussian, time_coord, freq_coord, freq_center, freq_sigma, hrf_delay, num_timepoints)
+    gaussian = np.exp(-0.5 * ((freqs - (center_freq+1))/sd)**2) / (np.sqrt(2*np.pi) * sd)
+    #gaussian = np.exp(-(freqs - center_freq)**2 / bandwidth**2)
+    
+    gaussian /= integrator(gaussian)
+    
+    return gaussian
+    
+def compute_model_ts_1D(center_freq, bandwidth, beta,
+                        times, freqs, spectrogram, noise,
+                        tr_length, convolve=True):
+    
+    # mix the scanner noise and the signal
+    # mixed = spectrogram * beta + noise
+    
+    # compute the standard deviation based on bandwidth
+    # sd = bandwidth/2/np.sqrt(2*np.log(2))
+    
+    # if center_freq - sd*3 <= 0:
+    #     return np.inf
+    
+    # invoke the gaussian
+    gaussian = gaussian_1D(freqs, center_freq, bandwidth)
+    
+    # num timepoints
+    num_timepoints = np.ceil(times[-1])
+    
+    # compute the stimulus response
+    stim = MakeFast_1D_Audio_Prediction(center_freq, bandwidth, spectrogram, gaussian, times, freqs, num_timepoints)
     stim = utils.zscore(stim)
     
-    # create the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
-    
-    # convolve it
-    model = ss.fftconvolve(stim, hrf)[0:len(stim)]
-    
-    # zscore it
-    model = utils.zscore(model)
-    
-    return model
-
-def compute_model_ts_slow(freq_center, freq_sigma, hrf_delay, beta,
-                          time_coord, freq_coord, 
-                          stimulus_spectrogram, noise_spectrogram,
-                          tr_length, num_timepoints,
-                          norm_func=utils.zscore):
-    
-    # create the STRF
-    gaussian = MakeFastGaussian2D(time_coord, freq_coord, time_coord.max()*0.5, freq_center, time_coord.max()*0.5, freq_sigma, 0)
-    
-    # mix the noise and the stimulus spectrograms
-    spectrogram = stimulus_spectrogram * (1-beta) + noise_spectrogram * (beta)
-    
-    # only operate on the first 3 stdevs of the Gaussian
-    s_factor_3 = (3.0*freq_sigma)**2
-    
-    # initialize the inter-TR stimulus model
-    stim = np.zeros(num_timepoints)
-    
-    # loop over each TR
-    for tr in np.arange(0, spectrogram.shape[-1],spectrogram.shape[-1]/num_timepoints):
-        
-        tr_num = tr/(spectrogram.shape[1]/num_timepoints)
-        
-        # initialize the intra-TR stimulus model
-        tr_model = np.zeros(spectrogram.shape[0])        
-        
-        from_slice = tr
-        to_slice = tr + spectrogram.shape[1]/num_timepoints
-        
-        # grab the sound frame an normalize it to 1
-        sound_frame = spectrogram[:,from_slice:to_slice]
-        
-        conv_sum = 0.0
-        
-        # loop over each frequency and convolve
-        for f in range(spectrogram.shape[0]):
-            
-            f_vector = sound_frame[f,:]
-            g_vector = gaussian[f,:]
-            
-            # the hard way
-            for conv_i in np.arange(1,len(f_vector)):
-                d = (time_coord[f,conv_i]-time_coord[f,conv_i])**2 + (freq_coord[f,conv_i]-freq_center)**2
-                if d <= s_factor_3:
-                    for conv_j in np.arange(1,len(f_vector)):
-                        conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
-            
-            # the easy way
-            # conv_sum += np.sum(ss.fftconvolve(g_vector,f_vector))
-            
-        stim[tr_num] = conv_sum
-        
-    stim_norm = utils.zscore(stim)
+    # hard-set the hrf_delay
+    hrf_delay = 0
     
     # convolve it with the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
-    model = utils.zscore(ss.fftconvolve(stim_norm, hrf)[0:len(stim_norm)])
+    model = utils.zscore(fftconvolve(stim, hrf)[0:len(stim)])
     
-    return model
+    # scale by beta
+    model *= beta
+    
+    # for debugging
+    if convolve:
+        return model
+    else:
+        return stim
 
 # this method is used to simply multiprocessing.Pool interactions
 def parallel_fit(args):
@@ -230,7 +198,7 @@ class SpectrotemporalFit(PopulationFit):
     
     def __init__(self, data, model,
                  search_bounds, fit_bounds, tr_length,
-                 voxel_index=None,auto_fit=True, verbose=True):
+                 voxel_index=None, auto_fit=True, verbose=True):
         
         self.data = data
         self.model = model
@@ -255,79 +223,95 @@ class SpectrotemporalFit(PopulationFit):
                 
                 # we need a voxel index for the print
                 if self.voxel_index is None:
-                    print('blah')
                     self.voxel_index = (0,0,0)
                 
                 # print
-                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
+                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f  CENTER=%.05d  SPREAD=%.05d" 
                       %(self.voxel_index[0],
                         self.voxel_index[1],
                         self.voxel_index[2],
                         int(toc-tic),
                         int(self.rss),
-                        self.fit_stats[2]))
-        
-        # collect garbage
-        gc.collect()
-        
+                        self.fit_stats[2],
+                        self.center_freq,
+                        self.bandwidth))
+    
     @auto_attr
     def ballpark_estimate(self):
-        return utils.brute_force_search((self.model.stimulus.time_coord_coarse,
-                                         self.model.stimulus.freq_coord_coarse,
-                                         self.model.stimulus.spectrogram_coarse,
-                                         self.model.stimulus.tr_length,
-                                         self.model.stimulus.num_timepoints),
+        return utils.brute_force_search((self.model.stimulus.times,
+                                         self.model.stimulus.freqs,
+                                         self.model.stimulus.spectrogram,
+                                         self.model.noise.spectrogram,
+                                         self.model.stimulus.tr_length),
                                         self.search_bounds,
                                         self.fit_bounds,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts)
+                                        compute_model_ts_1D)
                                         
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.f0, self.fs0, self.hrf0),
-                                             (self.model.stimulus.time_coord,
-                                              self.model.stimulus.freq_coord,
+        return utils.gradient_descent_search((self.f0, self.bw0, self.beta0),
+                                             (self.model.stimulus.times,
+                                              self.model.stimulus.freqs,
                                               self.model.stimulus.spectrogram,
-                                              self.model.stimulus.tr_length,
-                                              self.model.stimulus.num_timepoints),
+                                              self.model.noise.spectrogram,
+                                              self.model.stimulus.tr_length),
                                              self.fit_bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts)
+                                             compute_model_ts_1D)
                                        
     @auto_attr
     def f0(self):
         return self.ballpark_estimate[0]
     
     @auto_attr
-    def fs0(self):
+    def bw0(self):
         return self.ballpark_estimate[1]
     
     @auto_attr
-    def hrf0(self):
+    def beta0(self):
         return self.ballpark_estimate[2]
     
+    # @auto_attr
+    # def hrf0(self):
+    #     return self.ballpark_estimate[2]
+    
     @auto_attr
-    def freq_center(self):
+    def center_freq(self):
         return self.estimate[0]
         
     @auto_attr
-    def freq_sigma(self):
+    def bandwidth(self):
         return self.estimate[1]
-        
+    
     @auto_attr
-    def hrf_delay(self):
+    def beta(self):
         return self.estimate[2]
+        
+    # @auto_attr
+    # def hrf_delay(self):
+    #     return self.estimate[2]
         
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.freq_center, self.freq_sigma, self.hrf_delay,
-                                self.model.stimulus.time_coord,
-                                self.model.stimulus.freq_coord,
-                                self.model.stimulus.spectrogram,
-                                self.model.stimulus.tr_length,
-                                self.model.stimulus.num_timepoints)
+        return compute_model_ts_1D(self.center_freq, self.bandwidth, self.beta,
+                                   self.model.stimulus.times,
+                                   self.model.stimulus.freqs,
+                                   self.model.stimulus.spectrogram,
+                                   self.model.noise.spectrogram,
+                                   self.model.stimulus.tr_length)
+
+    @auto_attr
+    def stim_timeseries(self):
+        return compute_model_ts_1D(self.center_freq, self.bandwidth, self.beta,
+                                  self.model.stimulus.times,
+                                  self.model.stimulus.freqs,
+                                  self.model.stimulus.spectrogram,
+                                  self.model.noise.spectrogram,
+                                  self.model.stimulus.tr_length, False)
+                                                                  
     @auto_attr
     def fit_stats(self):
         return linregress(self.data, self.prediction)
@@ -338,13 +322,6 @@ class SpectrotemporalFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        return MakeFastGaussian2D(self.model.stimulus.time_coord,
-                                  self.model.stimulus.freq_coord,
-                                  self.model.stimulus.time_coord.max()*0.5,
-                                  self.freq_center,
-                                  self.model.stimulus.time_coord.max()*0.5,
-                                  self.freq_sigma, 0)
-        
-        
+        return gaussian_1D(self.model.stimulus.freqs, self.center_freq, self.bandwidth)
         
                                     

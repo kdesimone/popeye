@@ -31,12 +31,12 @@ def compute_stft(signal, freq_window, overlap=0.5, window=np.hanning):
     # zeros at end (thus samples can be fully covered by frames)
     samples = np.append(samples, np.zeros(freq_window))
     
-    frames = stride_tricks.as_strided(samples, shape=(cols, freq_window), strides=(samples.strides[0]*hop_size, samples.strides[0])).copy()
+    frames = stride_tricks.as_strided(samples, shape=(cols, freq_window), strides=(samples.strides[0]*hop_size, samples.strides[0]))
     frames *= win
     
     return np.fft.rfft(frames)
     
-def logscale_stft(stft, sapmling_rate, scale, timebins):
+def logscale_stft(stft, scale, timebins):
     
     # create stft with new freq bins
     log_stft = np.complex128(np.zeros([timebins, len(scale)]))
@@ -57,9 +57,10 @@ def generate_spectrogram(log_stft, all_freqs, num_timepoints, tr_sampling_rate):
     s[s == -np.inf] = 0
     s = np.transpose(s)
     s /= np.max(s)
-    im = imresize(s,(len(all_freqs), num_timepoints * tr_sampling_rate))
     
-    return im
+    # im = imresize(s,(len(all_freqs), num_timepoints * tr_sampling_rate))
+    
+    return s
     
 def generate_coordinate_matrices(tr_times, all_freqs):
     
@@ -85,7 +86,7 @@ class AuditoryStimulus(StimulusModel):
     
     def __init__(self, stim_arr, tr_length, freq_window = 2**10,
                  time_window = 0.1, freq_factor=1.0, sampling_rate=44100,
-                 tr_sampling_rate=100, scale_factor=1.0):
+                 tr_sampling_rate=10, scale_factor=1.0):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr)
@@ -103,7 +104,14 @@ class AuditoryStimulus(StimulusModel):
         self.time_window = time_window # in s, this is the number of slices we'll make for each TR
         self.freq_window = freq_window
         
-        # share the arrays via memmap to reduce size  CHANGE THESE TO SINGLE?
+        stft = compute_stft(self.stim_arr, self.freq_window)
+        self.stft = np.memmap('%s%s_%d.npy' %('/tmp/','stft',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(stft))
+        self.stft[:] = stft[:]
+        
+        log_stft = logscale_stft(self.stft, self.scale, self.timebins)
+        self.log_stft = np.memmap('%s%s_%d.npy' %('/tmp/','log_stft',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(log_stft))
+        self.log_stft[:] = log_stft[:]
+        
         spectrogram = generate_spectrogram(self.log_stft, self.all_freqs, self.num_timepoints, self.tr_sampling_rate)
         self.spectrogram = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
         self.spectrogram[:] = spectrogram[:]
@@ -116,21 +124,17 @@ class AuditoryStimulus(StimulusModel):
         self.freq_coord[:] = freq_coord[:]
         
         # create coarse versions of these
-        spectrogram_coarse = rescale_frequencies(spectrogram, self.scale_factor)
-        self.spectrogram_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram_coarse))
-        self.spectrogram_coarse[:] = spectrogram_coarse[:]
-        
-        time_coord_coarse = rescale_frequencies(time_coord, self.scale_factor)
-        self.time_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','time_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord_coarse))
-        self.time_coord_coarse[:] = time_coord_coarse[:]
-        
-        freq_coord_coarse = rescale_frequencies(freq_coord, self.scale_factor)
-        self.freq_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord_coarse))
-        self.freq_coord_coarse[:] = time_coord_coarse[:]
-        
-        # collect garbage
-        gc.collect()
-        
+        # spectrogram_coarse = rescale_frequencies(spectrogram, self.scale_factor)
+        # self.spectrogram_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram_coarse))
+        # self.spectrogram_coarse[:] = spectrogram_coarse[:]
+        # 
+        # time_coord_coarse = rescale_frequencies(time_coord, self.scale_factor)
+        # self.time_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','time_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(time_coord_coarse))
+        # self.time_coord_coarse[:] = time_coord_coarse[:]
+        # 
+        # freq_coord_coarse = rescale_frequencies(freq_coord, self.scale_factor)
+        # self.freq_coord_coarse = np.memmap('%s%s_%d.npy' %('/tmp/','freq_coord_coarse',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freq_coord_coarse))
+        # self.freq_coord_coarse[:] = time_coord_coarse[:]
         
     @auto_attr
     def num_timepoints(self):
@@ -141,8 +145,11 @@ class AuditoryStimulus(StimulusModel):
         return np.linspace(self.all_freqs[0],self.all_freqs[-1],self.tr_sampling_rate)
     
     @auto_attr
-    def stft(self):
-        return compute_stft(self.stim_arr, self.freq_window)
+    def scale(self):
+        scale = np.linspace(0, 1, self.freqbins) ** self.freq_factor
+        scale *= (self.freqbins-1)/max(scale)
+        scale = np.unique(np.round(scale))
+        return scale
     
     @auto_attr
     def timebins(self):
@@ -153,63 +160,10 @@ class AuditoryStimulus(StimulusModel):
         return np.shape(self.stft)[1]
     
     @auto_attr
-    def scale(self):
-        scale = np.linspace(0, 1, self.freqbins) ** self.freq_factor
-        scale *= (self.freqbins-1)/max(scale)
-        scale = np.unique(np.round(scale))
-        return scale
-    
-    @auto_attr
     def all_freqs(self):
         return np.abs(np.fft.fftfreq(self.freqbins*2, 1./self.sampling_rate)[:self.freqbins+1])
     
     @auto_attr
-    def scaled_freqs(self):
-        freqs = []
-        for i in np.arange(0, len(self.scale)):
-            if i == len(self.scale)-1:
-                freqs += [np.mean(self.all_freqs[self.scale[i]:])]
-            else:
-                freqs += [np.mean(self.all_freqs[self.scale[i]:self.scale[i+1]])]
-        return freqs
-    
-    @auto_attr
     def all_times(self):
         return np.arange(0,self.num_timepoints,self.time_window)
-    
-    @auto_attr
-    def log_stft(self):
-        return logscale_stft(self.stft, self.sampling_rate, self.scale, self.timebins)
-    
-    
-    @auto_attr
-    def scaled_spectrogram(self):
-        if self.scale_factor < 1:
-            return imresize(self.spectrogram,self.scale_factor)
-        else:
-            return None
-    
-    @auto_attr
-    def scaled_coordinate_matrices(self):
-        if self.scale_factor < 1:
-            ind = np.arange(0, len(self.all_freqs), 1/self.scale_factor).astype('int16')
-            freqs = self.all_freqs[ind]
-            X,Y = np.meshgrid(self.tr_times, self.all_freqs[ind])
-            return X,Y
-        else:
-            return None
-    
-    @auto_attr
-    def scaled_freq_coord(self):
-         return self.scaled_coordinate_matrices[1]
-         
-    @auto_attr
-    def scaled_time_coord(self):
-        return self.scaled_coordinate_matrices[0]
-    
-    @auto_attr
-    def scaled_num_timepoints(self):
-        if self.scale_factor < 1:
-            return self.scaled_spectrogram.shape[-1]
-        else:
-            return None
+

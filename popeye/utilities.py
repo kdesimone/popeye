@@ -44,7 +44,7 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
         brute(error_function,
               args=(args, fit_bounds, response, objective_function),
               ranges=search_bounds,
-              Ns=4,
+              Ns=5,
               finish=None,
               full_output=True,
               disp=False)
@@ -52,7 +52,7 @@ def brute_force_search(args, search_bounds, fit_bounds, response,
     return estimate
 
 # generic error function
-def error_function(params, args, bounds, response, func, debug=False):
+def error_function(params, args, bounds, response, func, debug=True):
     
     # check ifparameters are inside bounds
     for p, b in zip(params,bounds):
@@ -70,6 +70,8 @@ def error_function(params, args, bounds, response, func, debug=False):
     
     # compute the RSS
     error = np.sum((response-func(*ensemble))**2)
+    # error = 1 - np.corrcoef(response,func(*ensemble))[0,1]
+    
     
     # print for debugging
     if debug:
@@ -114,10 +116,10 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 6.0/tr_length+delay/tr_length
+    alpha_1 = 5.0/tr_length+delay/tr_length
     beta_1 = 1.0
     c = 0.2
-    alpha_2 = 16.0/tr_length+delay/tr_length
+    alpha_2 = 15.0/tr_length+delay/tr_length
     beta_2 = 1.0
     
     t = np.arange(0,33/tr_length,tr_length/frames_per_tr)
