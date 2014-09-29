@@ -107,7 +107,7 @@ def gradient_descent_search(parameters, args, fit_bounds, data,
     ----------
     
     .. [1] Fletcher, R., Powell, M.J.D. (1963) A rapidly convergent descent 
-    method for minimization. Compututation Journal 6: 163–168.
+    method for minimization. Compututation Journal 6: 163-168.
     
     """
     
@@ -282,7 +282,7 @@ def double_gamma_hrf(delay, tr_length, integrator=trapz):
     Reference
     ----------
     Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
-    fMRI. NeuroImage 9: 416 429.
+    fMRI. NeuroImage 9: 416-429.
     
     """
     

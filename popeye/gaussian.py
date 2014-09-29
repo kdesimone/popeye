@@ -57,7 +57,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, beta,
     ----------
     
     .. [1] Glover, GH. (1999). Deconvolution of impulse response in 
-    event-related BOLD fMRI. NeuroImage 9: 416–429.
+    event-related BOLD fMRI. NeuroImage 9: 416-429.
     
     """
     
