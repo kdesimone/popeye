@@ -8,7 +8,9 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 """
 from __future__ import division
 import ctypes
+import gc
 
+import sharedmem
 import numpy as np
 from scipy.misc import imresize
 from scipy.io import loadmat
@@ -296,7 +298,6 @@ class VisualStimulus(StimulusModel):
             
         """
         
-        
         StimulusModel.__init__(self, stim_arr)
         
         # absorb the vars
@@ -305,33 +306,35 @@ class VisualStimulus(StimulusModel):
         self.scale_factor = scale_factor
         
         # ascertain stimulus features
-        self.pixels_across = np.shape(stim_arr)[1]
-        self.pixels_down = np.shape(stim_arr)[0]
-        self.run_length = np.shape(stim_arr)[2]
+        self.pixels_across = self.stim_arr.shape[1]
+        self.pixels_down = self.stim_arr.shape[0]
+        self.run_length = self.stim_arr.shape[2]
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
         # create downsampled stimulus
-        stim_arr_coarse = resample_stimulus(stim_arr,self.scale_factor)
+        stim_arr_coarse = resample_stimulus(self.stim_arr,self.scale_factor)
         
         # generate the coordinate matrices
         deg_x, deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
         deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
-        # share the arrays via memmap to reduce size
-        self.deg_x = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(deg_x))
+        # share the rest of the arrays ...
+        self.deg_x = sharedmem.empty(deg_x.shape, dtype=ctypes.c_double)
+        # self.deg_x = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x))
         self.deg_x[:] = deg_x[:]
         
-        self.deg_y = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
+        self.deg_y = sharedmem.empty(deg_y.shape, dtype=ctypes.c_double)
+        # self.deg_y = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
         self.deg_y[:] = deg_y[:]
         
-        self.deg_x_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
+        self.deg_x_coarse = sharedmem.empty(deg_x_coarse.shape, dtype=ctypes.c_double)
+        # self.deg_x_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
         self.deg_x_coarse[:] = deg_x_coarse[:]
         
-        self.deg_y_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
+        self.deg_y_coarse = sharedmem.empty(deg_y_coarse.shape, dtype=ctypes.c_double)
+        # self.deg_y_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
         self.deg_y_coarse[:] = deg_y_coarse[:]
         
-        self.stim_arr = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr))
-        self.stim_arr[:] = stim_arr[:]
-        
-        self.stim_arr_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr_coarse',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
+        self.stim_arr_coarse = sharedmem.empty(stim_arr_coarse.shape, dtype=ctypes.c_short)
+        # self.stim_arr_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr_coarse',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
         self.stim_arr_coarse[:] = stim_arr_coarse[:]

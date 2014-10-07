@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function, absolute_import
 import time
+import gc
 import warnings
 warnings.simplefilter("ignore")
 
@@ -16,6 +17,90 @@ from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastGaussPrediction, MakeFastRF
+
+def recast_estimation_results(output, grid_parent):
+    """
+    Recasts the output of the prf estimation into two nifti_gz volumes.
+    
+    Takes `output`, a list of multiprocessing.Queue objects containing the
+    output of the prf estimation for each voxel.  The prf estimates are
+    expressed in both polar and Cartesian coordinates.  If the default value
+    for the `write` parameter is set to False, then the function returns the
+    arrays without writing the nifti files to disk.  Otherwise, if `write` is
+    True, then the two nifti files are written to disk.
+    
+    Each voxel contains the following metrics: 
+    
+        0 x / polar angle
+        1 y / eccentricity
+        2 sigma
+        3 HRF delay
+        4 RSS error of the model fit
+        5 correlation of the model fit
+        
+    Parameters
+    ----------
+    output : list
+        A list of PopulationFit objects.
+    grid_parent : nibabel object
+        A nibabel object to use as the geometric basis for the statmap.  
+        The grid_parent (x,y,z) dim and pixdim will be used.
+        
+    Returns
+    ------ 
+    cartes_filename : string
+        The absolute path of the recasted prf estimation output in Cartesian
+        coordinates. 
+    plar_filename : string
+        The absolute path of the recasted prf estimation output in polar
+        coordinates. 
+        
+    """
+    
+    
+    # load the gridParent
+    dims = list(grid_parent.shape)
+    dims = dims[0:3]
+    dims.append(7)
+    
+    # initialize the statmaps
+    polar = np.zeros(dims)
+    cartes = np.zeros(dims)
+    
+    # extract the prf model estimates from the results queue output
+    for fit in output:
+        
+        if fit.__dict__.has_key('rss'):
+        
+            cartes[fit.voxel_index] = (fit.x, 
+                                      fit.y,
+                                      fit.sigma,
+                                      fit.hrf_delay,
+                                      fit.beta,
+                                      fit.rss,
+                                      fit.fit_stats[2])
+                                 
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
+                                     np.sqrt(fit.x**2+fit.y**2),
+                                     fit.sigma,
+                                     fit.hrf_delay,
+                                     fit.beta,
+                                     fit.rss,
+                                     fit.fit_stats[2])
+                                 
+    # get header information from the gridParent and update for the prf volume
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    hdr.set_data_shape(dims)
+    
+    # recast as nifti
+    nif_polar = nibabel.Nifti1Image(polar,aff,header=hdr)
+    nif_polar.set_data_dtype('float32')
+   
+    nif_cartes = nibabel.Nifti1Image(cartes,aff,header=hdr)
+    nif_cartes.set_data_dtype('float32')
+    
+    return nif_cartes, nif_polar
 
 def compute_model_ts(x, y, sigma, hrf_delay, beta,
                      deg_x, deg_y, stim_arr, tr_length):
@@ -70,7 +155,7 @@ def compute_model_ts(x, y, sigma, hrf_delay, beta,
                                       sigma)
     
     # create the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length, frames_per_tr)
+    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
     model = fftconvolve(ts_stim, hrf)[0:len(ts_stim)]
@@ -117,8 +202,8 @@ def parallel_fit(args):
     
     
     # fit the data
-    fit = GaussianFit(response,
-                      model,
+    fit = GaussianFit(model,
+                      data,
                       search_bounds,
                       fit_bounds,
                       tr_length,
@@ -156,17 +241,16 @@ class GaussianModel(PopulationModel):
         
         """
         
-        # this is a weird notation
         PopulationModel.__init__(self, stimulus)
         
-class GaussianFit(object):
+class GaussianFit(PopulationFit):
     
     """
     A Gaussian population receptive field fit class
     
     """
     
-    def __init__(self, data, model, search_bounds, fit_bounds, tr_length,
+    def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
                  voxel_index=None, auto_fit=True, verbose=True):
         
         
@@ -224,8 +308,8 @@ class GaussianFit(object):
 
         """
         
-        self.data = data
-        self.model = model
+        PopulationFit.__init__(self, model, data)
+        
         self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
         self.tr_length = tr_length
@@ -237,32 +321,32 @@ class GaussianFit(object):
             tic = time.clock()
             self.ballpark_estimate;
             self.estimate;
+            self.fit_stats;
+            self.rss;
+            self.receptive_field;
             toc = time.clock()
             
             # print to screen if verbose
-            if self.verbose:
+            if self.verbose and ~np.isnan(self.rss) and ~np.isinf(self.rss):
                 
                 # if no voxel index is specified we need something for the print
                 if self.voxel_index is None:
                     self.voxel_index = (0,0,0)
                 
                 # print
-                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  ERROR=%.03d  RVAL=%.02f" 
+                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  RVAL=%.02f"
                       %(self.voxel_index[0],
                         self.voxel_index[1],
                         self.voxel_index[2],
                         toc-tic,
-                        self.rss,
                         self.fit_stats[2]))
-                    
         
     @auto_attr
     def ballpark_estimate(self):
         return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
                                          self.model.stimulus.deg_y_coarse,
                                          self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length,
-                                         self.model.stimulus.frames_per_tr),
+                                         self.tr_length),
                                         self.search_bounds,
                                         self.fit_bounds,
                                         self.data,
@@ -276,8 +360,7 @@ class GaussianFit(object):
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
-                                              self.tr_length,
-                                              self.model.stimulus.frames_per_tr),
+                                              self.tr_length),
                                              self.fit_bounds,
                                              self.data,
                                              utils.error_function,
@@ -330,8 +413,7 @@ class GaussianFit(object):
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
-                                self.tr_length,
-                                self.model.stimulus.frames_per_tr)
+                                self.tr_length)
     
     @auto_attr
     def fit_stats(self):
