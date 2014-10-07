@@ -251,7 +251,7 @@ class GaussianFit(PopulationFit):
     """
     
     def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
-                 voxel_index=None, auto_fit=True, verbose=True):
+                 voxel_index=None, auto_fit=True, verbose=True, uncorrected_rval=0.20):
         
         
         """
@@ -316,30 +316,43 @@ class GaussianFit(PopulationFit):
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
+        self.uncorrected_rval = uncorrected_rval
         
         if self.auto_fit:
+            
+            
             tic = time.clock()
             self.ballpark_estimate;
-            self.estimate;
-            self.fit_stats;
-            self.rss;
-            self.receptive_field;
-            toc = time.clock()
             
-            # print to screen if verbose
-            if self.verbose and ~np.isnan(self.rss) and ~np.isinf(self.rss):
+            if self.coarse_fit_stats[2] > self.uncorrected_rval:
+            
+                self.estimate;
+                self.fit_stats;
+                self.rss;
+                self.receptive_field;
+                toc = time.clock()
                 
-                # if no voxel index is specified we need something for the print
-                if self.voxel_index is None:
-                    self.voxel_index = (0,0,0)
+                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
+                        %(self.voxel_index[0],
+                          self.voxel_index[1],
+                          self.voxel_index[2],
+                          toc-tic,
+                          self.fit_stats[2]))
+            
                 
-                # print
-                print("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  RVAL=%.02f"
-                      %(self.voxel_index[0],
-                        self.voxel_index[1],
-                        self.voxel_index[2],
-                        toc-tic,
-                        self.fit_stats[2]))
+            else:
+                toc = time.clock()
+                
+                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   COARSE_RVAL=%.02f" 
+                        %(self.voxel_index[0],
+                          self.voxel_index[1],
+                          self.voxel_index[2],
+                          toc-tic,
+                          self.coarse_fit_stats[2]))
+            
+            if self.verbose:
+                print(msg)              
+                            
         
     @auto_attr
     def ballpark_estimate(self):
@@ -406,7 +419,15 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[4]
-        
+    
+    @auto_attr
+    def coarse_prediction(self):
+        return compute_model_ts(self.x0, self.y0, self.s0, self.hrf0, self.beta0,
+                                self.model.stimulus.deg_x_coarse,
+                                self.model.stimulus.deg_y_coarse,
+                                self.model.stimulus.stim_arr_coarse,
+                                self.tr_length)
+    
     @auto_attr
     def prediction(self):
         return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.beta,
@@ -414,6 +435,10 @@ class GaussianFit(PopulationFit):
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
+    
+    @auto_attr
+    def coarse_fit_stats(self):
+        return linregress(self.data, self.coarse_prediction)
     
     @auto_attr
     def fit_stats(self):
