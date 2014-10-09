@@ -183,9 +183,9 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
                        
     estimate, err,  _, _ =\
         brute(error_function,
-              args=(args, fit_bounds, response, objective_function),
+              args=(args, fit_bounds, data, objective_function),
               ranges=search_bounds,
-              Ns=4,
+              Ns=5,
               finish=None,
               full_output=True,
               disp=False)
@@ -238,7 +238,7 @@ def error_function(parameters, args, bounds, data, objective_function, debug=Fal
     ensemble.extend(args)
     
     # compute the RSS
-    error = np.sum((response-objective_function(*ensemble))**2)
+    error = np.sum((data-objective_function(*ensemble))**2)
     
     # print for debugging
     if debug:
@@ -246,7 +246,7 @@ def error_function(parameters, args, bounds, data, objective_function, debug=Fal
     
     return error
 
-def double_gamma_hrf(delay, tr_length, integrator=trapz):
+def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     
     """
     The double-gamma hemodynamic reponse function (HRF) used to convolve with
@@ -287,20 +287,21 @@ def double_gamma_hrf(delay, tr_length, integrator=trapz):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 6.0/tr_length+delay/tr_length
+    # add delay to the peak and undershoot params (alpha 1 and 2)
+    alpha_1 = 5.0/tr_length+delay/tr_length
     beta_1 = 1.0
-    c = 0.2
-    alpha_2 = 16.0/tr_length+delay/tr_length
+    c = 0.1
+    alpha_2 = 15.0/tr_length+delay/tr_length
     beta_2 = 1.0
     
-    t = np.arange(0,33,tr_length)
+    t = np.arange(0,33/tr_length,tr_length/frames_per_tr)
     scale = 1
     hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
                       np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))
-                      /gamma( alpha_2 ) ) )
-                      
-    hrf /= integrator(hrf)
+                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))/gamma( alpha_2 ) ) )
+    
+    if integrator:
+        hrf /= integrator(hrf)
     
     return hrf
 
