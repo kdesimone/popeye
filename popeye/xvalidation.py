@@ -173,16 +173,16 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
             
         # initialize the left-in fit object
         ensemble = []
-        ensemble.append(left_in_data)
         ensemble.append(model)
+        ensemble.append(left_in_data)
         ensemble.extend(fit_args)
         ensemble.extend(fit_kwargs.values())
         left_in_fit = Fit(*ensemble)
                 
         # initialize the left-out fit object
         ensemble = []
-        ensemble.append(left_out_data)
         ensemble.append(model)
+        ensemble.append(left_out_data)
         ensemble.extend(fit_args)
         ensemble.extend(fit_kwargs.values())
         left_out_fit = Fit(*ensemble)
