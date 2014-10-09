@@ -457,3 +457,7 @@ class GaussianFit(PopulationFit):
         return MakeFastRF(self.model.stimulus.deg_x,
                           self.model.stimulus.deg_y,
                           self.x, self.y, self.sigma)
+    
+    @auto_attr
+    def hemodynamic_response(self):
+        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
