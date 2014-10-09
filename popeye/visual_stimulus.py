@@ -61,7 +61,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     deg_x += 0.5/(ppd*scale_factor)
     deg_y += 0.5/(ppd*scale_factor)
     
-    return deg_x, deg_y
+    return deg_x, np.flipud(deg_y)
 
 def resample_stimulus(stim_arr, scale_factor=0.05):
     
@@ -144,20 +144,18 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
         The two-dimensional Gaussian.
     
     """
-    
-    
-    theta = degrees*2*np.pi/180
-    
+    theta = degrees*np.pi/180
+        
     a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
     b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
     c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
     
-    gauss = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
+    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
     
-    return gauss
+    return Z
 
 def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, 
-                         thetas, num_steps, stim_ecc, blanks=True, threshold = 0.33):
+                         thetas, num_steps, ecc, blanks=True, threshold = 0.33):
 
     """
     A utility function for creating a sweeping bar stimulus in memory.
@@ -187,7 +185,7 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
     num_steps : int
         The number of steps the bar makes on each sweep through the visual field.
     
-    stim_ecc : float
+    ecc : float
         The distance from fixation each bar sweep begins and ends (degees).
     
     blanks : bool
@@ -230,12 +228,20 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
         
         if theta != -1:
             
+            # convert to radians
             theta_rad = theta * np.pi / 180
             
             # get the starting point and trajectory
-            start_pos = np.array([-np.cos(theta_rad)*stim_ecc, np.sin(theta_rad)*stim_ecc])
-            end_pos = np.array([np.cos(theta_rad)*stim_ecc, -np.sin(theta_rad)*stim_ecc])
+            start_pos = np.array([-np.cos(theta_rad)*ecc, -np.sin(theta_rad)*ecc])
+            end_pos = np.array([np.cos(theta_rad)*ecc, np.sin(theta_rad)*ecc])
             run_and_rise = end_pos - start_pos;
+            
+            if np.mod(theta,90) == 0:
+                sigma_x = 1
+                sigma_y = 100
+            else:
+                sigma_x = 100
+                sigma_y = 1
             
             # step through each position along the trajectory
             for step in np.arange(0,num_steps):
@@ -244,8 +250,8 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
                 xy0 = run_and_rise * step/num_steps + start_pos
                 
                 # generate the gaussian
-                Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],1,100,theta)
-                
+                Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],sigma_x,sigma_y,theta)
+                                
                 # store and iterate
                 bar_stimulus[:,:,tr_num] = Z
                 tr_num += 1
@@ -320,21 +326,16 @@ class VisualStimulus(StimulusModel):
         
         # share the rest of the arrays ...
         self.deg_x = sharedmem.empty(deg_x.shape, dtype=ctypes.c_double)
-        # self.deg_x = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x))
         self.deg_x[:] = deg_x[:]
         
         self.deg_y = sharedmem.empty(deg_y.shape, dtype=ctypes.c_double)
-        # self.deg_y = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y))
         self.deg_y[:] = deg_y[:]
         
         self.deg_x_coarse = sharedmem.empty(deg_x_coarse.shape, dtype=ctypes.c_double)
-        # self.deg_x_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_x_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_x_coarse))
         self.deg_x_coarse[:] = deg_x_coarse[:]
         
         self.deg_y_coarse = sharedmem.empty(deg_y_coarse.shape, dtype=ctypes.c_double)
-        # self.deg_y_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','deg_y_coarse',self.__hash__()),dtype = ctypes.c_double, mode = 'w+',shape = np.shape(deg_y_coarse))
         self.deg_y_coarse[:] = deg_y_coarse[:]
         
         self.stim_arr_coarse = sharedmem.empty(stim_arr_coarse.shape, dtype=ctypes.c_short)
-        # self.stim_arr_coarse = np.memmap('%s%s_%s.npy' %('/tmp/','stim_arr_coarse',self.__hash__()),dtype = ctypes.c_short, mode = 'w+',shape = np.shape(stim_arr_coarse))
         self.stim_arr_coarse[:] = stim_arr_coarse[:]
