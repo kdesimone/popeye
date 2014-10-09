@@ -191,8 +191,8 @@ def parallel_fit(args):
     
     
     # unpackage the arguments
-    data = args[0]
-    model = args[1]
+    model = args[0]
+    data = args[1]
     search_bounds = args[2]
     fit_bounds = args[3]
     tr_length = args[4]
@@ -331,6 +331,10 @@ class GaussianFit(PopulationFit):
                 self.rss;
                 self.receptive_field;
                 toc = time.clock()
+                
+                # assign a dummy voxel if there is None
+                if self.voxel_index is None:
+                    self.voxel_index = (0,0,0)
                 
                 msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
                         %(self.voxel_index[0],
