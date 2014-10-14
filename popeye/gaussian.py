@@ -16,7 +16,7 @@ from scipy.signal import fftconvolve
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import MakeFastGaussPrediction, MakeFastRF
+from popeye.spinach import generate_gaussian_timeseries, generate_gaussian_receptive_field
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -102,7 +102,7 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma, hrf_delay, beta,
+def compute_model_ts(x, y, sigma, beta, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -147,23 +147,19 @@ def compute_model_ts(x, y, sigma, hrf_delay, beta,
     """
     
     # otherwise generate a prediction
-    ts_stim = MakeFastGaussPrediction(deg_x,
-                                      deg_y,
-                                      stim_arr,
-                                      x,
-                                      y,
-                                      sigma)
+    stim = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma, 1)
+    
+    # scale it
+    stim /= stim.max()
+    stim *= beta
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
-    model = fftconvolve(ts_stim, hrf)[0:len(ts_stim)]
+    model = fftconvolve(stim, hrf)[0:len(stim)]
     
-    # scale it
-    model *= beta
-        
-    return model
+    return model*beta
 
 def parallel_fit(args):
     
@@ -251,7 +247,7 @@ class GaussianFit(PopulationFit):
     """
     
     def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
-                 voxel_index=None, auto_fit=True, verbose=True, uncorrected_rval=0.20):
+                 voxel_index=(1,2,3), auto_fit=True, verbose=True, uncorrected_rval=0.0):
         
         
         """
@@ -329,12 +325,7 @@ class GaussianFit(PopulationFit):
                 self.estimate;
                 self.fit_stats;
                 self.rss;
-                self.receptive_field;
                 toc = time.clock()
-                
-                # assign a dummy voxel if there is None
-                if self.voxel_index is None:
-                    self.voxel_index = (0,0,0)
                 
                 msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
                         %(self.voxel_index[0],
@@ -373,7 +364,7 @@ class GaussianFit(PopulationFit):
                                   
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.beta0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0, self.hrf0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -395,13 +386,13 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def s0(self):
         return self.ballpark_estimate[2]
-        
-    @auto_attr
-    def hrf0(self):
-        return self.ballpark_estimate[3]
     
     @auto_attr
     def beta0(self):
+        return self.ballpark_estimate[3]
+        
+    @auto_attr
+    def hrf0(self):
         return self.ballpark_estimate[4]
         
     @auto_attr
@@ -415,18 +406,18 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[2]
-        
-    @auto_attr
-    def hrf_delay(self):
-        return self.estimate[3]
     
     @auto_attr
     def beta(self):
+        return self.estimate[3]
+    
+    @auto_attr
+    def hrf_delay(self):
         return self.estimate[4]
     
     @auto_attr
     def coarse_prediction(self):
-        return compute_model_ts(self.x0, self.y0, self.s0, self.hrf0, self.beta0,
+        return compute_model_ts(self.x0, self.y0, self.s0, self.beta0, self.hrf0,
                                 self.model.stimulus.deg_x_coarse,
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse,
@@ -434,7 +425,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.beta,
+        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -454,9 +445,9 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        return MakeFastRF(self.model.stimulus.deg_x,
-                          self.model.stimulus.deg_y,
-                          self.x, self.y, self.sigma)
+        return generate_gaussian_receptive_field(self.model.stimulus.deg_x,
+                                                 self.model.stimulus.deg_y,
+                                                 self.x, self.y, self.sigma, self.beta)
     
     @auto_attr
     def hemodynamic_response(self):
