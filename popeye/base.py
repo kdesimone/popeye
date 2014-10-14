@@ -30,6 +30,6 @@ class StimulusModel(object):
 
     def __init__(self, stim_arr):
         
-        self.stim_arr  = sharedmem.empty(stim_arr.shape, dtype='int16')
+        self.stim_arr  = sharedmem.empty(stim_arr.shape, dtype='float64')
         self.stim_arr[:] = stim_arr[:]
 
