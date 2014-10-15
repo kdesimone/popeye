@@ -23,6 +23,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
+from popeye.spinach import generate_strf_timeseries
 
 def recast_estimation_results(output, grid_parent, write=True):
     """
@@ -117,10 +118,12 @@ def compute_model_ts_1D(center_freq, sd,
                         tr_length, convolve=True):
     
     # invoke the gaussian
-    gaussian = gaussian_1D(freqs, center_freq, sd)
+    # gaussian = gaussian_1D(freqs, center_freq, sd)
     
     # now create the stimulus time-series
-    stim = np.sum(gaussian[:,np.newaxis] * spectrogram,axis=0)
+    # stim = np.sum(gaussian[:,np.newaxis] * spectrogram,axis=0)
+    
+    stim = generate_strf_timeseries(freqs, spectrogram, center_freq, sd)
     
     # recast the stimulus into a time-series that i can decimate
     old_time = np.linspace(0,np.ceil(times[-1]),len(stim))
@@ -200,7 +203,6 @@ class SpectrotemporalFit(PopulationFit):
             self.estimate;
             self.fit_stats;
             self.rss;
-            # self.model = []
             toc = time.clock()
                 
             # print to screen if verbose
