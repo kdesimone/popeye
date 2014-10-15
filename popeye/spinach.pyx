@@ -223,6 +223,70 @@ def generate_gaussian_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
+                                 np.ndarray[DTYPE2_t, ndim=2] spectrogram,
+                                 DTYPE2_t center_freq, DTYPE2_t sd):
+                                 
+    """
+    Generate a time-series given a stimulus array and Gaussian parameters.
+    
+    Parameters
+    ----------
+    deg_x : 2D array
+            The coordinate matrix along the horizontal dimension of the display (degrees)
+    deg_y : 2D array
+            The coordinate matrix along the vertical dimension of the display (degrees)
+    x : float
+       The x coordinate of the center of the Gaussian (degrees)
+    y : float
+       The y coordinate of the center of the Gaussian (degrees)
+    s : float
+       The dispersion of the Gaussian (degrees)
+    beta : float
+        The amplitude of the Gaussian
+       
+    Returns
+    
+    stim : ndarray
+        The 1D array containing the stimulus energies given the Gaussian coordinates
+    
+    """
+    
+    # cdef's
+    cdef int i,j
+    cdef DTYPE2_t s_factor2 = (2.0*sd**2)
+    cdef DTYPE2_t s_factor3 = (3.0*sd)**2
+    cdef int xlim = spectrogram.shape[0]
+    cdef int ylim = spectrogram.shape[1]
+    cdef DTYPE2_t d, gauss1D
+    cdef DTYPE2_t sum_gauss = 0.0
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(ylim,dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        
+        d = (freqs[i]-center_freq)**2
+
+        for j in xrange(ylim):
+            
+            if d <= s_factor3:
+                
+                #compute gauss
+                gauss1D = exp(-d/s_factor2)
+                
+                # filter spectrogram
+                stim[j] += spectrogram[i,j]*gauss1D
+                sum_gauss += gauss1D
+                    
+    
+    stim /= sum_gauss
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_gaussian_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                       np.ndarray[DTYPE2_t, ndim=2] deg_y,
                                       DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
