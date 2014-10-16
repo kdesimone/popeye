@@ -16,7 +16,7 @@ import scipy.signal as ss
 from popeye.onetime import auto_attr
 
 import popeye.utilities as utils
-from popeye import gaussian
+from popeye import og
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import MakeFastGaborPrediction
 
@@ -279,8 +279,8 @@ class GaborFit(object):
                 tic = time.clock()
                 
                 # compute the gaussian first
-                self.gaussian_model = gaussian.GaussianModel(self.model.stimulus)
-                self.gaussian_fit = gaussian.GaussianFit(self.data, self.gaussian_model, self.bounds,
+                self.gaussian_model = og.GaussianModel(self.model.stimulus)
+                self.gaussian_fit = og.GaussianFit(self.data, self.gaussian_model, self.bounds,
                                                          self.tr_length, self.voxel_index, 
                                                          self.uncorrected_rval, False, True)
                 self.has_gaussian = True
