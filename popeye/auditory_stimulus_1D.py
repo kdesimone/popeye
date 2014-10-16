@@ -7,7 +7,8 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 
 """
 from __future__ import division
-import ctypes, gc
+import ctypes
+import sharedmem
 
 import numpy as np
 from pylab import specgram
@@ -44,13 +45,13 @@ class AuditoryStimulus(StimulusModel):
         self.tr_length = tr_length
                 
         spectrogram, freqs, times = generate_spectrogram(self.stim_arr, self.NFFT, self.Fs, self.noverlap)
-        self.spectrogram = np.memmap('%s%s_%d.npy' %('/tmp/','spectrogram',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(spectrogram))
+        self.spectrogram = sharedmem.empty(spectrogram.shape, dtype=ctypes.c_double)
         self.spectrogram[:] = spectrogram[:]
         
-        self.freqs = np.memmap('%s%s_%d.npy' %('/tmp/','freqs',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(freqs))
+        self.freqs = sharedmem.empty(freqs.shape, dtype=ctypes.c_double)
         self.freqs[:] = freqs[:]
         
-        self.times = np.memmap('%s%s_%d.npy' %('/tmp/','times',self.__hash__()),dtype = np.double, mode = 'w+',shape = np.shape(times))
+        self.times = sharedmem.empty(times.shape, dtype=ctypes.c_double)
         self.times[:] = times[:]
         
         
