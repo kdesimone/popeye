@@ -18,14 +18,14 @@ from libc.math cimport sin, cos, exp, sqrt
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def two_dimensional_gaussian(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                             np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                             DTYPE2_t x,
-                             DTYPE2_t y,
-                             DTYPE2_t sigma_x,
-                             DTYPE2_t sigma_y,
-                             DTYPE2_t degrees,
-                             DTYPE2_t amplitude):
+def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                       np.ndarray[DTYPE2_t, ndim=2] deg_y,
+                       DTYPE2_t x,
+                       DTYPE2_t y,
+                       DTYPE2_t sigma_x,
+                       DTYPE2_t sigma_y,
+                       DTYPE2_t degrees,
+                       DTYPE2_t amplitude):
     
     # cdef's
     cdef int i,j,k
@@ -163,10 +163,10 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_gaussian_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                 np.ndarray[short, ndim=3] stim_arr,
-                                 DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
+def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                           np.ndarray[DTYPE2_t, ndim=2] deg_y,
+                           np.ndarray[short, ndim=3] stim_arr,
+                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
                                  
     """
     Generate a time-series given a stimulus array and Gaussian parameters.
@@ -287,9 +287,9 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_gaussian_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                      np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                      DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
+def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                np.ndarray[DTYPE2_t, ndim=2] deg_y,
+                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
     """
     Generate a Gaussian.
     
@@ -450,7 +450,7 @@ def generate_gabor_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_gaussian_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
+def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                        np.ndarray[DTYPE2_t, ndim=2] deg_y,
                                        np.ndarray[DTYPE2_t, ndim=1] xs,
                                        np.ndarray[DTYPE2_t, ndim=1] ys,
