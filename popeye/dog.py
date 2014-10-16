@@ -160,33 +160,29 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
         return np.inf
     
     # time-series for the center and surround
-    # stim_center = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
-    # stim_surround = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
+    stim_center = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
+    stim_surround = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
 
     # # combine to create the DoG time-series
     # stim_dog = beta_center * stim_center + beta_surround * stim_surround
     
-    # get the stim time-series for center and surround
-    stim_center, stim_surround = generate_dog_timeseries(deg_x, deg_y, stim_arr, x, y,
-                                                         sigma_center, sigma_surround)
+    # # get the stim time-series for center and surround
+    # stim_center, stim_surround = generate_dog_timeseries(deg_x, deg_y, stim_arr, x, y,
+    #                                                      sigma_center, sigma_surround,
+    #                                                      beta_center, beta_surround)
     
-    # set amplitdues to 1
-    stim_center /= stim_center.max()
-    stim_surround /= stim_surround.max()
+    # scale them
+    scaled_center = beta_center * stim_center
+    scaled_surround = -beta_surround * stim_surround
     
-    # scale by beta
-    stim_center *= beta_center
-    stim_surround *= -beta_surround
+    # combine them
+    stim_dog = scaled_center + scaled_surround
     
     # generate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus timeseries
-    model_center = fftconvolve(stim_center, hrf)[0:len(stim_center)]
-    model_surround = fftconvolve(stim_surround, hrf)[0:len(stim_surround)]
-    
-    # combine them
-    model = model_center + model_surround
+    model = fftconvolve(stim_dog, hrf)[0:len(stim_dog)]
     
     return model
 
@@ -215,16 +211,26 @@ def parallel_fit(args):
     """
     
     
+    # unpackage the arguments
+    model = args[0]
+    data = args[1]
+    search_bounds = args[2]
+    fit_bounds = args[3]
+    tr_length = args[4]
+    voxel_index = args[5]
+    auto_fit = args[6]
+    verbose = args[7]
+    
+    
     # fit the data
-    gaussian_fit = args[0]
-    fit_bounds = args[1]
-    auto_fit = args[2]
-    verbose = args[3]
-    uncorrected_rval = args[4]
-    
-    # run the fit
-    fit = DifferenceOfGaussiansFit(gaussian_fit, fit_bounds, auto_fit, verbose, uncorrected_rval)
-    
+    fit = GaussianFit(model,
+                      data,
+                      search_bounds,
+                      fit_bounds,
+                      tr_length,
+                      voxel_index,
+                      auto_fit,
+                      verbose)
     return fit
 
 
@@ -265,7 +271,8 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, gaussian_fit, fit_bounds, auto_fit=True, verbose=True, uncorrected_rval=0.2):
+    def __init__(self, model, data, og_fit, search_bounds, fit_bounds, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=True, uncorrected_rval=0):
         
         
         """
@@ -322,42 +329,32 @@ class DifferenceOfGaussiansFit(PopulationFit):
 
         """
         
-        PopulationFit.__init__(self, gaussian_fit.model, gaussian_fit.data)
+        PopulationFit.__init__(self, model, data)
         
-        self.gaussian_fit = gaussian_fit
+        self.og_fit = og_fit
+        self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
+        self.tr_length = tr_length
+        self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
         self.uncorrected_rval = uncorrected_rval
-        self.tr_length = self.gaussian_fit.tr_length
-        self.voxel_index = self.gaussian_fit.voxel_index
-        tic = time.clock()
         
         if self.auto_fit:
             
-            if self.gaussian_fit.fit_stats[2] > self.uncorrected_rval:
-                
-                self.estimate;
-                self.fit_stats;
-                self.rss;
-                self.receptive_field;
-                toc = time.clock()
-                
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d    OG-RVAL=%.02f    DoG-RVAL=%.02f" 
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.gaussian_fit.fit_stats[2],
-                          self.fit_stats[2]))
-            else:
-                toc = time.clock()
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d    OG-RVAL=%.02f" 
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.gaussian_fit.fit_stats[2]))
+            tic = time.clock()
+            self.estimate;
+            self.fit_stats;
+            self.rss;
+            self.receptive_field;
+            toc = time.clock()
+            
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
+                    %(self.voxel_index[0],
+                      self.voxel_index[1],
+                      self.voxel_index[2],
+                      toc-tic,
+                      self.fit_stats[2]))
             
             if self.verbose:
                 print(msg)
@@ -376,8 +373,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                         
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, 
-                                             self.sigma_center0, self.sigma_surround0,
+        return utils.gradient_descent_search((self.x0, self.y0, self.sigma_center0, self.sigma_surround0,
                                               self.beta_center0, self.beta_surround0, self.hrf0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
@@ -390,31 +386,31 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                              
     @auto_attr
     def x0(self):
-        return self.gaussian_fit.estimate[0]
+        return self.og_fit.estimate[0]
         
     @auto_attr
     def y0(self):
-        return self.gaussian_fit.estimate[1]
+        return self.og_fit.estimate[1]
     
     @auto_attr
     def sigma_center0(self):
-        return self.gaussian_fit.estimate[2]
+        return self.og_fit.estimate[2]
     
     @auto_attr
     def sigma_surround0(self):
-        return self.gaussian_fit.estimate[2]
+        return self.og_fit.estimate[2]
     
     @auto_attr
     def beta_center0(self):
-        return self.gaussian_fit.estimate[3]
+        return self.og_fit.estimate[3]
     
     @auto_attr
     def beta_surround0(self):
-        return self.gaussian_fit.estimate[3]
+        return self.og_fit.estimate[3]
     
     @auto_attr
     def hrf0(self):
-        return self.gaussian_fit.estimate[4]
+        return self.og_fit.estimate[4]
         
     @auto_attr
     def x(self):
@@ -447,7 +443,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def coarse_prediction(self):
         return compute_model_ts(self.x0, self.y0, self.sigma_center0, self.sigma_surround0,
-                                self.beta_center0, self.beta_surround0, self.hrf0,
+                                self.beta_center0, self.beta_surround0, self.hrf0, 
                                 self.model.stimulus.deg_x_coarse,
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse,
