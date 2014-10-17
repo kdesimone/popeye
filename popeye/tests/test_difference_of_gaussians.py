@@ -1,4 +1,3 @@
-import os
 import multiprocessing
 from itertools import repeat
 
@@ -8,9 +7,10 @@ import nose.tools as nt
 from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
-import popeye.difference_of_gaussians as dog
+import popeye.dog as dog
+import popeye.og as gaussian
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
-from popeye.spinach import generate_gaussian_timeseries
+from popeye.spinach import generate_og_timeseries
 
 def test_difference_of_gaussians_fit():
     
@@ -110,7 +110,7 @@ def test_parallel_gaussian_fit():
     for estimate in estimates:
         
         # make the stim time-series
-        stim = generate_gaussian_timeseries(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, 
+        stim = generate_og_timeseries(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, 
                                             estimate[0], estimate[1], estimate[2], estimate[-1])
         
         # create the HRF
