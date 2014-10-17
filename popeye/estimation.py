@@ -7,7 +7,7 @@ from scipy.special import gamma
 from scipy.optimize import fmin_powell, fmin, brute
 from scipy.stats import linregress
 
-from popeye.spinach import MakeFastGaussPrediction
+#from popeye.spinach import MakeFastGaussPrediction
 import popeye.utilities as utils
 
 def compute_prf_estimate(deg_x_coarse, deg_y_coarse, deg_x_fine, deg_y_fine,
