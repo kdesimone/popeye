@@ -16,7 +16,7 @@ from scipy.signal import fftconvolve
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_dog_timeseries, generate_gaussian_timeseries, generate_gaussian_receptive_field
+from popeye.spinach import generate_dog_timeseries, generate_og_timeseries, generate_og_receptive_field
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -102,8 +102,7 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma_center, sigma_surround, 
-                     beta_center, beta_surround, hrf_delay,
+def compute_model_ts(x, y, sigma_center, sigma_surround, beta_center, beta_surround, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -154,29 +153,35 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
     """
     
     # limiting cases for a center-surround receptive field
-    if sigma_center > sigma_surround:
+    if sigma_center >= sigma_surround:
         return np.inf
-    if beta_center < beta_surround:
+    if beta_center <= beta_surround:
         return np.inf
     
+    
+    # METHOD 1
     # time-series for the center and surround
-    stim_center = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
-    stim_surround = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
-
-    # # combine to create the DoG time-series
-    # stim_dog = beta_center * stim_center + beta_surround * stim_surround
+    stim_center, stim_surround = generate_dog_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, sigma_surround)
     
-    # # get the stim time-series for center and surround
-    # stim_center, stim_surround = generate_dog_timeseries(deg_x, deg_y, stim_arr, x, y,
-    #                                                      sigma_center, sigma_surround,
-    #                                                      beta_center, beta_surround)
+    # scale them by betas
+    stim_center *= beta_center
+    stim_surround *= beta_surround
     
-    # scale them
-    scaled_center = beta_center * stim_center
-    scaled_surround = -beta_surround * stim_surround
+    # differnce them
+    stim_dog = stim_center - stim_surround
     
-    # combine them
-    stim_dog = scaled_center + scaled_surround
+    # # METHOD 2
+    # # scale the RFs, combine, then extract ts
+    # rf_center = generate_og_receptive_field(deg_x, deg_y, x, y, sigma_center)
+    # rf_center /= rf_center.max()
+    # rf_center *= beta_center
+    # 
+    # rf_surround = generate_og_receptive_field(deg_x, deg_y, x, y, sigma_surround)
+    # rf_surround /= rf_surround.max()
+    # rf_surround *= beta_surround
+    # 
+    # rf_dog = rf_center - rf_surround
+    # stim_dog = np.sum(np.sum(stim_arr * rf_dog[:,:,np.newaxis],axis=0),axis=0)
     
     # generate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
@@ -212,25 +217,19 @@ def parallel_fit(args):
     
     
     # unpackage the arguments
-    model = args[0]
-    data = args[1]
-    search_bounds = args[2]
-    fit_bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    og_fit = args[0]
+    fit_bounds = args[1]
+    auto_fit = args[2]
+    verbose = args[3]
+    uncorrected_rval = args[4]
     
     
     # fit the data
-    fit = GaussianFit(model,
-                      data,
-                      search_bounds,
-                      fit_bounds,
-                      tr_length,
-                      voxel_index,
-                      auto_fit,
-                      verbose)
+    fit = DifferenceOfGaussiansFit(og_fit,
+                                   fit_bounds,
+                                   auto_fit,
+                                   verbose,
+                                   uncorrected_rval)
     return fit
 
 
@@ -271,30 +270,20 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, og_fit, search_bounds, fit_bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True, uncorrected_rval=0):
+    def __init__(self, og_fit, fit_bounds, auto_fit=True, verbose=True, uncorrected_rval=0.0):
         
         
         """
         A Gaussian population receptive field model [1]_.
-
+        
         Paramaters
         ----------
         
-        data : ndarray
-            An array containing the measured BOLD signal.
-        
-        model : `GaussianModel` class instance containing the representation
-            of the visual stimulus.
-        
-        search_bounds : tuple
-            A tuple indicating the search space for the brute-force grid-search.
-            The tuple contains pairs of upper and lower bounds for exploring a
-            given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
-            search the first dimension from -10 to 10 and the second from 0 to 5.
-            These values cannot be None. 
-            
-            For more information, see `scipy.optimize.brute`.
+        og_fit : `GaussianFit` class instance
+            A `GaussianFit` object.  This object does not have to be fitted already,
+            as the fit will be performed inside the `DifferenceOfGaussiansFit` in any 
+            case.  The `GaussianFit` is used as a seed for the `DifferenceOfGaussiansFit`
+            search.
         
         fit_bounds : tuple
             A tuple containing the upper and lower bounds for each parameter
@@ -302,17 +291,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
             `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
-        
-        tr_length : float
-            The length of the repetition time in seconds.
-        
-        voxel_index : tuple
-            A tuple containing the index of the voxel being modeled. The 
-            fitting procedure does not require a voxel index, but 
-            collating the results across many voxels will does require voxel
-            indices. With voxel indices, the brain volume can be reconstructed 
-            using the newly computed model estimates.
-        
+            
         auto-fit : bool
             A flag for automatically running the fitting procedures once the 
             `GaussianFit` object is instantiated.
@@ -326,16 +305,15 @@ class DifferenceOfGaussiansFit(PopulationFit):
         
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
         estimates in human visual cortex. NeuroImage 39:647-660
-
+        
         """
         
-        PopulationFit.__init__(self, model, data)
+        PopulationFit.__init__(self, og_fit.model, og_fit.data)
         
         self.og_fit = og_fit
-        self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
-        self.tr_length = tr_length
-        self.voxel_index = voxel_index
+        self.tr_length = self.og_fit.tr_length
+        self.voxel_index = self.og_fit.voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
         self.uncorrected_rval = uncorrected_rval
@@ -343,34 +321,34 @@ class DifferenceOfGaussiansFit(PopulationFit):
         if self.auto_fit:
             
             tic = time.clock()
-            self.estimate;
-            self.fit_stats;
-            self.rss;
-            self.receptive_field;
-            toc = time.clock()
+            self.og_fit.estimate
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      toc-tic,
-                      self.fit_stats[2]))
+            if self.og_fit.fit_stats[2] > self.uncorrected_rval:
+             
+                self.estimate;
+                self.fit_stats;
+                toc = time.clock()
+            
+                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f    DoG-RVAL=%.02f"
+                        %(self.voxel_index[0],
+                          self.voxel_index[1],
+                          self.voxel_index[2],
+                          toc-tic,
+                          self.og_fit.fit_stats[2],
+                          self.fit_stats[2]))
+            
+            else:
+                toc = time.clock()
+                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f"
+                        %(self.voxel_index[0],
+                          self.voxel_index[1],
+                          self.voxel_index[2],
+                          toc-tic,
+                          self.og_fit.fit_stats[2]))
             
             if self.verbose:
                 print(msg)
                 
-    @auto_attr
-    def ballpark_estimate(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length),
-                                        self.search_bounds,
-                                        self.fit_bounds,
-                                        self.data,
-                                        utils.error_function,
-                                        compute_model_ts)
-                                        
     @auto_attr
     def estimate(self):
         return utils.gradient_descent_search((self.x0, self.y0, self.sigma_center0, self.sigma_surround0,
@@ -398,7 +376,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def sigma_surround0(self):
-        return self.og_fit.estimate[2]
+        return self.og_fit.estimate[2]*2
     
     @auto_attr
     def beta_center0(self):
@@ -406,7 +384,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def beta_surround0(self):
-        return self.og_fit.estimate[3]
+        return self.og_fit.estimate[3]/2
     
     @auto_attr
     def hrf0(self):
@@ -439,28 +417,14 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[6]
-        
-    @auto_attr
-    def coarse_prediction(self):
-        return compute_model_ts(self.x0, self.y0, self.sigma_center0, self.sigma_surround0,
-                                self.beta_center0, self.beta_surround0, self.hrf0, 
-                                self.model.stimulus.deg_x_coarse,
-                                self.model.stimulus.deg_y_coarse,
-                                self.model.stimulus.stim_arr_coarse,
-                                self.tr_length)
-    
+
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma_center, self.sigma_surround,
-                                self.beta_center, self.beta_surround, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma_center, self.sigma_surround, self.beta_center, self.beta_surround, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
-    
-    @auto_attr
-    def coarse_fit_stats(self):
-        return linregress(self.data, self.coarse_prediction)
     
     @auto_attr
     def fit_stats(self):
@@ -472,13 +436,13 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        rf_center = generate_gaussian_receptive_field(self.model.stimulus.deg_x,
-                                                      self.model.stimulus.deg_y,
-                                                      self.x, self.y, self.sigma_center, 1)
+        rf_center = generate_og_receptive_field(self.model.stimulus.deg_x,
+                                                self.model.stimulus.deg_y,
+                                                self.x, self.y, self.sigma_center)
         
-        rf_surround = generate_gaussian_receptive_field(self.model.stimulus.deg_x,
-                                                      self.model.stimulus.deg_y,
-                                                      self.x, self.y, self.sigma_surround, 1)
+        rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x,
+                                                  self.model.stimulus.deg_y,
+                                                  self.x, self.y, self.sigma_surround)
         
         return rf_center*self.beta_center - rf_surround*self.beta_surround
         
