@@ -3,7 +3,7 @@ import numpy.testing as npt
 import nose.tools as nt
 
 from popeye.visual_stimulus import generate_coordinate_matrices
-from popeye.spinach import MakeFastRF, MakeFastRFs, MakeFastGaussPrediction
+#from popeye.spinach import MakeFastRF, MakeFastRFs, MakeFastGaussPrediction
 
 def test_make_prf():
     xpixels = 100 # simulated screen width

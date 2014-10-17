@@ -7,12 +7,11 @@ import numpy.testing as npt
 import nose.tools as nt
 import scipy.signal as ss
 
-
 import popeye.utilities as utils
-import popeye.gaussian as gaussian
+import popeye.og as gaussian
 import popeye.xvalidation as xval
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
-from popeye.spinach import MakeFastGaussPrediction
+#from popeye.spinach import MakeFastGaussPrediction
 
 def test_coeff_of_determination():
     
