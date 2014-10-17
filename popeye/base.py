@@ -21,15 +21,16 @@ class PopulationFit(object):
     """
     
     def __init__(self, model, data):
-        self.data = data
         self.model = model
+        self.data = data
 
 class StimulusModel(object):
     """ Abstract class which holds the StimulusModel
     """
 
-    def __init__(self, stim_arr):
+    def __init__(self, stim_arr, dtype):
         
-        self.stim_arr  = sharedmem.empty(stim_arr.shape, dtype='float64')
+        self.dtype = dtype
+        self.stim_arr  = sharedmem.empty(stim_arr.shape, dtype=self.dtype)
         self.stim_arr[:] = stim_arr[:]
 
