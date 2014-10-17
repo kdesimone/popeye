@@ -1,15 +1,11 @@
 from __future__ import division
 import time
-import ctypes
-import shutil
-from multiprocessing import Process, Queue, Array
-
+from multiprocessing import Process
 import numpy as np
-from pylab import find
 from scipy.interpolate import interp1d
+from scipy.signal import wiener
 
-import nibabel
-from popeye.spinach import MakeFastRF
+#from popeye.spinach import MakeFastRF
 
 def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
     

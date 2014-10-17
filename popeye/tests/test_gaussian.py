@@ -8,9 +8,9 @@ import nose.tools as nt
 from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
-import popeye.gaussian as gaussian
+import popeye.og as gaussian
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
-from popeye.spinach import MakeFastGaussPrediction
+#from popeye.spinach import MakeFastGaussPrediction
 
 def test_gaussian_fit():
     

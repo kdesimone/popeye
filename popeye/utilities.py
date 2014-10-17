@@ -5,14 +5,11 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time
 
 import numpy as np
-import nibabel
-from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell
-from scipy.integrate import romb, trapz
+from scipy.integrate import trapz
 
 # normalize to a specific range
 def normalize(array, imin=-1, imax=1):

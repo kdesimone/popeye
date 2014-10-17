@@ -8,12 +8,9 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 """
 from __future__ import division
 import ctypes
-import gc
-
 import sharedmem
 import numpy as np
 from scipy.misc import imresize
-from scipy.io import loadmat
 
 from popeye.base import StimulusModel
 

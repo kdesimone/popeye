@@ -4,19 +4,19 @@
 
 from __future__ import division, print_function, absolute_import
 import time
-import gc
 import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
+import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_dog_timeseries, generate_gaussian_timeseries, generate_gaussian_receptive_field
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
+
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -160,8 +160,8 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
         return np.inf
     
     # time-series for the center and surround
-    stim_center = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
-    stim_surround = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
+    stim_center = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
+    stim_surround = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
 
     # # combine to create the DoG time-series
     # stim_dog = beta_center * stim_center + beta_surround * stim_surround
@@ -472,11 +472,11 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        rf_center = generate_gaussian_receptive_field(self.model.stimulus.deg_x,
+        rf_center = generate_og_receptive_field(self.model.stimulus.deg_x,
                                                       self.model.stimulus.deg_y,
                                                       self.x, self.y, self.sigma_center, 1)
         
-        rf_surround = generate_gaussian_receptive_field(self.model.stimulus.deg_x,
+        rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x,
                                                       self.model.stimulus.deg_y,
                                                       self.x, self.y, self.sigma_surround, 1)
         
