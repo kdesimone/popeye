@@ -276,7 +276,7 @@ class VisualStimulus(StimulusModel):
     """ A child of the StimulusModel class for visual stimuli. """
     
     
-    def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor):
+    def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor, dtype):
         
         """
         
@@ -304,7 +304,7 @@ class VisualStimulus(StimulusModel):
             
         """
         
-        StimulusModel.__init__(self, stim_arr)
+        StimulusModel.__init__(self, stim_arr, dtype)
         
         # absorb the vars
         self.viewing_distance = viewing_distance
@@ -325,17 +325,17 @@ class VisualStimulus(StimulusModel):
         deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
         # share the rest of the arrays ...
-        self.deg_x = sharedmem.empty(deg_x.shape, dtype=ctypes.c_double)
+        self.deg_x = sharedmem.empty(deg_x.shape, dtype='float64')
         self.deg_x[:] = deg_x[:]
         
-        self.deg_y = sharedmem.empty(deg_y.shape, dtype=ctypes.c_double)
+        self.deg_y = sharedmem.empty(deg_y.shape, dtype='float64')
         self.deg_y[:] = deg_y[:]
         
-        self.deg_x_coarse = sharedmem.empty(deg_x_coarse.shape, dtype=ctypes.c_double)
+        self.deg_x_coarse = sharedmem.empty(deg_x_coarse.shape, dtype='float64')
         self.deg_x_coarse[:] = deg_x_coarse[:]
         
-        self.deg_y_coarse = sharedmem.empty(deg_y_coarse.shape, dtype=ctypes.c_double)
+        self.deg_y_coarse = sharedmem.empty(deg_y_coarse.shape, dtype='float64')
         self.deg_y_coarse[:] = deg_y_coarse[:]
         
-        self.stim_arr_coarse = sharedmem.empty(stim_arr_coarse.shape, dtype=ctypes.c_short)
+        self.stim_arr_coarse = sharedmem.empty(stim_arr_coarse.shape, dtype=self.dtype)
         self.stim_arr_coarse[:] = stim_arr_coarse[:]
