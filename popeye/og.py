@@ -16,7 +16,7 @@ from scipy.signal import fftconvolve
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_gaussian_timeseries, generate_gaussian_receptive_field
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
 
 def recast_estimation_results(output, grid_parent):
     """
