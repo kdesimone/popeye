@@ -133,7 +133,7 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
             # if its inside the surround ...
             if d <= sigma_surround_factor3:
                 gauss1D_surround = exp(-d/sigma_surround_factor2)
-                # sum_gauss_surround += gauss1D_surround
+                sum_gauss_surround += gauss1D_surround
                 add_surround = 1
             else:
                 add_surround = 0
@@ -141,7 +141,7 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
             # if its inside the center ...
             if d <= sigma_center_factor3:
                 gauss1D_center = exp(-d/sigma_center_factor2)
-                # sum_gauss_center += gauss1D_center
+                sum_gauss_center += gauss1D_center
                 add_center = 1
             else:
                 add_center = 0
@@ -156,8 +156,8 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
             
             
     # scale it by the integral
-    # stim_center /= sum_gauss_surround
-    # stim_surround /= sum_gauss_center
+    stim_center /= sum_gauss_center
+    stim_surround /= sum_gauss_surround
     
     return stim_center, stim_surround
     
@@ -166,7 +166,7 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                            np.ndarray[DTYPE2_t, ndim=2] deg_y,
                            np.ndarray[short, ndim=3] stim_arr,
-                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
+                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
                                  
     """
     Generate a time-series given a stimulus array and Gaussian parameters.
@@ -211,13 +211,13 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
             if d <= s_factor3:
-                gauss1D = exp(-d/s_factor2)*beta
-                # sum_gauss += gauss1D
+                gauss1D = exp(-d/s_factor2)
+                sum_gauss += gauss1D
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*gauss1D
                     
-    
-    # stim /= sum_gauss
+    # normalize it
+    stim /= sum_gauss
     
     return stim
 
@@ -284,12 +284,12 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
     stim /= sum_gauss
     
     return stim
-
+    
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t s, DTYPE2_t beta):
+                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
     """
     Generate a Gaussian.
     
@@ -331,7 +331,7 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
             if d <= s_factor3:
-                rf[i,j] = exp(-d/s_factor2)*beta    
+                rf[i,j] = exp(-d/s_factor2)
 
     return rf
 
