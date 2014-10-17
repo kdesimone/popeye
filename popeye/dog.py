@@ -16,7 +16,8 @@ from scipy.signal import fftconvolve
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_dog_timeseries, generate_gaussian_timeseries, generate_gaussian_receptive_field
+from popeye.spinach import generate_dog_timeseries, generate_og_timeseries, generate_og_receptive_field
+
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -160,8 +161,8 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
         return np.inf
     
     # time-series for the center and surround
-    stim_center = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
-    stim_surround = generate_gaussian_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
+    stim_center = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, 1)
+    stim_surround = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround, 1)
 
     # # combine to create the DoG time-series
     # stim_dog = beta_center * stim_center + beta_surround * stim_surround
