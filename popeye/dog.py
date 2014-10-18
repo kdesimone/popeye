@@ -9,7 +9,7 @@ import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-
+import nibabel
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
 
@@ -61,7 +61,7 @@ def recast_estimation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(7)
+    dims.append(8)
     
     # initialize the statmaps
     polar = np.zeros(dims)
@@ -70,22 +70,24 @@ def recast_estimation_results(output, grid_parent):
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        if fit.__dict__.has_key('rss'):
+        if fit.__dict__.has_key('fit_stats'):
         
             cartes[fit.voxel_index] = (fit.x, 
                                       fit.y,
-                                      fit.sigma,
+                                      fit.sigma_center,
+                                      fit.sigma_surround,
+                                      fit.beta_center,
+                                      fit.beta_surround,
                                       fit.hrf_delay,
-                                      fit.beta,
-                                      fit.rss,
                                       fit.fit_stats[2])
                                  
             polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
                                      np.sqrt(fit.x**2+fit.y**2),
-                                     fit.sigma,
+                                     fit.sigma_center,
+                                     fit.sigma_surround,
+                                     fit.beta_center,
+                                     fit.beta_surround,
                                      fit.hrf_delay,
-                                     fit.beta,
-                                     fit.rss,
                                      fit.fit_stats[2])
                                  
     # get header information from the gridParent and update for the prf volume
