@@ -33,10 +33,10 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, tr_length):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, tr_length, dtype):
         
         # this is a weird notation
-        StimulusModel.__init__(self, stim_arr)
+        StimulusModel.__init__(self, stim_arr, dtype=dtype)
         
         # absorb the vars
         self.NFFT = NFFT
@@ -45,13 +45,13 @@ class AuditoryStimulus(StimulusModel):
         self.tr_length = tr_length
                 
         spectrogram, freqs, times = generate_spectrogram(self.stim_arr, self.NFFT, self.Fs, self.noverlap)
-        self.spectrogram = sharedmem.empty(spectrogram.shape, dtype=ctypes.c_double)
+        self.spectrogram = sharedmem.empty(spectrogram.shape, dtype='float64')
         self.spectrogram[:] = spectrogram[:]
         
-        self.freqs = sharedmem.empty(freqs.shape, dtype=ctypes.c_double)
+        self.freqs = sharedmem.empty(freqs.shape, dtype='float64')
         self.freqs[:] = freqs[:]
         
-        self.times = sharedmem.empty(times.shape, dtype=ctypes.c_double)
+        self.times = sharedmem.empty(times.shape, dtype='float64')
         self.times[:] = times[:]
         
         
