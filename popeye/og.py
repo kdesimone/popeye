@@ -9,9 +9,9 @@ import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
+import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
@@ -70,7 +70,7 @@ def recast_estimation_results(output, grid_parent):
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        if fit.__dict__.has_key('rss'):
+        if fit.__dict__.has_key('fit_stats'):
         
             cartes[fit.voxel_index] = (fit.x, 
                                       fit.y,
