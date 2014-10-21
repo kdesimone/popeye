@@ -7,7 +7,7 @@ Base-classes for poulation encoding models and fits.
 
 import numpy as np
 import ctypes
-import sharedmem
+import popeye.utilities as utils
 
 class PopulationModel(object):
     """ Abstract class which holds the PopulationModel
@@ -31,6 +31,5 @@ class StimulusModel(object):
     def __init__(self, stim_arr, dtype):
         
         self.dtype = dtype
-        self.stim_arr  = sharedmem.empty(stim_arr.shape, dtype=self.dtype)
-        self.stim_arr[:] = stim_arr[:]
+        self.stim_arr = utils.generate_shared_array(stim_arr, self.dtype)
 

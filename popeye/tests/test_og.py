@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 from itertools import repeat
+import ctypes
 
 import numpy as np
 import numpy.testing as npt
@@ -24,7 +25,7 @@ def test_og_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.05
-    dtype='short'
+    dtype = ctypes.c_short
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
@@ -74,7 +75,7 @@ def test_parallel_og_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.05
-    dtype='short'
+    dtype = ctypes.c_short
     num_voxels = multiprocessing.cpu_count()-1
     
     # create the sweeping bar stimulus in memory
