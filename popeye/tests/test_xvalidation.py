@@ -50,8 +50,8 @@ def test_kfold_xval_repeated_runs():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
     
     # set up bounds for the grid search
-    search_bounds = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
-    fit_bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
+    grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
+    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus)
@@ -64,7 +64,7 @@ def test_kfold_xval_repeated_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0]]
+    fit_args = [grids, bounds, tr_length, [0,0,0]]
     fit_kwargs = {'auto_fit': False, 'verbose' : False}    
     
     # create a series of "runs"
@@ -107,11 +107,11 @@ def test_kfold_xval_unique_runs():
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype=)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
     
     # set up bounds for the grid search
-    search_bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5),(0.1,1e2))
-    fit_bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(-5,5),(0.1,1e2))
+    grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
+    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus)
@@ -124,7 +124,7 @@ def test_kfold_xval_unique_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0],]
+    fit_args = [grids, bounds, tr_length, [0,0,0],]
     fit_kwargs = {'auto_fit': False, 'verbose' : False}
     
     # create a series of "runs"
@@ -140,7 +140,7 @@ def test_kfold_xval_unique_runs():
     
     # get predictions out for each of the folds ...
     models = np.tile(model,num_runs)
-    left_out_data, predictions = xval.kfold_xval(models, data, gaussian.GaussianFit, folds, fit_args, fit_kwargs)
+    left_out_data, predictions = xval.kfold_xval(models, data, og.GaussianFit, folds, fit_args, fit_kwargs)
     
     # assert the coeff of determination is 100 for each prediction
     for k in range(folds):
