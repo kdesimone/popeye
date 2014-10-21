@@ -12,7 +12,6 @@ from scipy.signal import chirp
 import popeye.utilities as utils
 import popeye.strf as strf
 from popeye.auditory_stimulus import AuditoryStimulus
-from popeye.spinach import MakeFastGaussian2D, MakeFastAudioPrediction
 
 # def test_brute_force_search():
 #     """

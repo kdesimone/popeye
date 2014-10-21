@@ -10,7 +10,6 @@ import scipy.signal as ss
 import popeye.utilities as utils
 import popeye.gabor as gabor
 import popeye.gaussian as gaussian
-from popeye.spinach import MakeFastGaussPrediction, MakeFastGaborPrediction
 from popeye.visual_stimulus import simulate_bar_stimulus, VisualStimulus
 
 # def test_gabor_fit():

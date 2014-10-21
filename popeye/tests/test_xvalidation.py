@@ -9,10 +9,10 @@ import scipy.signal as ss
 
 
 import popeye.utilities as utils
-import popeye.gaussian as gaussian
+from popeye import og
 import popeye.xvalidation as xval
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
-from popeye.spinach import MakeFastGaussPrediction
+from popeye.spinach import generate_og_timeseries
 
 def test_coeff_of_determination():
     
@@ -39,6 +39,7 @@ def test_kfold_xval_repeated_runs():
     ecc = 10
     tr_length = 1.0
     scale_factor = 0.05
+    dtype = 'short'
     num_runs = 4
     folds = 2
     
@@ -46,17 +47,21 @@ def test_kfold_xval_repeated_runs():
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
     
     # set up bounds for the grid search
-    search_bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5),(0.1,1e2))
-    fit_bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(-5,5),(0.1,1e2))
+    search_bounds = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
+    fit_bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
     
     # initialize the gaussian model
-    model = gaussian.GaussianModel(stimulus)
+    model = og.GaussianModel(stimulus)
     
-    # generate a pRF estimate
-    estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    hrf_delay = -0.25
     
     # create the args context for calling the Fit class
     fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0]]
@@ -67,23 +72,15 @@ def test_kfold_xval_repeated_runs():
     
     for r in range(num_runs):
         
-        # make the stim time-series
-        stim = MakeFastGaussPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
-        
-        # create the HRF
-        hrf = utils.double_gamma_hrf(estimate[3], tr_length)
-        
-        # simulate the BOLD response
-        dat = ss.fftconvolve(stim,hrf)[0:len(stim)] * estimate[-1]
-        
         # fill out the data list
-        data[:,r] = dat
-        
-        
+        data[:,r] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
+                                        stimulus.deg_x, stimulus.deg_y, 
+                                        stimulus.stim_arr, tr_length)
+    
     # get predictions out for each of the folds ...
     models = (model,)
-    left_out_data, predictions = xval.kfold_xval(models, data, gaussian.GaussianFit, folds, fit_args, fit_kwargs)
-
+    left_out_data, predictions = xval.kfold_xval(models, data, og.GaussianFit, folds, fit_args, fit_kwargs)
+    
     # assert the coeff of determination is 100 for each prediction
     for k in range(folds):
         cod = xval.coeff_of_determination(left_out_data[k], predictions[k])
@@ -102,6 +99,7 @@ def test_kfold_xval_unique_runs():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.05
+    dtype = 'short'
     num_runs = 4
     folds = 2
     
@@ -109,17 +107,21 @@ def test_kfold_xval_unique_runs():
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype=)
     
     # set up bounds for the grid search
     search_bounds = ((-10,10),(-10,10),(0.25,5.25),(-5,5),(0.1,1e2))
     fit_bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(-5,5),(0.1,1e2))
     
     # initialize the gaussian model
-    model = gaussian.GaussianModel(stimulus)
+    model = og.GaussianModel(stimulus)
     
-    # generate a pRF estimate
-    estimate = [-5.24, 2.583, 1.24, -0.25, 2.5]
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    hrf_delay = -0.25
     
     # create the args context for calling the Fit class
     fit_args = [search_bounds, fit_bounds, tr_length, [0,0,0],]
@@ -130,17 +132,10 @@ def test_kfold_xval_unique_runs():
     
     for r in range(num_runs):
         
-        # make the stim time-series
-        stim = MakeFastGaussPrediction(stimulus.deg_x, stimulus.deg_y, stimulus.stim_arr, estimate[0], estimate[1], estimate[2])
-        
-        # create the HRF
-        hrf = utils.double_gamma_hrf(estimate[3], tr_length, frames_per_tr)
-        
-        # simulate the BOLD response
-        dat = ss.fftconvolve(stim,hrf)[0:len(stim)] * estimate[-1]
-        
         # fill out the data list
-        data[:,r] = dat
+        data[:,r] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
+                                        stimulus.deg_x, stimulus.deg_y, 
+                                        stimulus.stim_arr, tr_length)
     
     
     # get predictions out for each of the folds ...
