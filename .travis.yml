@@ -24,20 +24,23 @@ install:
     - unzip Cython-0.18.zip
     - cd Cython-0.18
     - sudo python$PYSUF setup.py install
-	- git clone https://github.com/sturlamolden/sharedmem-numpy.git
-	- cd sharedmem-numpy
-	- $PYTHON setup.py build_ext
-	- sudo $PYTHON setup.py install
+    - cd ..
+    - git clone https://github.com/sturlamolden/sharedmem-numpy.git
+    - cd sharedmem-numpy
+    - $PYTHON setup.py build_ext
+    - sudo $PYTHON setup.py install
     # Temporary solution to travis issue #155
     # https://github.com/travis-ci/travis-cookbooks/issues/155
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
-    - sudo pip install coverage
+    - sudo pip install coverage coveralls
     - cd ..
-    - $PYTHON setup.py build
+    - $PYTHON setup.py build_ext --inplace
+    #- $PYTHON setup.py build
     - sudo $PYTHON setup.py install
 script:
     # Change into an innocuous directory and find tests from installation
-    - mkdir for_test
-    - cd for_test
-       cp ../.coveragerc . ;
-        nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye `$PYTHON -c "import os; import popeye; print(os.path.dirname(popeye.__file__))"` ;
+    - nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye
+    #- mkdir for_test
+    #- cd for_test
+    #   cp ../.coveragerc . ;
+    #    nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye `$PYTHON -c "import os; import popeye; print(os.path.dirname(popeye.__file__))"` ;
