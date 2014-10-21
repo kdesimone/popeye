@@ -9,7 +9,6 @@ from pylab import find
 from scipy.interpolate import interp1d
 
 import nibabel
-from popeye.spinach import MakeFastRF
 
 def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
     
