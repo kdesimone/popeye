@@ -18,8 +18,6 @@ from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye import og
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import MakeFastGaborPrediction
-
 
 def compute_model_ts(x, y, sigma, hrf_delay, theta, phi, cpd,
                      deg_x, deg_y, stim_arr, tr_length, 
