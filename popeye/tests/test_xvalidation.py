@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 from itertools import repeat
+import ctypes
 
 import numpy as np
 import numpy.testing as npt
@@ -39,7 +40,7 @@ def test_kfold_xval_repeated_runs():
     ecc = 10
     tr_length = 1.0
     scale_factor = 0.05
-    dtype = 'short'
+    dtype = ctypes.c_short
     num_runs = 4
     folds = 2
     
@@ -99,7 +100,7 @@ def test_kfold_xval_unique_runs():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.05
-    dtype = 'short'
+    dtype = ctypes.c_short
     num_runs = 4
     folds = 2
     

@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 from itertools import repeat
+import ctypes
 
 import numpy as np
 import numpy.testing as npt
@@ -23,8 +24,13 @@ def test_dog():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
+<<<<<<< HEAD
     scale_factor = 0.20
     dtype = 'short'
+=======
+    scale_factor = 0.10
+    dtype = ctypes.c_short
+>>>>>>> shared-memory
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)

@@ -10,12 +10,12 @@ from __future__ import division
 import ctypes
 import gc
 
-import sharedmem
 import numpy as np
 from scipy.misc import imresize
 from scipy.io import loadmat
 
 from popeye.base import StimulusModel
+import popeye.utilities as utils
 
 def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1):
     
@@ -324,18 +324,10 @@ class VisualStimulus(StimulusModel):
         deg_x, deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
         deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
-        # share the rest of the arrays ...
-        self.deg_x = sharedmem.empty(deg_x.shape, dtype='float64')
-        self.deg_x[:] = deg_x[:]
+        # share the arrays
+        self.deg_x = utils.generate_shared_array(deg_x, ctypes.c_double)
+        self.deg_y = utils.generate_shared_array(deg_y, ctypes.c_double)
+        self.deg_x_coarse = utils.generate_shared_array(deg_x_coarse, ctypes.c_double)
+        self.deg_y_coarse = utils.generate_shared_array(deg_y_coarse, ctypes.c_double)
+        self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, ctypes.c_short)
         
-        self.deg_y = sharedmem.empty(deg_y.shape, dtype='float64')
-        self.deg_y[:] = deg_y[:]
-        
-        self.deg_x_coarse = sharedmem.empty(deg_x_coarse.shape, dtype='float64')
-        self.deg_x_coarse[:] = deg_x_coarse[:]
-        
-        self.deg_y_coarse = sharedmem.empty(deg_y_coarse.shape, dtype='float64')
-        self.deg_y_coarse[:] = deg_y_coarse[:]
-        
-        self.stim_arr_coarse = sharedmem.empty(stim_arr_coarse.shape, dtype=self.dtype)
-        self.stim_arr_coarse[:] = stim_arr_coarse[:]

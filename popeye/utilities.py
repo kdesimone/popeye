@@ -6,6 +6,7 @@ though that might change with time.
 
 from __future__ import division
 import sys, os, time
+from multiprocessing import Array
 
 import numpy as np
 import nibabel
@@ -13,6 +14,40 @@ from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell
 from scipy.integrate import romb, trapz
+
+def generate_shared_array(unshared_arr,dtype):
+    
+    """
+    Creates synchronized shared arrays from numpy arrays.
+    
+    The function takes a numpy array `unshared_arr` and returns a shared
+    memory object, `shared_arr`.  The user also specifies the data-type of
+    the values in the array with the `dataType` argument.  See
+    multiprocessing.Array and ctypes for details on shared memory arrays and
+    the data-types.
+
+    Parameters
+    ----------
+    unshared_arr : ndarray
+        Array_like means all those objects -- lists, nested lists, etc. --
+        that can be converted to an array.  We can also refer to
+        variables like `var1`.
+    dtype : ctypes instance
+        The data-type specificed has to be an instance of the ctypes library.
+        See ctypes for details.
+        
+    Returns
+    -------
+    shared_arr : synchronized shared array
+        An array that is read accessible from multiple processes/threads. 
+    """
+    
+    shared_array_base = Array(dtype,np.prod(np.shape(unshared_arr)))
+    shared_arr = np.ctypeslib.as_array(shared_array_base.get_obj())
+    shared_arr = np.reshape(shared_arr,np.shape(unshared_arr))
+    shared_arr[:] = unshared_arr[:]
+
+    return shared_arr
 
 # normalize to a specific range
 def normalize(array, imin=-1, imax=1):
