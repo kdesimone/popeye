@@ -34,8 +34,8 @@ install:
     - sudo $PYTHON setup.py install
 script:
     # Change into an innocuous directory and find tests from installation
-    - nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye
-    #- mkdir for_test
-    #- cd for_test
-    #   cp ../.coveragerc . ;
-    #    nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye `$PYTHON -c "import os; import popeye; print(os.path.dirname(popeye.__file__))"` ;
+    #- nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye
+    - mkdir for_test
+    - cd for_test
+       cp ../.coveragerc . ;
+        nosetests$PYSUF --with-doctest --with-coverage --cover-package=popeye `$PYTHON -c "import os; import popeye; print(os.path.dirname(popeye.__file__))"` ;
