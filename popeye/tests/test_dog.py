@@ -24,18 +24,13 @@ def test_dog():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-<<<<<<< HEAD
     scale_factor = 0.20
-    dtype = 'short'
-=======
-    scale_factor = 0.10
     dtype = ctypes.c_short
->>>>>>> shared-memory
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
-    # resample the stimulus to 50% of original
+    # resample the stimulus to 25% of original
     bar = resample_stimulus(bar, 0.25)
     
     # create an instance of the Stimulus class
