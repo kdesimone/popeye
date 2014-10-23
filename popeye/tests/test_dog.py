@@ -23,14 +23,14 @@ def test_dog():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.10
+    scale_factor = 0.20
     dtype = 'short'
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
     
     # resample the stimulus to 50% of original
-    bar = resample_stimulus(bar, 0.50)
+    bar = resample_stimulus(bar, 0.25)
     
     # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
@@ -61,11 +61,11 @@ def test_dog():
     dog_fit = dog.DifferenceOfGaussiansFit(og_fit, fit_bounds, True, False)
     
     # assert equivalence
-    nt.assert_almost_equal(dog_fit.x, x)
-    nt.assert_almost_equal(dog_fit.y, y)
-    nt.assert_almost_equal(dog_fit.sigma_center, sigma_center)
-    nt.assert_almost_equal(dog_fit.sigma_surround, sigma_surround)
-    nt.assert_almost_equal(dog_fit.beta_center, beta_center)
-    nt.assert_almost_equal(dog_fit.beta_surround, beta_surround)
-    nt.assert_almost_equal(dog_fit.hrf_delay, hrf_delay)
+    nt.assert_almost_equal(dog_fit.x, x, 2)
+    nt.assert_almost_equal(dog_fit.y, y, 2)
+    nt.assert_almost_equal(dog_fit.sigma_center, sigma_center, 2)
+    nt.assert_almost_equal(dog_fit.sigma_surround, sigma_surround, 2)
+    nt.assert_almost_equal(dog_fit.beta_center, beta_center, 2)
+    nt.assert_almost_equal(dog_fit.beta_surround, beta_surround, 2)
+    nt.assert_almost_equal(dog_fit.hrf_delay, hrf_delay, 2)
 
