@@ -217,7 +217,8 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                     stim[k] += stim_arr[i,j,k]*gauss1D
                     
     # normalize it
-    stim /= sum_gauss
+    if sum_gauss > 0.0:
+        stim /= sum_gauss
     
     return stim
 
