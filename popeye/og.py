@@ -4,7 +4,6 @@
 
 from __future__ import division, print_function, absolute_import
 import time
-import gc
 import warnings
 warnings.simplefilter("ignore")
 
