@@ -101,6 +101,7 @@ def recast_estimation_results(output, grid_parent):
 
     return nif_cartes, nif_polar
 
+
 def compute_model_ts(x, y, sigma, beta, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
 
@@ -158,6 +159,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     model = fftconvolve(stim, hrf)[0:len(stim)]
 
     return model*beta
+
 
 def parallel_fit(args):
 
@@ -236,6 +238,7 @@ class GaussianModel(PopulationModel):
         """
 
         PopulationModel.__init__(self, stimulus)
+
 
 class GaussianFit(PopulationFit):
 
