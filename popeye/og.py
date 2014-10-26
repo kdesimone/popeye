@@ -346,11 +346,11 @@ class GaussianFit(PopulationFit):
                                          self.model.stimulus.deg_y_coarse,
                                          self.model.stimulus.stim_arr_coarse,
                                          self.tr_length),
-                                        self.search_bounds,
-                                        self.fit_bounds,
-                                        self.data,
-                                        utils.error_function,
-                                        compute_model_ts)
+                                         self.search_bounds,
+                                         self.fit_bounds,
+                                         self.data,
+                                         utils.error_function,
+                                         compute_model_ts)
 
 
     @auto_attr
@@ -360,10 +360,10 @@ class GaussianFit(PopulationFit):
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
                                               self.tr_length),
-                                             self.fit_bounds,
-                                             self.data,
-                                             utils.error_function,
-                                             compute_model_ts)
+                                              self.fit_bounds,
+                                              self.data,
+                                              utils.error_function,
+                                              compute_model_ts)
 
 
     @auto_attr
