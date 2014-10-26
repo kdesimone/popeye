@@ -17,6 +17,7 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
 
+
 def recast_estimation_results(output, grid_parent):
     """
     Recasts the output of the prf estimation into two nifti_gz volumes.
@@ -71,19 +72,19 @@ def recast_estimation_results(output, grid_parent):
 
         if fit.__dict__.has_key('fit_stats'):
 
-            cartes[fit.voxel_index] = (fit.x,
-                                      fit.y,
-                                      fit.sigma,
-                                      fit.hrf_delay,
-                                      fit.beta,
+            cartes[fit.voxel_index] = (fit.x_,
+                                      fit.y_,
+                                      fit.sigma_,
+                                      fit.hrf_delay_,
+                                      fit.beta_,
                                       fit.rss,
                                       fit.fit_stats[2])
 
-            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
-                                     np.sqrt(fit.x**2+fit.y**2),
-                                     fit.sigma,
-                                     fit.hrf_delay,
-                                     fit.beta,
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x_,fit.y_),2*np.pi),
+                                     np.sqrt(fit.x_**2+fit.y_**2),
+                                     fit.sigma_,
+                                     fit.hrf_delay_,
+                                     fit.beta_,
                                      fit.rss,
                                      fit.fit_stats[2])
 
@@ -360,7 +361,8 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.sigma0, self.beta0, self.hrf_delay0),
+        return utils.gradient_descent_search((self.x0_, self.y0_, self.sigma0_,
+                                              self.beta0_, self.hrf_delay0_),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -372,50 +374,50 @@ class GaussianFit(PopulationFit):
 
 
     @auto_attr
-    def x0(self):
+    def x0_(self):
         return self.ballpark_estimate[0]
 
     @auto_attr
-    def y0(self):
+    def y0_(self):
         return self.ballpark_estimate[1]
 
     @auto_attr
-    def sigma0(self):
+    def sigma0_(self):
         return self.ballpark_estimate[2]
 
     @auto_attr
-    def beta0(self):
+    def beta0_(self):
         return self.ballpark_estimate[3]
 
     @auto_attr
-    def hrf_delay0(self):
+    def hrf_delay0_(self):
         return self.ballpark_estimate[4]
 
     @auto_attr
-    def x(self):
+    def x_(self):
         return self.estimate[0]
 
     @auto_attr
-    def y(self):
+    def y_(self):
         return self.estimate[1]
 
     @auto_attr
-    def sigma(self):
+    def sigma_(self):
         return self.estimate[2]
 
     @auto_attr
-    def beta(self):
+    def beta_(self):
         return self.estimate[3]
 
     @auto_attr
-    def hrf_delay(self):
+    def hrf_delay_(self):
         return self.estimate[4]
 
     @auto_attr
     def prediction0(self):
         """predicted hemodynamic response based on coarse model estimates"""
-        return compute_model_ts(self.x0, self.y0, self.sigma0, self.beta0,
-                                self.hrf_delay0,
+        return compute_model_ts(self.x0_, self.y0_, self.sigma0_, self.beta0_,
+                                self.hrf_delay0_,
                                 self.model.stimulus.deg_x_coarse,
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse,
@@ -424,7 +426,8 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def prediction(self):
         """predicted hemodynamic response based on model estimates"""
-        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x_, self.y_, self.sigma_, self.beta_,
+                                self.hrf_delay_,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -448,12 +451,12 @@ class GaussianFit(PopulationFit):
     def receptive_field(self):
         rf = generate_og_receptive_field(self.model.stimulus.deg_x,
                                          self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma)
+                                         self.x_, self.y_, self.sigma_)
 
-        rf *= self.beta
+        rf *= self.beta_
 
         return rf
 
     @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return utils.double_gamma_hrf(self.hrf_delay_, self.tr_length)
