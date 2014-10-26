@@ -241,17 +241,14 @@ class GaussianModel(PopulationModel):
 
 
 class GaussianFit(PopulationFit):
-
-    """
-    A Gaussian population receptive field fit class
-
-    """
+    """A Gaussian population receptive field fit class"""
 
     def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True, uncorrected_rval=0.0):
+                 voxel_index=(1,2,3), auto_fit=True, uncorrected_rval=0.0,
+                 verbose=True):
         """Gaussian population receptive field (pRF) model
 
-        The pRF model was introduced in [1]_.
+        The Gaussian pRF model was introduced in [1]_.
 
         Paramaters
         ----------
@@ -264,7 +261,7 @@ class GaussianFit(PopulationFit):
         search_bounds : tuple
             A tuple indicating the search space for the brute-force grid-search.
             The tuple contains pairs of upper and lower bounds for exploring a
-            given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
+            given dimension. For example `fit_bounds=((-10,10),(0,5),)` will
             search the first dimension from -10 to 10 and the second from 0 to
             5. These values cannot be None.
 
@@ -291,6 +288,11 @@ class GaussianFit(PopulationFit):
             A flag for automatically running the fitting procedures once the
             `GaussianFit` object is instantiated.
 
+        uncorrected_rval : float, default 0.0
+            The second stage of the model estimation is only performed when the
+            model estimates of the first stage fitting procedure correlate
+            higher than ``uncorrected_rval`` with the measures BOLD signal.
+
         verbose : bool, default True
             A flag for printing some summary information about the model
             estiamte after the fitting procedures have completed.
@@ -316,7 +318,7 @@ class GaussianFit(PopulationFit):
             tic = time.clock()
             self.ballpark_estimate;
 
-            if self.coarse_fit_stats[2] > self.uncorrected_rval:
+            if self.fit_stats0[2] > self.uncorrected_rval:
                 self.estimate;
                 self.fit_stats;
                 self.rss;
@@ -337,7 +339,7 @@ class GaussianFit(PopulationFit):
                           self.voxel_index[1],
                           self.voxel_index[2],
                           toc-tic,
-                          self.coarse_fit_stats[2]))
+                          self.fit_stats0[2]))
 
             if self.verbose:
                 print(msg)
@@ -358,7 +360,7 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0, self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.sigma0, self.beta0, self.hrf_delay0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -378,7 +380,7 @@ class GaussianFit(PopulationFit):
         return self.ballpark_estimate[1]
 
     @auto_attr
-    def s0(self):
+    def sigma0(self):
         return self.ballpark_estimate[2]
 
     @auto_attr
@@ -386,7 +388,7 @@ class GaussianFit(PopulationFit):
         return self.ballpark_estimate[3]
 
     @auto_attr
-    def hrf0(self):
+    def hrf_delay0(self):
         return self.ballpark_estimate[4]
 
     @auto_attr
@@ -410,8 +412,10 @@ class GaussianFit(PopulationFit):
         return self.estimate[4]
 
     @auto_attr
-    def coarse_prediction(self):
-        return compute_model_ts(self.x0, self.y0, self.s0, self.beta0, self.hrf0,
+    def prediction0(self):
+        """predicted hemodynamic response based on coarse model estimates"""
+        return compute_model_ts(self.x0, self.y0, self.sigma0, self.beta0,
+                                self.hrf_delay0,
                                 self.model.stimulus.deg_x_coarse,
                                 self.model.stimulus.deg_y_coarse,
                                 self.model.stimulus.stim_arr_coarse,
@@ -419,6 +423,7 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def prediction(self):
+        """predicted hemodynamic response based on model estimates"""
         return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
@@ -426,11 +431,13 @@ class GaussianFit(PopulationFit):
                                 self.tr_length)
 
     @auto_attr
-    def coarse_fit_stats(self):
-        return linregress(self.data, self.coarse_prediction)
+    def fit_stats0(self):
+        """statistical fit based on coarse model estimates"""
+        return linregress(self.data, self.prediction0)
 
     @auto_attr
     def fit_stats(self):
+        """statistical fit based on model estimates"""
         return linregress(self.data, self.prediction)
 
     @auto_attr
