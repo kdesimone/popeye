@@ -1,5 +1,5 @@
 """
-Cross-validation analysis of diffusion models
+Cross-validation analysis of population encoding models
 """
 from __future__ import division, print_function, absolute_import
 from copy import deepcopy
@@ -188,7 +188,7 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
         left_out_fit = Fit(*ensemble)
         
         # run the left-in Fit
-        left_out_fit.estimate = left_in_fit.estimate
+        left_out_fit.estimates_ = left_in_fit.estimates_
         
         # store the prediction
         predictions.append(left_out_fit.prediction)
