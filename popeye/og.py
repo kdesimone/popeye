@@ -70,23 +70,23 @@ def recast_estimation_results(output, grid_parent):
     # extract the prf model estimates from the results queue output
     for fit in output:
 
-        if fit.__dict__.has_key('fit_stats'):
+        if fit.__dict__.has_key('fit_stats_'):
 
             cartes[fit.voxel_index] = (fit.x_,
                                       fit.y_,
                                       fit.sigma_,
                                       fit.hrf_delay_,
                                       fit.beta_,
-                                      fit.rss,
-                                      fit.fit_stats[2])
+                                      fit.rss_,
+                                      fit.fit_stats_[2])
 
             polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x_,fit.y_),2*np.pi),
                                      np.sqrt(fit.x_**2+fit.y_**2),
                                      fit.sigma_,
                                      fit.hrf_delay_,
                                      fit.beta_,
-                                     fit.rss,
-                                     fit.fit_stats[2])
+                                     fit.rss_,
+                                     fit.fit_stats_[2])
 
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
@@ -103,12 +103,9 @@ def recast_estimation_results(output, grid_parent):
     return nif_cartes, nif_polar
 
 
-def compute_model_ts(x, y, sigma, beta, hrf_delay,
-                     deg_x, deg_y, stim_arr, tr_length):
-
-
-    """
-    The objective function for GaussianFi class.
+def compute_model_ts(x, y, sigma, beta, hrf_delay, deg_x, deg_y, stim_arr,
+                     tr_length):
+    """The objective function for GaussianFit class.
 
     Parameters
     ----------
@@ -121,33 +118,28 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     sigma : float
         The model estimate of the dispersion across the the display.
 
-    hrf_delay : float
-        The model estimate of the relative delay of the HRF.  The canonical
-        HRF is assumed to be 5 s post-stimulus [1]_.
-
     beta : float
         The model estimate of the amplitude of the BOLD signal.
+
+    hrf_delay : float
+        The model estimate of the relative delay of the HRF. The canonical
+        HRF is assumed to be 5 s post-stimulus [1]_.
 
     tr_length : float
         The length of the repetition time in seconds.
 
-
     Returns
     -------
-
     model : ndarray
-    The model prediction time-series.
-
+        The model prediction time-series.
 
     References
     ----------
-
     .. [1] Glover, GH. (1999). Deconvolution of impulse response in
-    event-related BOLD fMRI. NeuroImage 9: 416-429.
-
+           event-related BOLD fMRI. NeuroImage 9: 416-429.
     """
 
-    # otherwise generate a prediction
+    # generate a prediction
     stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
 
     # scale it
@@ -156,7 +148,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
 
-    # convolve it with the stimulus
+    # convolve HRF with the stimulus
     model = fftconvolve(stim, hrf)[0:len(stim)]
 
     return model*beta
@@ -211,38 +203,32 @@ def parallel_fit(args):
 
 
 class GaussianModel(PopulationModel):
-
     """
     A Gaussian population receptive field model class
 
     """
 
     def __init__(self, stimulus):
-
         """
         A Gaussian population receptive field model [1]_.
 
         Paramaters
         ----------
-
         stimulus : `VisualStimulus` class object
             A class instantiation of the `VisualStimulus` class
             containing a representation of the visual stimulus.
 
-
         References
         ----------
-
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field
-        estimates in human visual cortex. NeuroImage 39:647-660
-
+               estimates in human visual cortex. NeuroImage 39:647-660
         """
 
         PopulationModel.__init__(self, stimulus)
 
 
 class GaussianFit(PopulationFit):
-    """A Gaussian population receptive field fit class"""
+    """Gaussian population receptive field fit class"""
 
     def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
                  voxel_index=(1,2,3), auto_fit=True, uncorrected_rval=0.0,
@@ -300,9 +286,8 @@ class GaussianFit(PopulationFit):
 
         References
         ----------
-
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field
-        estimates in human visual cortex. NeuroImage 39:647-660
+               estimates in human visual cortex. NeuroImage 39:647-660
         """
 
         PopulationFit.__init__(self, model, data)
@@ -319,10 +304,10 @@ class GaussianFit(PopulationFit):
             tic = time.clock()
             self.ballpark_estimate;
 
-            if self.fit_stats0[2] > self.uncorrected_rval:
-                self.estimate;
-                self.fit_stats;
-                self.rss;
+            if self.fit_stats0_[2] > self.uncorrected_rval:
+                self.estimates_;
+                self.fit_stats_;
+                self.rss_;
                 toc = time.clock()
 
                 msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f"
@@ -330,7 +315,7 @@ class GaussianFit(PopulationFit):
                           self.voxel_index[1],
                           self.voxel_index[2],
                           toc-tic,
-                          self.fit_stats[2]))
+                          self.fit_stats_[2]))
 
             else:
                 toc = time.clock()
@@ -340,7 +325,7 @@ class GaussianFit(PopulationFit):
                           self.voxel_index[1],
                           self.voxel_index[2],
                           toc-tic,
-                          self.fit_stats0[2]))
+                          self.fit_stats0_[2]))
 
             if self.verbose:
                 print(msg)
@@ -360,7 +345,7 @@ class GaussianFit(PopulationFit):
 
 
     @auto_attr
-    def estimate(self):
+    def estimates_(self):
         return utils.gradient_descent_search((self.x0_, self.y0_, self.sigma0_,
                                               self.beta0_, self.hrf_delay0_),
                                              (self.model.stimulus.deg_x,
@@ -395,23 +380,23 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def x_(self):
-        return self.estimate[0]
+        return self.estimates_[0]
 
     @auto_attr
     def y_(self):
-        return self.estimate[1]
+        return self.estimates_[1]
 
     @auto_attr
     def sigma_(self):
-        return self.estimate[2]
+        return self.estimates_[2]
 
     @auto_attr
     def beta_(self):
-        return self.estimate[3]
+        return self.estimates_[3]
 
     @auto_attr
     def hrf_delay_(self):
-        return self.estimate[4]
+        return self.estimates_[4]
 
     @auto_attr
     def prediction0(self):
@@ -434,17 +419,17 @@ class GaussianFit(PopulationFit):
                                 self.tr_length)
 
     @auto_attr
-    def fit_stats0(self):
+    def fit_stats0_(self):
         """statistical fit based on coarse model estimates"""
         return linregress(self.data, self.prediction0)
 
     @auto_attr
-    def fit_stats(self):
+    def fit_stats_(self):
         """statistical fit based on model estimates"""
         return linregress(self.data, self.prediction)
 
     @auto_attr
-    def rss(self):
+    def rss_(self):
         return np.sum((self.data - self.prediction)**2)
 
     @auto_attr
