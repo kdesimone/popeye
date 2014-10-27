@@ -1,4 +1,3 @@
-import os
 import multiprocessing
 from itertools import repeat
 import ctypes
@@ -6,9 +5,7 @@ import ctypes
 import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
-from scipy.signal import fftconvolve
 
-import popeye.utilities as utils
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 
@@ -24,7 +21,6 @@ def test_og_fit():
     num_steps = 20
     ecc = 10
     tr_length = 1.0
-    frames_per_tr = 1.0
     scale_factor = 0.05
     dtype = ctypes.c_short
 
@@ -75,7 +71,6 @@ def test_parallel_og_fit():
     num_steps = 20
     ecc = 10
     tr_length = 1.0
-    frames_per_tr = 1.0
     scale_factor = 0.05
     dtype = ctypes.c_short
     num_voxels = multiprocessing.cpu_count()-1

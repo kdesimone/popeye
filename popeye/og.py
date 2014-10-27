@@ -125,6 +125,18 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay, deg_x, deg_y, stim_arr,
         The model estimate of the relative delay of the HRF. The canonical
         HRF is assumed to be 5 s post-stimulus [1]_.
 
+    deg_x : ndarray
+        An array representing the horizontal extent of the visual display in
+        terms of degrees of visual angle.
+
+    deg_y : ndarray
+        An array representing the vertical extent of the visual display in
+        terms of degrees of visual angle.
+
+    stim_arr : ndarray
+        An array containing the visual stimulus at the native resolution. The
+        visual stimulus is assumed to be three-dimensional (x,y,time).
+
     tr_length : float
         The length of the repetition time in seconds.
 
@@ -171,13 +183,10 @@ def parallel_fit(args):
 
     Returns
     -------
-
     fit : `GaussianFit` class object
         A fit object that contains all the inputs and outputs of the
         Gaussian pRF model estimation for a single voxel.
-
     """
-
 
     # unpackage the arguments
     model = args[0]
@@ -189,7 +198,6 @@ def parallel_fit(args):
     auto_fit = args[6]
     verbose = args[7]
 
-
     # fit the data
     fit = GaussianFit(model,
                       data,
@@ -199,6 +207,7 @@ def parallel_fit(args):
                       voxel_index,
                       auto_fit,
                       verbose)
+
     return fit
 
 
