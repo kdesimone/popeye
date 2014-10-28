@@ -240,7 +240,7 @@ class GaussianFit(PopulationFit):
     """Gaussian population receptive field fit class"""
 
     def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, uncorrected_rval=0.0,
+                 voxel_index=(1,2,3), auto_fit=True, rsquared_threshold=0.0,
                  verbose=True):
         """Gaussian population receptive field (pRF) model
 
@@ -284,10 +284,11 @@ class GaussianFit(PopulationFit):
             A flag for automatically running the fitting procedures once the
             `GaussianFit` object is instantiated.
 
-        uncorrected_rval : float, default 0.0
+        rsquared_threshold : float, default 0.0
+            Explained variance threshold, with ``0. <= rsquared_threshold <= 1.``
             The second stage of the model estimation is only performed when the
-            model estimates of the first stage fitting procedure correlate
-            higher than ``uncorrected_rval`` with the measures BOLD signal.
+            model estimates of the first stage fitting procedure explain more
+            variance than given by ``rsquared_threshold``.
 
         verbose : bool, default True
             A flag for printing some summary information about the model
@@ -307,13 +308,13 @@ class GaussianFit(PopulationFit):
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
-        self.uncorrected_rval = uncorrected_rval
+        self.rsquared_threshold = rsquared_threshold
 
         if self.auto_fit:
             tic = time.clock()
             self.ballpark_estimate;
 
-            if self.fit_stats0_[2] > self.uncorrected_rval:
+            if self.fit_stats0_[2]**2 > self.rsquared_threshold:
                 self.estimates_;
                 self.fit_stats_;
                 self.rss_;
