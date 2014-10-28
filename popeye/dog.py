@@ -323,9 +323,9 @@ class DifferenceOfGaussiansFit(PopulationFit):
         if self.auto_fit:
             
             tic = time.clock()
-            self.og_fit.estimate
+            self.og_fit.estimates_
             
-            if self.og_fit.fit_stats[2] > self.uncorrected_rval:
+            if self.og_fit.fit_stats_[2] > self.uncorrected_rval:
              
                 self.estimate;
                 self.fit_stats;
@@ -336,7 +336,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
                           self.voxel_index[1],
                           self.voxel_index[2],
                           toc-tic,
-                          self.og_fit.fit_stats[2],
+                          self.og_fit.fit_stats_[2],
                           self.fit_stats[2]))
             
             else:
@@ -346,7 +346,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
                           self.voxel_index[1],
                           self.voxel_index[2],
                           toc-tic,
-                          self.og_fit.fit_stats[2]))
+                          self.og_fit.fit_stats_[2]))
             
             if self.verbose:
                 print(msg)
@@ -366,31 +366,31 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                              
     @auto_attr
     def x0(self):
-        return self.og_fit.estimate[0]
+        return self.og_fit.estimates_[0]
         
     @auto_attr
     def y0(self):
-        return self.og_fit.estimate[1]
+        return self.og_fit.estimates_[1]
     
     @auto_attr
     def sigma_center0(self):
-        return self.og_fit.estimate[2]
+        return self.og_fit.estimates_[2]
     
     @auto_attr
     def sigma_surround0(self):
-        return self.og_fit.estimate[2]*2
+        return self.og_fit.estimates_[2]*2
     
     @auto_attr
     def beta_center0(self):
-        return self.og_fit.estimate[3]
+        return self.og_fit.estimates_[3]
     
     @auto_attr
     def beta_surround0(self):
-        return self.og_fit.estimate[3]/2
+        return self.og_fit.estimates_[3]/2
     
     @auto_attr
     def hrf0(self):
-        return self.og_fit.estimate[4]
+        return self.og_fit.estimates_[4]
         
     @auto_attr
     def x(self):
