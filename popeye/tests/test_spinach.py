@@ -6,8 +6,8 @@ from popeye.visual_stimulus import generate_coordinate_matrices
 from popeye.spinach import generate_og_receptive_field, generate_og_timeseries
 
 def test_generate_og_receptive_field():
-    xpixels = 100 # simulated screen width
-    ypixels = 100 # simulated screen height
+    xpixels = 500 # simulated screen width
+    ypixels = 500 # simulated screen height
     ppd = 1 # simulated visual angle
     scale_factor = 1.0 # simulated stimulus resampling rate
     
@@ -25,7 +25,7 @@ def test_generate_og_receptive_field():
                                          scale_factor)
     
     # generate a pRF at (0,0) and 1 sigma wide
-    rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma)
+    rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma, 1)
     
     # compare the volume of the pRF to a known value
     nt.assert_equal(np.round(np.sum(rf)), test_value)
