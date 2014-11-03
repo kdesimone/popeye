@@ -75,16 +75,16 @@ def recast_estimation_results(output, grid_parent):
             cartes[fit.voxel_index] = (fit.x, 
                                       fit.y,
                                       fit.sigma,
-                                      fit.hrf_delay,
                                       fit.beta,
+                                      fit.hrf_delay,
                                       fit.rss,
                                       fit.fit_stats[2])
                                  
             polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
                                      np.sqrt(fit.x**2+fit.y**2),
                                      fit.sigma,
-                                     fit.hrf_delay,
                                      fit.beta,
+                                     fit.hrf_delay,
                                      fit.rss,
                                      fit.fit_stats[2])
                                  
