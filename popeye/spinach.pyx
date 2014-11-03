@@ -66,6 +66,35 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                           np.ndarray[DTYPE2_t, ndim=2] deg_y,
+                           np.ndarray[short, ndim=3] stim_arr, 
+                           np.ndarray[DTYPE2_t, ndim=2] rf,
+                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
+    
+    # cdef's
+    cdef int i,j,k
+    cdef DTYPE2_t s_factor3 = (3.0*sigma)**2
+    cdef int xlim = stim_arr.shape[0]
+    cdef int ylim = stim_arr.shape[1]
+    cdef int zlim = stim_arr.shape[2]
+    cdef DTYPE2_t d, gauss1D
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
+            if d <= s_factor3:
+                for k in xrange(zlim):
+                    stim[k] += stim_arr[i,j,k]*rf[i,j]
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                  np.ndarray[DTYPE2_t, ndim=2] deg_y,
                                  np.ndarray[short, ndim=3] stim_arr,
@@ -200,8 +229,7 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef int zlim = stim_arr.shape[2]
-    cdef DTYPE2_t d, gauss1D
-    cdef DTYPE2_t sum_gauss = 0.0
+    cdef DTYPE2_t d, gauss1D, sum_gauss
     
     # initialize output variable
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
@@ -216,10 +244,7 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*gauss1D
                     
-    # normalize it
-    if sum_gauss > 0.0:
-        stim /= sum_gauss
-    
+    stim /= sum_gauss
     return stim
 
 @cython.boundscheck(False)
@@ -290,7 +315,7 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
 @cython.wraparound(False)
 def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
+                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma, DTYPE2_t beta):
     """
     Generate a Gaussian.
     
@@ -318,11 +343,13 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     
     # cdef's
     cdef int i,j,k
-    cdef DTYPE2_t s_factor2 = (2.0*s**2)
-    cdef DTYPE2_t s_factor3 = (3.0*s)**2
+    cdef DTYPE2_t s_factor2 = (2.0*sigma**2)
+    cdef DTYPE2_t s_factor3 = (3.0*sigma)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef DTYPE2_t d, gauss1D
+    cdef DTYPE2_t pi = 3.14159265
+
     
     # initialize output variable
     cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] rf = np.zeros((xlim,ylim),dtype=DTYPE2)
@@ -332,7 +359,7 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
             if d <= s_factor3:
-                rf[i,j] = exp(-d/s_factor2)
+                rf[i,j] = exp(-d/s_factor2)*beta
 
     return rf
 
