@@ -10,3 +10,4 @@ from . import utilities
 from . import og
 from . import dog
 from . import xvalidation
+from . import plotting
