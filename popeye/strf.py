@@ -79,7 +79,7 @@ def recast_estimation_results(output, grid_parent, write=True):
         if fit.__dict__.has_key('fit_stats'):
             
             nii_out[fit.voxel_index] = (fit.center_freq, 
-                                        fit.bandwidth,
+                                        fit.sigma,
                                         fit.rss,
                                         fit.fit_stats[2])
                                  
@@ -112,30 +112,24 @@ def gaussian_1D(freqs, center_freq, sd, integrator=trapz):
     gaussian = np.exp(-0.5 * ((freqs - (center_freq+1))/sd)**2) / (np.sqrt(2*np.pi) * sd)
     
     return gaussian
-    
+
 def compute_model_ts_1D(center_freq, sd,
-                        times, freqs, spectrogram,
+                        spectrogram, freqs,
+                        source_times, target_times,
                         tr_length, convolve=True):
     
-    # invoke the gaussian
-    # gaussian = gaussian_1D(freqs, center_freq, sd)
-    
-    # now create the stimulus time-series
-    # stim = np.sum(gaussian[:,np.newaxis] * spectrogram,axis=0)
-    
+    # generate stimulus time-series
     stim = generate_strf_timeseries(freqs, spectrogram, center_freq, sd)
     
     # recast the stimulus into a time-series that i can decimate
-    old_time = np.linspace(0,np.ceil(times[-1]),len(stim))
-    new_time = np.linspace(0,np.ceil(times[-1]),np.ceil(times[-1])*10)
-    f = interp1d(old_time,stim)
-    new_stim = f(new_time)
+    f = interp1d(source_times,stim)
+    new_stim = f(target_times)
     
     # hard-set the hrf_delay
     hrf_delay = 0
     
     # convolve it with the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length, 10)
+    hrf = utils.double_gamma_hrf(hrf_delay, tr_length, np.sum(target_times<=1))
     model = fftconvolve(new_stim, hrf)[0:len(new_stim)] 
     
     # for debugging
@@ -150,22 +144,20 @@ def parallel_fit(args):
     # unpackage the arguments
     model = args[0]
     data = args[1]
-    search_bounds = args[2]
-    fit_bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    source_times = args[2]
+    target_times = args[3]
+    grids = args[4]
+    bounds = args[5]
+    tr_length = args[6]
+    voxel_index = args[7]
+    auto_fit = args[8]
+    verbose = args[9]
     
     # fit the data
-    fit = SpectrotemporalFit(model,
-                             data,
-                             search_bounds,
-                             fit_bounds,
-                             tr_length,
-                             voxel_index,
-                             auto_fit,
-                             verbose)
+    fit = SpectrotemporalFit(model, data, source_times, target_times,
+                             grids, bounds, tr_length, voxel_index,
+                             auto_fit, verbose)
+    
     return fit
 
 
@@ -183,18 +175,24 @@ class SpectrotemporalModel(PopulationModel):
 
 class SpectrotemporalFit(PopulationFit):
     
-    def __init__(self, model, data,
+    def __init__(self, model, data, source_times, target_times,
                  search_bounds, fit_bounds, tr_length,
                  voxel_index=None, auto_fit=True, verbose=True):
         
+        # assignment
         self.model = model
-        self.data = data
         self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
         self.tr_length = tr_length
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
+        self.target_times = target_times
+        self.source_times = source_times
+        
+        # rescale the time-series
+        f = interp1d(self.source_times, data, kind='cubic')
+        self.data = f(self.target_times)
         
         # just make sure that all data is inside the mask
         if self.auto_fit:
@@ -220,13 +218,14 @@ class SpectrotemporalFit(PopulationFit):
                         int(toc-tic),
                         self.fit_stats[2],
                         self.center_freq,
-                        self.bandwidth))
+                        self.sigma))
     
     @auto_attr
     def ballpark_estimate(self):
-        return utils.brute_force_search((self.model.stimulus.times,
+        return utils.brute_force_search((self.model.stimulus.spectrogram,
                                          self.model.stimulus.freqs,
-                                         self.model.stimulus.spectrogram,
+                                         self.model.stimulus.source_times,
+                                         self.target_times,
                                          self.model.stimulus.tr_length),
                                         self.search_bounds,
                                         self.fit_bounds,
@@ -236,63 +235,66 @@ class SpectrotemporalFit(PopulationFit):
                                         
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.f0, self.bw0),
-                                             (self.model.stimulus.times,
+        return utils.gradient_descent_search((self.f0, self.s0),
+                                             (self.model.stimulus.spectrogram,
                                               self.model.stimulus.freqs,
-                                              self.model.stimulus.spectrogram,
+                                              self.model.stimulus.source_times,
+                                              self.target_times,
                                               self.model.stimulus.tr_length),
                                              self.fit_bounds,
                                              self.data,
                                              utils.error_function,
                                              compute_model_ts_1D)
-                                       
+                                             
     @auto_attr
     def f0(self):
         return self.ballpark_estimate[0]
     
     @auto_attr
-    def bw0(self):
+    def s0(self):
         return self.ballpark_estimate[1]
     
-    @auto_attr
-    def beta0(self):
-        return self.ballpark_estimate[2]
-    
     # @auto_attr
-    # def hrf0(self):
+    # def beta0(self):
     #     return self.ballpark_estimate[2]
+    
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark_estimate[2]
     
     @auto_attr
     def center_freq(self):
         return self.estimate[0]
         
     @auto_attr
-    def bandwidth(self):
+    def sigma(self):
         return self.estimate[1]
     
-    @auto_attr
-    def beta(self):
-        return self.estimate[2]
-        
     # @auto_attr
-    # def hrf_delay(self):
+    # def beta(self):
     #     return self.estimate[2]
         
     @auto_attr
+    def hrf_delay(self):
+        return self.estimate[2]
+        
+    @auto_attr
     def prediction(self):
-        return compute_model_ts_1D(self.center_freq, self.bandwidth,
-                                   self.model.stimulus.times,
-                                   self.model.stimulus.freqs,
+        return compute_model_ts_1D(self.center_freq, self.sigma,
                                    self.model.stimulus.spectrogram,
+                                   self.model.stimulus.freqs,
+                                   self.model.stimulus.source_times,
+                                   self.target_times,
                                    self.model.stimulus.tr_length)
 
     @auto_attr
     def stim_timeseries(self):
-        return compute_model_ts_1D(self.center_freq, self.bandwidth,
-                                  self.model.stimulus.times,
-                                  self.model.stimulus.freqs,
-                                  self.model.stimulus.spectrogram,
-                                  self.model.stimulus.tr_length, False)
+        return compute_model_ts_1D(self.center_freq, self.sigma,
+                                   self.model.stimulus.spectrogram,
+                                   self.model.stimulus.freqs,
+                                   self.model.stimulus.source_times,
+                                   self.target_times,
+                                   self.model.stimulus.tr_length, False)
                                                                   
     @auto_attr
     def fit_stats(self):
@@ -304,6 +306,6 @@ class SpectrotemporalFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        return gaussian_1D(self.model.stimulus.freqs, self.center_freq, self.bandwidth)
+        return gaussian_1D(self.model.stimulus.freqs, self.center_freq, self.sigma)
         
                                     
