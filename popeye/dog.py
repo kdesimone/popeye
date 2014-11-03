@@ -4,19 +4,21 @@
 
 from __future__ import division, print_function, absolute_import
 import time
-import gc
 import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-import nibabel
+np.set_printoptions(suppress=True)
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
+from scipy.integrate import trapz
+
+import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_dog_timeseries, generate_og_timeseries, generate_og_receptive_field
+from popeye.spinach import generate_dog_timeseries, generate_og_timeseries, generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -104,7 +106,8 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma_center, sigma_surround, beta_center, beta_surround, hrf_delay,
+def compute_model_ts(x, y, sigma_center, sigma_surround,
+                     beta_center, beta_surround, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -155,42 +158,20 @@ def compute_model_ts(x, y, sigma_center, sigma_surround, beta_center, beta_surro
     """
     
     # limiting cases for a center-surround receptive field
-    if sigma_center >= sigma_surround:
+    if sigma_center > sigma_surround:
         return np.inf
     if beta_center <= beta_surround:
         return np.inf
     
-    
-    # METHOD 1
-    # time-series for the center and surround
-    stim_center, stim_surround = generate_dog_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center, sigma_surround)
-    
-    # scale them by betas
-    stim_center *= beta_center
-    stim_surround *= beta_surround
-    
-    # differnce them
-    stim_dog = stim_center - stim_surround
-    
-    # # METHOD 2
-    # # scale the RFs, combine, then extract ts
-    # rf_center = generate_og_receptive_field(deg_x, deg_y, x, y, sigma_center)
-    # rf_center /= rf_center.max()
-    # rf_center *= beta_center
-    # 
-    # rf_surround = generate_og_receptive_field(deg_x, deg_y, x, y, sigma_surround)
-    # rf_surround /= rf_surround.max()
-    # rf_surround *= beta_surround
-    # 
-    # rf_dog = rf_center - rf_surround
-    # stim_dog = np.sum(np.sum(stim_arr * rf_dog[:,:,np.newaxis],axis=0),axis=0)
-    
-    # generate the hrf
+    # calculate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
-    # convolve it with the stimulus timeseries
-    model = fftconvolve(stim_dog, hrf)[0:len(stim_dog)]
+    stim_center = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
+    stim_surround = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
+    stim = stim_center*beta_center + stim_surround*-beta_surround
     
+    model = fftconvolve(stim, hrf)[0:len(stim)]
+        
     return model
 
 def parallel_fit(args):
@@ -220,19 +201,23 @@ def parallel_fit(args):
     
     # unpackage the arguments
     og_fit = args[0]
-    fit_bounds = args[1]
+    bounds = args[1]
     auto_fit = args[2]
     verbose = args[3]
     uncorrected_rval = args[4]
     
     
     # fit the data
-    fit = DifferenceOfGaussiansFit(og_fit,
-                                   fit_bounds,
-                                   auto_fit,
-                                   verbose,
-                                   uncorrected_rval)
-    return fit
+    try:
+        fit = DifferenceOfGaussiansFit(og_fit,
+                                       bounds,
+                                       auto_fit,
+                                       verbose,
+                                       uncorrected_rval)
+        return fit
+    except:
+        print(og_fit.voxel_index)
+        return None
 
 
 class DifferenceOfGaussiansModel(PopulationModel):
@@ -272,7 +257,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, og_fit, fit_bounds, auto_fit=True, verbose=True, uncorrected_rval=0.0):
+    def __init__(self, og_fit, bounds, auto_fit=True, verbose=True, uncorrected_rval=0.0):
         
         
         """
@@ -287,10 +272,10 @@ class DifferenceOfGaussiansFit(PopulationFit):
             case.  The `GaussianFit` is used as a seed for the `DifferenceOfGaussiansFit`
             search.
         
-        fit_bounds : tuple
+        bounds : tuple
             A tuple containing the upper and lower bounds for each parameter
             in `parameters`.  If a parameter is not bounded, simply use
-            `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
+            `None`.  For example, `bounds=((0,None),(-10,10),)` would 
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
             
@@ -312,25 +297,26 @@ class DifferenceOfGaussiansFit(PopulationFit):
         
         PopulationFit.__init__(self, og_fit.model, og_fit.data)
         
+        self.bounds = bounds
         self.og_fit = og_fit
-        self.fit_bounds = fit_bounds
-        self.tr_length = self.og_fit.tr_length
         self.voxel_index = self.og_fit.voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
         self.uncorrected_rval = uncorrected_rval
+        self.tr_length = og_fit.tr_length
         
         if self.auto_fit:
             
             tic = time.clock()
-            self.og_fit.estimate
+            self.og_fit.estimate;
+            self.og_fit.fit_stats;
             
             if self.og_fit.fit_stats[2] > self.uncorrected_rval:
-             
+                
                 self.estimate;
                 self.fit_stats;
                 toc = time.clock()
-            
+                
                 msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f    DoG-RVAL=%.02f"
                         %(self.voxel_index[0],
                           self.voxel_index[1],
@@ -350,16 +336,18 @@ class DifferenceOfGaussiansFit(PopulationFit):
             
             if self.verbose:
                 print(msg)
-                
+    
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.sigma_center0, self.sigma_surround0,
-                                              self.beta_center0, self.beta_surround0, self.hrf0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length),
-                                             self.fit_bounds,
+        return utils.gradient_descent_search((self.x0, self.y0,
+                                              self.sigma_center0, self.sigma_surround0,
+                                              self.beta_center0, self.beta_surround0,
+                                              self.hrf0),
+                                              (self.model.stimulus.deg_x,
+                                               self.model.stimulus.deg_y,
+                                               self.model.stimulus.stim_arr,
+                                               self.tr_length),
+                                             self.bounds,
                                              self.data,
                                              utils.error_function,
                                              compute_model_ts)
@@ -386,7 +374,11 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def beta_surround0(self):
-        return self.og_fit.estimate[3]/2
+        return self.og_fit.estimate[3]*0.5
+    
+    # @auto_attr
+    # def baseline0(self):
+    #     return 0
     
     @auto_attr
     def hrf0(self):
@@ -415,19 +407,25 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def beta_surround(self):
         return self.estimate[5]
-            
+         
+    # @auto_attr
+    # def baseline(self):
+    #     return self.estimate[6]
+        
     @auto_attr
     def hrf_delay(self):
         return self.estimate[6]
-
+    
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma_center, self.sigma_surround, self.beta_center, self.beta_surround, self.hrf_delay,
+        return compute_model_ts(self.x, self.y,
+                                self.sigma_center, self.sigma_surround,
+                                self.beta_center, self.beta_surround, 
+                                self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
-    
     @auto_attr
     def fit_stats(self):
         return linregress(self.data, self.prediction)
@@ -437,17 +435,5 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return np.sum((self.data - self.prediction)**2)
     
     @auto_attr
-    def receptive_field(self):
-        rf_center = generate_og_receptive_field(self.model.stimulus.deg_x,
-                                                self.model.stimulus.deg_y,
-                                                self.x, self.y, self.sigma_center)
-        
-        rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x,
-                                                  self.model.stimulus.deg_y,
-                                                  self.x, self.y, self.sigma_surround)
-        
-        return rf_center*self.beta_center - rf_surround*self.beta_surround
-        
-    @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return utils.double_gamma_hrf(self.hrf_delay, self.og_fit.tr_length)
