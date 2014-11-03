@@ -125,25 +125,25 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     for k in range(folds):
         
         # Select the timepoints for this fold
-        fold_mask = np.ones(data.shape[-1], dtype=bool)
-        fold_idx = order[k*n_in_fold:(k+1)*n_in_fold]
-        fold_mask[fold_idx] = False
+        fold_mask = np.zeros(data.shape[-1], dtype=bool)
+        fold_mask[0:len(fold_mask)/folds] = 1
+        fold_mask = np.random.permutation(fold_mask)
+        print(fold_mask)
         
         # Grab the left-in data and concatenate the runs
-        left_in_data = np.reshape(data[...,fold_mask], data.shape[0]*2, order='F')
+        left_in_data = np.reshape(data[...,fold_mask], data.shape[0]*data.shape[1]/folds, order='F')
         
         # Grab the left-out data and concatenate the runs
-        left_out_data = np.reshape(data[...,~fold_mask], data.shape[0]*2, order='F')
+        left_out_data = np.reshape(data[...,~fold_mask], data.shape[0]*data.shape[1]/folds, order='F')
         
         # If there is only 1 model specified, repeat it over the concatenated functionals
         if len(models) == 1:
             
             # Grab the stimulus instance from one of the models
-            stimulus = deepcopy(models[0].stimulus)
             
             # Tile it according to the number of runs ...
-            stimulus.stim_arr = np.tile(stimulus.stim_arr.copy(), folds)
-            stimulus.stim_arr_coarse = np.tile(stimulus.stim_arr_coarse.copy(), folds)
+            model.stimulus.stim_arr = np.tile(model.stimulus.stim_arr, data.shape[1]/folds)
+            model.stimulus.stim_arr_coarse = np.tile(model.stimulus.stim_arr_coarse, data.shape[1]/folds)
             
             # Create a new Model instance
             model = models[0].__class__(stimulus)
