@@ -1,3 +1,58 @@
+def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from pylab import find
+    
+    ecc = np.array(ecc)
+    sigma = np.array(sigma)
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+    
+    # fit a line
+    p = np.polyfit(ecc,sigma,1)
+    [y1,y2] = np.polyval(p,[0,14])
+    
+    mus = []
+    errs = []
+    
+    # bin and plot the errors
+    for e in np.arange(0.5,14.5,1):
+        b0 = e-0.5
+        b1 = e+0.5
+        idx0 = find(ecc>=b0)
+        idx1 = find(ecc<=b1)
+        idx = np.intersect1d(idx0,idx1)
+        mu = np.mean(sigma[idx])
+        err = np.std(sigma[idx])/np.sqrt(len(idx))
+        mus.append(mu)
+        errs.append(err)
+    
+    xs = np.arange(0,len(mus))
+    ys = np.linspace(y1,y2,len(mus))
+    ax.plot(xs, ys, c = '%s' %(plot_color), lw=2)
+    ax.fill_between(xs, ys+errs, ys-errs, color='%s' %(plot_color), alpha=0.5)
+    
+    # beautify
+    ax.set_xlim((0,13))
+    ax.set_ylim([-1,5])
+    ax.set_xticks(np.arange(0,14))
+    ax.set_yticks(np.arange(0,6))
+    ax.set_xticklabels(np.arange(0,14),fontsize='18')
+    ax.set_yticklabels(np.arange(0,6),fontsize='18')
+    ax.set_ylabel('pRF Size (deg)',size='18')
+    ax.set_xlabel('Eccentricity (deg)',size='18')
+    ax.legend(fancybox=True,loc=2)
+    
+    # show and return the fig and ax handles
+    plt.show()
+    return fig,ax
+
+
 def eccentricity_sigma_scatter(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
