@@ -104,7 +104,7 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
         
         resampled_arr[:,:,tr] = f
     
-    return resampled_arr.astype('short')
+    return resampled_arr
 
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     
@@ -329,5 +329,5 @@ class VisualStimulus(StimulusModel):
         self.deg_y = utils.generate_shared_array(deg_y, ctypes.c_double)
         self.deg_x_coarse = utils.generate_shared_array(deg_x_coarse, ctypes.c_double)
         self.deg_y_coarse = utils.generate_shared_array(deg_y_coarse, ctypes.c_double)
-        self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, ctypes.c_short)
+        self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, dtype)
         
