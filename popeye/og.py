@@ -158,7 +158,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     # convolve it with the stimulus
     model = fftconvolve(stim, hrf)[0:len(stim)]
     
-    return model*beta
+    return model
 
 def parallel_fit(args):
     
