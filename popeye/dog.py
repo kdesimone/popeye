@@ -204,20 +204,13 @@ def parallel_fit(args):
     bounds = args[1]
     auto_fit = args[2]
     verbose = args[3]
-    uncorrected_rval = args[4]
-    
     
     # fit the data
-    try:
-        fit = DifferenceOfGaussiansFit(og_fit,
-                                       bounds,
-                                       auto_fit,
-                                       verbose,
-                                       uncorrected_rval)
-        return fit
-    except:
-        print(og_fit.voxel_index)
-        return None
+    fit = DifferenceOfGaussiansFit(og_fit,
+                                   bounds,
+                                   auto_fit,
+                                   verbose)
+    return fit
 
 
 class DifferenceOfGaussiansModel(PopulationModel):
@@ -257,7 +250,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, og_fit, bounds, auto_fit=True, verbose=True, uncorrected_rval=0.0):
+    def __init__(self, og_fit, bounds, auto_fit=True, verbose=True):
         
         
         """
@@ -302,37 +295,28 @@ class DifferenceOfGaussiansFit(PopulationFit):
         self.voxel_index = self.og_fit.voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
-        self.uncorrected_rval = uncorrected_rval
         self.tr_length = og_fit.tr_length
         
         if self.auto_fit:
             
             tic = time.clock()
+            
+            # run the OG
+            self.og_fit.ballpark;
             self.og_fit.estimate;
             self.og_fit.fit_stats;
             
-            if self.og_fit.fit_stats[2] > self.uncorrected_rval:
+            # run the DoG
+            self.estimate;
+            toc = time.clock()
                 
-                self.estimate;
-                self.fit_stats;
-                toc = time.clock()
-                
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f    DoG-RVAL=%.02f"
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.og_fit.fit_stats[2],
-                          self.fit_stats[2]))
-            
-            else:
-                toc = time.clock()
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f"
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.og_fit.fit_stats[2]))
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f    DoG-RVAL=%.02f"
+                    %(self.voxel_index[0],
+                      self.voxel_index[1],
+                      self.voxel_index[2],
+                      toc-tic,
+                      self.og_fit.fit_stats[2],
+                      self.fit_stats[2]))
             
             if self.verbose:
                 print(msg)
@@ -376,10 +360,6 @@ class DifferenceOfGaussiansFit(PopulationFit):
     def beta_surround0(self):
         return self.og_fit.estimate[3]*0.5
     
-    # @auto_attr
-    # def baseline0(self):
-    #     return 0
-    
     @auto_attr
     def hrf0(self):
         return self.og_fit.estimate[4]
@@ -407,10 +387,6 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def beta_surround(self):
         return self.estimate[5]
-         
-    # @auto_attr
-    # def baseline(self):
-    #     return self.estimate[6]
         
     @auto_attr
     def hrf_delay(self):

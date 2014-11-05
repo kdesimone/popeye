@@ -188,19 +188,18 @@ def parallel_fit(args):
     # unpackage the arguments
     model = args[0]
     data = args[1]
-    search_bounds = args[2]
-    fit_bounds = args[3]
+    grids = args[2]
+    bounds = args[3]
     tr_length = args[4]
     voxel_index = args[5]
     auto_fit = args[6]
     verbose = args[7]
     
-    
     # fit the data
     fit = GaussianFit(model,
                       data,
-                      search_bounds,
-                      fit_bounds,
+                      grids,
+                      bounds,
                       tr_length,
                       voxel_index,
                       auto_fit,
@@ -245,8 +244,8 @@ class GaussianFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, search_bounds, fit_bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True, uncorrected_rval=0.0):
+    def __init__(self, model, data, grids, bounds, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
         
         
         """
@@ -305,62 +304,44 @@ class GaussianFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data)
         
-        self.search_bounds = search_bounds
-        self.fit_bounds = fit_bounds
+        self.grids = grids
+        self.bounds = bounds
         self.tr_length = tr_length
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
-        self.uncorrected_rval = uncorrected_rval
         
         if self.auto_fit:
             
-            
             tic = time.clock()
-            self.ballpark_estimate;
+            self.ballpark;
+            self.estimate;
+            self.fit_stats;
+            self.rss;
+            toc = time.clock()
             
-            if self.coarse_fit_stats[2] > self.uncorrected_rval:
-            
-                self.estimate;
-                self.fit_stats;
-                self.rss;
-                toc = time.clock()
-                
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.fit_stats[2]))
-            
-                
-            else:
-                toc = time.clock()
-                
-                msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   COARSE_RVAL=%.02f" 
-                        %(self.voxel_index[0],
-                          self.voxel_index[1],
-                          self.voxel_index[2],
-                          toc-tic,
-                          self.coarse_fit_stats[2]))
-            
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
+                    %(self.voxel_index[0],
+                      self.voxel_index[1],
+                      self.voxel_index[2],
+                      toc-tic,
+                      self.fit_stats[2]))
+                          
             if self.verbose:
-                print(msg)              
-                            
+                print(msg)
         
     @auto_attr
-    def ballpark_estimate(self):
+    def ballpark(self):
         return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
                                          self.model.stimulus.deg_y_coarse,
                                          self.model.stimulus.stim_arr_coarse,
                                          self.tr_length),
-                                        self.search_bounds,
-                                        self.fit_bounds,
+                                        self.grids,
+                                        self.bounds,
                                         self.data,
                                         utils.error_function,
                                         compute_model_ts)
-                                  
-                                  
+
     @auto_attr
     def estimate(self):
         return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0, self.hrf0),
@@ -368,31 +349,30 @@ class GaussianFit(PopulationFit):
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
                                               self.tr_length),
-                                             self.fit_bounds,
+                                             self.bounds,
                                              self.data,
                                              utils.error_function,
                                              compute_model_ts)
  
-                                       
     @auto_attr
     def x0(self):
-        return self.ballpark_estimate[0]
+        return self.ballpark[0]
         
     @auto_attr
     def y0(self):
-        return self.ballpark_estimate[1]
+        return self.ballpark[1]
         
     @auto_attr
     def s0(self):
-        return self.ballpark_estimate[2]
+        return self.ballpark[2]
     
     @auto_attr
     def beta0(self):
-        return self.ballpark_estimate[3]
+        return self.ballpark[3]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark_estimate[4]
+        return self.ballpark[4]
         
     @auto_attr
     def x(self):
@@ -415,24 +395,12 @@ class GaussianFit(PopulationFit):
         return self.estimate[4]
     
     @auto_attr
-    def coarse_prediction(self):
-        return compute_model_ts(self.x0, self.y0, self.s0, self.beta0, self.hrf0,
-                                self.model.stimulus.deg_x_coarse,
-                                self.model.stimulus.deg_y_coarse,
-                                self.model.stimulus.stim_arr_coarse,
-                                self.tr_length)
-    
-    @auto_attr
     def prediction(self):
         return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
-    
-    @auto_attr
-    def coarse_fit_stats(self):
-        return linregress(self.data, self.coarse_prediction)
     
     @auto_attr
     def fit_stats(self):
@@ -446,9 +414,7 @@ class GaussianFit(PopulationFit):
     def receptive_field(self):
         rf = generate_og_receptive_field(self.model.stimulus.deg_x,
                                          self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma)
-        
-        rf *= self.beta
+                                         self.x, self.y, self.sigma, self.beta)
         
         return rf
     
