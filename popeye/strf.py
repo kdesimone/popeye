@@ -113,13 +113,14 @@ def gaussian_1D(freqs, center_freq, sd, integrator=trapz):
     
     return gaussian
 
-def compute_model_ts_1D(center_freq, sd,
+def compute_model_ts_1D(center_freq, sigma,
                         spectrogram, freqs,
                         source_times, target_times,
-                        tr_length, convolve=True):
+                        fps, convolve=True):
     
     # generate stimulus time-series
-    stim = generate_strf_timeseries(freqs, spectrogram, center_freq, sd)
+    stim = generate_strf_timeseries(freqs, spectrogram, center_freq, sigma)
+    stim /= stim.max()
     
     # recast the stimulus into a time-series that i can decimate
     f = interp1d(source_times,stim)
@@ -129,7 +130,7 @@ def compute_model_ts_1D(center_freq, sd,
     hrf_delay = 0
     
     # convolve it with the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length, np.sum(target_times<=1))
+    hrf = utils.double_gamma_hrf(hrf_delay, 1.0, fps)
     model = fftconvolve(new_stim, hrf)[0:len(new_stim)] 
     
     # for debugging
@@ -148,14 +149,14 @@ def parallel_fit(args):
     target_times = args[3]
     grids = args[4]
     bounds = args[5]
-    tr_length = args[6]
+    fps = args[6]
     voxel_index = args[7]
     auto_fit = args[8]
     verbose = args[9]
     
     # fit the data
     fit = SpectrotemporalFit(model, data, source_times, target_times,
-                             grids, bounds, tr_length, voxel_index,
+                             grids, bounds, fps, voxel_index,
                              auto_fit, verbose)
     
     return fit
@@ -176,14 +177,14 @@ class SpectrotemporalModel(PopulationModel):
 class SpectrotemporalFit(PopulationFit):
     
     def __init__(self, model, data, source_times, target_times,
-                 search_bounds, fit_bounds, tr_length,
+                 search_bounds, fit_bounds, fps,
                  voxel_index=None, auto_fit=True, verbose=True):
         
         # assignment
         self.model = model
         self.search_bounds = search_bounds
         self.fit_bounds = fit_bounds
-        self.tr_length = tr_length
+        self.fps = fps
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
@@ -226,7 +227,7 @@ class SpectrotemporalFit(PopulationFit):
                                          self.model.stimulus.freqs,
                                          self.model.stimulus.source_times,
                                          self.target_times,
-                                         self.model.stimulus.tr_length),
+                                         self.fps),
                                         self.search_bounds,
                                         self.fit_bounds,
                                         self.data,
@@ -240,7 +241,7 @@ class SpectrotemporalFit(PopulationFit):
                                               self.model.stimulus.freqs,
                                               self.model.stimulus.source_times,
                                               self.target_times,
-                                              self.model.stimulus.tr_length),
+                                              self.fps),
                                              self.fit_bounds,
                                              self.data,
                                              utils.error_function,
@@ -285,7 +286,7 @@ class SpectrotemporalFit(PopulationFit):
                                    self.model.stimulus.freqs,
                                    self.model.stimulus.source_times,
                                    self.target_times,
-                                   self.model.stimulus.tr_length)
+                                   self.fps)
 
     @auto_attr
     def stim_timeseries(self):
@@ -294,7 +295,7 @@ class SpectrotemporalFit(PopulationFit):
                                    self.model.stimulus.freqs,
                                    self.model.stimulus.source_times,
                                    self.target_times,
-                                   self.model.stimulus.tr_length, False)
+                                   self.fps, False)
                                                                   
     @auto_attr
     def fit_stats(self):

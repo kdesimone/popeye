@@ -304,11 +304,7 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
                 
                 # filter spectrogram
                 stim[j] += spectrogram[i,j]*gauss1D
-                sum_gauss += gauss1D
-                    
-    
-    stim /= sum_gauss
-    
+                
     return stim
     
 @cython.boundscheck(False)
