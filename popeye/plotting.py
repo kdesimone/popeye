@@ -1,3 +1,55 @@
+from __future__ import division
+
+def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name, fig=None, ax=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from pylab import find
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='polar')
+    else:
+        ax = fig.add_subplot(111, projection='polar')
+    
+    # compute the polar angle
+    polar_angle = np.mod(np.arctan2(y,x),2*np.pi)
+    
+    # calculate the volume of ROI at a given polar angle sector ...
+    n,bins = np.histogram(polar_angle,bins=np.arange(0,(2*np.pi)+2*np.pi/num_radians,2*np.pi/num_radians))
+    mu = (n*voxel_dim**3)/(len(polar_angle)*voxel_dim**3)
+    sme = mu / np.sqrt(n)
+    bincenters = list(0.5*(bins[1:]+bins[:-1]))
+    
+    # wrap it to make it circular & then recast back to ndarray
+    mu = np.append(mu, mu[0])
+    sme = np.append(sme, sme[0])
+    bincenters = np.append(bincenters, bincenters[0])
+    
+    label_name += ',n=%d' %(len(polar_angle))
+    ax.plot(bincenters,mu,c=plot_color,lw=2, label=label_name)
+    ax.fill_between(bincenters,mu-sme,mu+sme,color=plot_color,alpha=0.5)
+    
+    
+    ax.set_rlim(0,rlim)
+    
+    # make labels
+    labels = []
+    for label_val in np.arange(5,rlim*100,5):
+        labels.append('%s%%' %(int(label_val)))
+    
+    
+    ax.set_rgrids(np.arange(0.05,rlim,0.05),labels,angle=90,fontsize=24)
+    ax.set_thetagrids(np.arange(0,360,360/8),[],fontsize=24)
+    ax.legend(fancybox=True,loc=4)
+    
+    # show and return the fig and ax handles
+    plt.show()
+    
+    # return handles
+    return fig,ax
+
+
 def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
@@ -53,13 +105,12 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     return fig,ax
 
 
-def eccentricity_sigma_scatter(ecc,sigma,plot_color,label_name,fig=None,ax=None):
+def eccentricity_sigma_scatter(x,y,sigma,xlim,ylim,plot_color,label_name,fig=None,ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
     from pylab import find
     
-    ecc = np.array(ecc)
-    sigma = np.array(sigma)
+    ecc = np.sqrt(x**2+y**2)
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -70,11 +121,12 @@ def eccentricity_sigma_scatter(ecc,sigma,plot_color,label_name,fig=None,ax=None)
     
     # fit a line
     p = np.polyfit(ecc,sigma,1)
-    [y1,y2] = np.polyval(p,[0,13])
-    ax.plot([0,13],[y1,y2],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
+    [y1,y2] = np.polyval(p,xlim)
+    label_name += ',n=%d' %(len(ecc))
+    ax.plot([0,0],[0,0],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
     
     # bin and plot the errors
-    for e in np.arange(0.5,13.5,1):
+    for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
         b0 = e-0.5
         b1 = e+0.5
         idx0 = find(ecc>=b0)
@@ -86,12 +138,12 @@ def eccentricity_sigma_scatter(ecc,sigma,plot_color,label_name,fig=None,ax=None)
         ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
     
     # beautify
-    ax.set_xlim((0,13))
-    ax.set_ylim([-1,5])
-    ax.set_xticks(np.arange(0,14))
-    ax.set_yticks(np.arange(0,6))
-    ax.set_xticklabels(np.arange(0,14),fontsize='18')
-    ax.set_yticklabels(np.arange(0,6),fontsize='18')
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
+    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
+    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
+    ax.set_yticklabels(np.arange(ylim[0],ylim[1]+1),fontsize='18')
     ax.set_ylabel('pRF Size (deg)',size='18')
     ax.set_xlabel('Eccentricity (deg)',size='18')
     ax.legend(fancybox=True,loc=2)
