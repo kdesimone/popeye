@@ -24,7 +24,7 @@ def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
     ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
     plt.xticks(spacing,fontsize=18)
     plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
-    ax.bar(bincenters,mu,color=plot_color,width=0.5)
+    ax.bar(bincenters,mu,color=plot_color,width=0.33)
     plt.xlim(spacing[0]+0.15,spacing[-1]+0.25)
     plt.ylim(0,1)
     
