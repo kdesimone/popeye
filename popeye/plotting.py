@@ -1,5 +1,91 @@
 from __future__ import division
 
+def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from pylab import find
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+    
+    spacing = np.linspace(xlim[0],xlim[1],xlim[2],endpoint=False)
+    
+    n,bins = np.histogram(beta,bins=spacing)
+    bincenters = list(0.5*(bins[1:]+bins[:-1]))
+    mu = (n*voxel_dim**3)/(len(beta)*voxel_dim**3)
+    sme = mu / np.sqrt(n)
+    cumsum = np.cumsum(mu)
+    
+    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name)
+    ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
+    plt.xticks(spacing,fontsize=18)
+    plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
+    ax.bar(bincenters,mu,color=plot_color,width=0.5)
+    plt.xlim(spacing[0]+0.15,spacing[-1]+0.25)
+    plt.ylim(0,1)
+    
+    return fig, ax
+
+
+def eccentricity_hist(x, y, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from pylab import find
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+        
+    ecc = np.sqrt(x**2+y**2)
+    n,bins = np.histogram(ecc,bins=np.arange(xlim[0],xlim[1]))
+    bincenters = list(0.5*(bins[1:]+bins[:-1]))
+    mu = (n*voxel_dim**3)/(len(ecc)*voxel_dim**3)
+    sme = mu / np.sqrt(n)
+    cumsum = np.cumsum(mu)
+    
+    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name)
+    ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
+    plt.xticks(np.arange(xlim[0],xlim[1]+1,5),fontsize=18)
+    plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
+    ax.bar(bincenters,mu,color=plot_color)
+    plt.xlim(0.5,xlim[1]+0.5)
+    plt.ylim(0,1)
+    
+    return fig, ax
+
+def hrf_delay_hist(hrf_delay, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from pylab import find
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+        
+    n,bins = np.histogram(hrf_delay,bins=np.arange(-6,6,0.5))
+    bincenters = list(0.5*(bins[1:]+bins[:-1]))
+    mu = (n*voxel_dim**3)/(len(hrf_delay)*voxel_dim**3)
+    sme = mu / np.sqrt(n)
+    cumsum = np.cumsum(mu)
+    
+    ax.bar(bincenters,mu,color=plot_color,width=0.33)
+    plt.xticks(np.arange(-5,6,5),fontsize=28)
+    plt.yticks(np.arange(.1,.31,.1),['10%','20%','30%'],fontsize=28)
+    plt.xlim(-5,5.75)
+    plt.ylim(0,0.3)
+    
+    return fig, ax
+
 def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name, fig=None, ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
