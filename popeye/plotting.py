@@ -105,7 +105,8 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     return fig,ax
 
 
-def eccentricity_sigma_scatter(x,y,sigma,xlim,ylim,plot_color,label_name,fig=None,ax=None):
+def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, 
+                              plot_color, label_name, fig=None, ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
     from pylab import find
@@ -132,10 +133,11 @@ def eccentricity_sigma_scatter(x,y,sigma,xlim,ylim,plot_color,label_name,fig=Non
         idx0 = find(ecc>=b0)
         idx1 = find(ecc<=b1)
         idx = np.intersect1d(idx0,idx1)
-        mu = np.mean(sigma[idx])
-        err = np.std(sigma[idx])/np.sqrt(len(idx))
-        ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
-        ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
+        if len(idx) > min_n:
+            mu = np.mean(sigma[idx])
+            err = np.std(sigma[idx])/np.sqrt(len(idx))
+            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
+            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
     
     # beautify
     ax.set_xlim(xlim)
