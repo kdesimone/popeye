@@ -228,7 +228,7 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
     return estimate
 
 # generic error function
-def error_function(parameters, args, bounds, data, objective_function, debug=True):
+def error_function(parameters, args, bounds, data, objective_function, debug=False):
     
     """
     A generic error function with bounding.
