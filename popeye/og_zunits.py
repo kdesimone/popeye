@@ -61,7 +61,7 @@ def recast_estimation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(7)
+    dims.append(6)
     
     # initialize the statmaps
     polar = np.zeros(dims)
