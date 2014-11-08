@@ -80,7 +80,7 @@ def recast_estimation_results(output, grid_parent):
                                       fit.rss,
                                       fit.fit_stats[2])
                                  
-            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi)
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi),
                                       np.sqrt(fit.x**2+fit.y**2),
                                       fit.sigma,
                                       fit.beta,
