@@ -244,7 +244,6 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*gauss1D
                     
-    stim /= sum_gauss
     return stim
 
 @cython.boundscheck(False)
