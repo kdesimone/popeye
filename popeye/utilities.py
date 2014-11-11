@@ -14,6 +14,7 @@ from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell
 from scipy.integrate import romb, trapz
+import sharedmem
 
 def generate_shared_array(unshared_arr,dtype):
     
@@ -42,11 +43,8 @@ def generate_shared_array(unshared_arr,dtype):
         An array that is read accessible from multiple processes/threads. 
     """
     
-    shared_array_base = Array(dtype,np.prod(np.shape(unshared_arr)))
-    shared_arr = np.ctypeslib.as_array(shared_array_base.get_obj())
-    shared_arr = np.reshape(shared_arr,np.shape(unshared_arr))
+    shared_arr = sharedmem.empty(unshared_arr.shape, dtype=dtype)
     shared_arr[:] = unshared_arr[:]
-
     return shared_arr
 
 # normalize to a specific range
