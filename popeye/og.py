@@ -80,8 +80,8 @@ def recast_estimation_results(output, grid_parent):
                                       fit.rss,
                                       fit.fit_stats[2])
                                  
-            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi),
-                                      np.sqrt(fit.x**2+fit.y**2),
+            polar[fit.voxel_index] = (fit.theta,
+                                      fit.rho,
                                       fit.sigma,
                                       fit.beta,
                                       fit.hrf_delay,
@@ -148,15 +148,16 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     
     # otherwise generate a prediction
     stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
-    
-    # scale it
-    stim *= beta
+    stim /= sigma**2 * 2 * np.pi * beta
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
     model = fftconvolve(stim, hrf)[0:len(stim)]
+    
+    # scale it
+    model *= beta
     
     return model
 
@@ -320,12 +321,16 @@ class GaussianFit(PopulationFit):
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
                       toc-tic,
-                      self.fit_stats[2]))
+                      self.fit_stats[2],
+                      self.theta,
+                      self.rho,
+                      self.sigma,
+                      self.beta))
                           
             if self.verbose:
                 print(msg)
@@ -393,6 +398,14 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[4]
+    
+    @auto_attr
+    def rho(self):
+        return np.sqrt(self.x**2+self.y**2)
+    
+    @auto_attr
+    def theta(self):
+        return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
     def prediction(self):

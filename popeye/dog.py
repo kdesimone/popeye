@@ -83,7 +83,7 @@ def recast_estimation_results(output, grid_parent):
                                       fit.hrf_delay,
                                       fit.fit_stats[2])
                                  
-            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.x,fit.y),2*np.pi),
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi),
                                      np.sqrt(fit.x**2+fit.y**2),
                                      fit.sigma_center,
                                      fit.sigma_surround,
@@ -166,12 +166,21 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
     # calculate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
-    stim_center = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
-    stim_surround = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
-    stim = stim_center*beta_center + stim_surround*-beta_surround
+    # center
+    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
+    stim /= sigma_center**2 * 2 * np.pi * beta_center
+    model_center = fftconvolve(stim, hrf)[0:len(stim)]
+    model_center *= beta_center
     
-    model = fftconvolve(stim, hrf)[0:len(stim)]
-        
+    # surround
+    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
+    stim /= sigma_surround**2 * 2 * np.pi * beta_surround
+    model_surround = fftconvolve(stim, hrf)[0:len(stim)]
+    model_surround *= beta_surround
+    
+    # dog
+    model = model_center + model_surround
+    
     return model
 
 def parallel_fit(args):
@@ -200,14 +209,22 @@ def parallel_fit(args):
     
     
     # unpackage the arguments
-    og_fit = args[0]
-    bounds = args[1]
-    auto_fit = args[2]
-    verbose = args[3]
+    model = args[0]
+    data = args[1]
+    grids = args[2]
+    bounds = args[3]
+    tr_length = args[4]
+    voxel_index = args[5]
+    auto_fit = args[6]
+    verbose = args[7]
     
     # fit the data
-    fit = DifferenceOfGaussiansFit(og_fit,
+    fit = DifferenceOfGaussiansFit(model,
+                                   data,
+                                   grids,
                                    bounds,
+                                   tr_length,
+                                   voxel_index,
                                    auto_fit,
                                    verbose)
     return fit
@@ -250,8 +267,8 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, og_fit, bounds, auto_fit=True, verbose=True):
-        
+    def __init__(self, model, data, grids, bounds, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
         
         """
         A Gaussian population receptive field model [1]_.
@@ -288,38 +305,52 @@ class DifferenceOfGaussiansFit(PopulationFit):
         
         """
         
-        PopulationFit.__init__(self, og_fit.model, og_fit.data)
         
+        PopulationFit.__init__(self, model, data)
+        
+        self.grids = grids
         self.bounds = bounds
-        self.og_fit = og_fit
-        self.voxel_index = self.og_fit.voxel_index
+        self.tr_length = tr_length
+        self.voxel_index = voxel_index
         self.auto_fit = auto_fit
         self.verbose = verbose
-        self.tr_length = og_fit.tr_length
         
         if self.auto_fit:
             
-            tic = time.clock()
-            
             # run the OG
-            self.og_fit.ballpark;
-            self.og_fit.estimate;
-            self.og_fit.fit_stats;
-            
-            # run the DoG
+            tic = time.clock()
+            self.ballpark;
             self.estimate;
+            self.fit_stats;
             toc = time.clock()
                 
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OG-RVAL=%.02f    DoG-RVAL=%.02f"
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   BETA_1=%.04f   BETA_%.04f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
                       toc-tic,
-                      self.og_fit.fit_stats[2],
-                      self.fit_stats[2]))
+                      self.fit_stats[2],
+                      self.theta,
+                      self.rho,
+                      self.sigma_center,
+                      self.sigma_surround,
+                      self.beta_center,
+                      self.beta_surround))
             
             if self.verbose:
                 print(msg)
+    
+    @auto_attr
+    def ballpark(self):
+        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
+                                         self.model.stimulus.deg_y_coarse,
+                                         self.model.stimulus.stim_arr_coarse,
+                                         self.tr_length),
+                                        self.grids,
+                                        self.bounds,
+                                        self.data,
+                                        utils.error_function,
+                                        compute_model_ts)
     
     @auto_attr
     def estimate(self):
@@ -338,31 +369,31 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                              
     @auto_attr
     def x0(self):
-        return self.og_fit.estimate[0]
+        return self.ballpark[0]
         
     @auto_attr
     def y0(self):
-        return self.og_fit.estimate[1]
+        return self.ballpark[1]
     
     @auto_attr
     def sigma_center0(self):
-        return self.og_fit.estimate[2]
+        return self.ballpark[2]
     
     @auto_attr
     def sigma_surround0(self):
-        return self.og_fit.estimate[2]*2
+        return self.ballpark[3]
     
     @auto_attr
     def beta_center0(self):
-        return self.og_fit.estimate[3]
+        return self.ballpark[4]
     
     @auto_attr
     def beta_surround0(self):
-        return self.og_fit.estimate[3]*0.5
+        return self.ballpark[5]
     
     @auto_attr
     def hrf0(self):
-        return self.og_fit.estimate[4]
+        return self.ballpark[6]
         
     @auto_attr
     def x(self):
@@ -391,6 +422,14 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[6]
+    
+    @auto_attr
+    def rho(self):
+        return np.sqrt(self.x**2+self.y**2)
+    
+    @auto_attr
+    def theta(self):
+        return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
     def prediction(self):
