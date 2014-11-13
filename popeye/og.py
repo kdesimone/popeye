@@ -148,7 +148,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     
     # otherwise generate a prediction
     stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
-    stim /= sigma**2 * 2 * np.pi * beta
+    stim /= sigma**2 * 2 * pi
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
