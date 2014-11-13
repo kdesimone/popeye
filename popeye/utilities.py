@@ -218,7 +218,7 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
         brute(error_function,
               args=(args, fit_bounds, data, objective_function),
               ranges=search_bounds,
-              Ns=4,
+              Ns=5,
               finish=None,
               full_output=True,
               disp=False)
