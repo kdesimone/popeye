@@ -4,19 +4,21 @@
 
 from __future__ import division, print_function, absolute_import
 import time
-import gc
 import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
+np.set_printoptions(suppress=True)
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
+from scipy.integrate import trapz
+
 import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
+from popeye.spinach import generate_dog_timeseries, generate_og_timeseries, generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -61,7 +63,7 @@ def recast_estimation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(7)
+    dims.append(8)
     
     # initialize the statmaps
     polar = np.zeros(dims)
@@ -74,19 +76,21 @@ def recast_estimation_results(output, grid_parent):
         
             cartes[fit.voxel_index] = (fit.x, 
                                       fit.y,
-                                      fit.sigma,
-                                      fit.beta,
+                                      fit.sigma_center,
+                                      fit.sigma_surround,
+                                      fit.beta_center,
+                                      fit.beta_surround,
                                       fit.hrf_delay,
-                                      fit.rss,
                                       fit.fit_stats[2])
                                  
-            polar[fit.voxel_index] = (fit.theta,
-                                      fit.rho,
-                                      fit.sigma,
-                                      fit.beta,
-                                      fit.hrf_delay,
-                                      fit.rss,
-                                      fit.fit_stats[2])
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi),
+                                     np.sqrt(fit.x**2+fit.y**2),
+                                     fit.sigma_center,
+                                     fit.sigma_surround,
+                                     fit.beta_center,
+                                     fit.beta_surround,
+                                     fit.hrf_delay,
+                                     fit.fit_stats[2])
                                  
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
@@ -102,7 +106,8 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma, beta, hrf_delay,
+def compute_model_ts(x, y, sigma_center, sigma_surround,
+                     beta_center, beta_surround, hrf_delay, baseline,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -113,19 +118,25 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     ----------
     x : float
         The model estimate along the horizontal dimensions of the display.
-
+        
     y : float
         The model estimate along the vertical dimensions of the display.
-
-    sigma : float
-        The model estimate of the dispersion across the the display.
+        
+    sigma_center : float
+        The model estimate of the dispersion of the excitatory center.
+    
+    sigma_surround : float
+        The model estimate of the dispersion of the inhibitory surround.
+    
+    beta_center : float
+        The amplitude of the excitatory center.
+    
+    beta_surround : float
+        The amplitude of the inhibitory surround.
     
     hrf_delay : float
         The model estimate of the relative delay of the HRF.  The canonical
         HRF is assumed to be 5 s post-stimulus [1]_.
-    
-    beta : float
-        The model estimate of the amplitude of the BOLD signal.
     
     tr_length : float
         The length of the repetition time in seconds.
@@ -146,18 +157,29 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     
     """
     
-    # otherwise generate a prediction
-    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
-    stim /= sigma**2 * 2 * np.pi
+    # limiting cases for a center-surround receptive field
+    if sigma_center > sigma_surround:
+        return np.inf
+    if beta_center <= beta_surround:
+        return np.inf
     
-    # create the HRF
+    # calculate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
-    # convolve it with the stimulus
-    model = fftconvolve(stim, hrf)[0:len(stim)]
+    # center
+    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
+    stim /= sigma_center**2 * 2 * np.pi
+    model_center = fftconvolve(stim, hrf)[0:len(stim)]
+    model_center *= beta_center
     
-    # scale it
-    model *= beta
+    # surround
+    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
+    stim /= sigma_surround**2 * 2 * np.pi
+    model_surround = fftconvolve(stim, hrf)[0:len(stim)]
+    model_surround *= -beta_surround
+    
+    # dog
+    model = model_center + model_surround + baseline
     
     return model
 
@@ -197,18 +219,18 @@ def parallel_fit(args):
     verbose = args[7]
     
     # fit the data
-    fit = GaussianFit(model,
-                      data,
-                      grids,
-                      bounds,
-                      tr_length,
-                      voxel_index,
-                      auto_fit,
-                      verbose)
+    fit = DifferenceOfGaussiansFit(model,
+                                   data,
+                                   grids,
+                                   bounds,
+                                   tr_length,
+                                   voxel_index,
+                                   auto_fit,
+                                   verbose)
     return fit
 
 
-class GaussianModel(PopulationModel):
+class DifferenceOfGaussiansModel(PopulationModel):
     
     """
     A Gaussian population receptive field model class
@@ -238,7 +260,7 @@ class GaussianModel(PopulationModel):
         
         PopulationModel.__init__(self, stimulus)
         
-class GaussianFit(PopulationFit):
+class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     A Gaussian population receptive field fit class
@@ -248,45 +270,25 @@ class GaussianFit(PopulationFit):
     def __init__(self, model, data, grids, bounds, tr_length,
                  voxel_index=(1,2,3), auto_fit=True, verbose=True):
         
-        
         """
         A Gaussian population receptive field model [1]_.
-
+        
         Paramaters
         ----------
         
-        data : ndarray
-            An array containing the measured BOLD signal.
+        og_fit : `GaussianFit` class instance
+            A `GaussianFit` object.  This object does not have to be fitted already,
+            as the fit will be performed inside the `DifferenceOfGaussiansFit` in any 
+            case.  The `GaussianFit` is used as a seed for the `DifferenceOfGaussiansFit`
+            search.
         
-        model : `GaussianModel` class instance containing the representation
-            of the visual stimulus.
-        
-        search_bounds : tuple
-            A tuple indicating the search space for the brute-force grid-search.
-            The tuple contains pairs of upper and lower bounds for exploring a
-            given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
-            search the first dimension from -10 to 10 and the second from 0 to 5.
-            These values cannot be None. 
-            
-            For more information, see `scipy.optimize.brute`.
-        
-        fit_bounds : tuple
+        bounds : tuple
             A tuple containing the upper and lower bounds for each parameter
             in `parameters`.  If a parameter is not bounded, simply use
-            `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
+            `None`.  For example, `bounds=((0,None),(-10,10),)` would 
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
-        
-        tr_length : float
-            The length of the repetition time in seconds.
-        
-        voxel_index : tuple
-            A tuple containing the index of the voxel being modeled. The 
-            fitting procedure does not require a voxel index, but 
-            collating the results across many voxels will does require voxel
-            indices. With voxel indices, the brain volume can be reconstructed 
-            using the newly computed model estimates.
-        
+            
         auto-fit : bool
             A flag for automatically running the fitting procedures once the 
             `GaussianFit` object is instantiated.
@@ -300,8 +302,9 @@ class GaussianFit(PopulationFit):
         
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
         estimates in human visual cortex. NeuroImage 39:647-660
-
+        
         """
+        
         
         PopulationFit.__init__(self, model, data)
         
@@ -314,14 +317,14 @@ class GaussianFit(PopulationFit):
         
         if self.auto_fit:
             
+            # run the OG
             tic = time.clock()
             self.ballpark;
             self.estimate;
             self.fit_stats;
-            self.rss;
             toc = time.clock()
-            
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f" 
+                
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   BETA_1=%.04f   BETA_%.04f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
@@ -329,12 +332,14 @@ class GaussianFit(PopulationFit):
                       self.fit_stats[2],
                       self.theta,
                       self.rho,
-                      self.sigma,
-                      self.beta))
-                          
+                      self.sigma_center,
+                      self.sigma_surround,
+                      self.beta_center,
+                      self.beta_surround))
+            
             if self.verbose:
                 print(msg)
-        
+    
     @auto_attr
     def ballpark(self):
         return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
@@ -346,19 +351,22 @@ class GaussianFit(PopulationFit):
                                         self.data,
                                         utils.error_function,
                                         compute_model_ts)
-
+    
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0, self.hrf0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length),
+        return utils.gradient_descent_search((self.x0, self.y0,
+                                              self.sigma_center0, self.sigma_surround0,
+                                              self.beta_center0, self.beta_surround0,
+                                              self.hrf0, self.baseline0),
+                                              (self.model.stimulus.deg_x,
+                                               self.model.stimulus.deg_y,
+                                               self.model.stimulus.stim_arr,
+                                               self.tr_length),
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
                                              compute_model_ts)
- 
+                                             
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -366,18 +374,30 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def y0(self):
         return self.ballpark[1]
-        
+    
     @auto_attr
-    def s0(self):
+    def sigma_center0(self):
         return self.ballpark[2]
     
     @auto_attr
-    def beta0(self):
+    def sigma_surround0(self):
         return self.ballpark[3]
-        
+    
+    @auto_attr
+    def beta_center0(self):
+        return self.ballpark[4]
+    
+    @auto_attr
+    def beta_surround0(self):
+        return self.ballpark[5]
+    
     @auto_attr
     def hrf0(self):
-        return self.ballpark[4]
+        return self.ballpark[6]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[7]
         
     @auto_attr
     def x(self):
@@ -388,16 +408,28 @@ class GaussianFit(PopulationFit):
         return self.estimate[1]
         
     @auto_attr
-    def sigma(self):
+    def sigma_center(self):
         return self.estimate[2]
+        
+    @auto_attr
+    def sigma_surround(self):
+        return self.estimate[3]
+        
+    @auto_attr
+    def beta_center(self):
+        return self.estimate[4]
     
     @auto_attr
-    def beta(self):
-        return self.estimate[3]
+    def beta_surround(self):
+        return self.estimate[5]
+        
+    @auto_attr
+    def hrf_delay(self):
+        return self.estimate[6]
     
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[4]
+        return self.estimate[7]
     
     @auto_attr
     def rho(self):
@@ -409,12 +441,15 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x, self.y,
+                                self.sigma_center, self.sigma_surround,
+                                self.beta_center, self.beta_surround, 
+                                self.hrf_delay,
+                                self.baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
-    
     @auto_attr
     def fit_stats(self):
         return linregress(self.data, self.prediction)
@@ -422,14 +457,6 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def rss(self):
         return np.sum((self.data - self.prediction)**2)
-    
-    @auto_attr
-    def receptive_field(self):
-        rf = generate_og_receptive_field(self.model.stimulus.deg_x,
-                                         self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma, self.beta)
-        
-        return rf
     
     @auto_attr
     def hemodynamic_response(self):

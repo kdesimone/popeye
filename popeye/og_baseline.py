@@ -102,7 +102,7 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma, beta, hrf_delay,
+def compute_model_ts(x, y, sigma, beta, hrf_delay, baseline,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -158,6 +158,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     
     # scale it
     model *= beta
+    model += baseline
     
     return model
 
@@ -321,7 +322,7 @@ class GaussianFit(PopulationFit):
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   BASELINE=%.03f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
@@ -330,7 +331,8 @@ class GaussianFit(PopulationFit):
                       self.theta,
                       self.rho,
                       self.sigma,
-                      self.beta))
+                      self.beta,
+                      self.baseline))
                           
             if self.verbose:
                 print(msg)
@@ -349,7 +351,8 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0, self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, 
+                                              self.beta0, self.hrf0, self.baseline0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -378,6 +381,10 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def hrf0(self):
         return self.ballpark[4]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[5]
         
     @auto_attr
     def x(self):
@@ -400,6 +407,10 @@ class GaussianFit(PopulationFit):
         return self.estimate[4]
     
     @auto_attr
+    def baseline(self):
+        return self.estimate[5]
+    
+    @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
     
@@ -409,7 +420,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay, self.baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,

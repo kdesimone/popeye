@@ -168,15 +168,15 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
     
     # center
     stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
-    stim /= sigma_center**2 * 2 * np.pi * beta_center
+    stim /= sigma_center**2 * 2 * np.pi
     model_center = fftconvolve(stim, hrf)[0:len(stim)]
     model_center *= beta_center
     
     # surround
     stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
-    stim /= sigma_surround**2 * 2 * np.pi * beta_surround
+    stim /= sigma_surround**2 * 2 * np.pi
     model_surround = fftconvolve(stim, hrf)[0:len(stim)]
-    model_surround *= beta_surround
+    model_surround *= -beta_surround
     
     # dog
     model = model_center + model_surround
@@ -451,4 +451,4 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.og_fit.tr_length)
+        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
