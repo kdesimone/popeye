@@ -83,8 +83,8 @@ def recast_estimation_results(output, grid_parent):
                                       fit.hrf_delay,
                                       fit.fit_stats[2])
                                  
-            polar[fit.voxel_index] = (fit.theta,
-                                     fit.rho,
+            polar[fit.voxel_index] = (np.mod(np.arctan2(fit.y,fit.x),2*np.pi),
+                                     np.sqrt(fit.x**2+fit.y**2),
                                      fit.sigma_center,
                                      fit.sigma_surround,
                                      fit.beta_center,
@@ -107,7 +107,7 @@ def recast_estimation_results(output, grid_parent):
     return nif_cartes, nif_polar
 
 def compute_model_ts(x, y, sigma_center, sigma_surround,
-                     beta_center, beta_surround, hrf_delay,
+                     beta_center, beta_surround, hrf_delay, baseline,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -179,7 +179,7 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
     model_surround *= -beta_surround
     
     # dog
-    model = model_center + model_surround
+    model = model_center + model_surround + baseline
     
     return model
 
@@ -357,7 +357,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return utils.gradient_descent_search((self.x0, self.y0,
                                               self.sigma_center0, self.sigma_surround0,
                                               self.beta_center0, self.beta_surround0,
-                                              self.hrf0),
+                                              self.hrf0, self.baseline0),
                                               (self.model.stimulus.deg_x,
                                                self.model.stimulus.deg_y,
                                                self.model.stimulus.stim_arr,
@@ -394,6 +394,10 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def hrf0(self):
         return self.ballpark[6]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[7]
         
     @auto_attr
     def x(self):
@@ -424,6 +428,10 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.estimate[6]
     
     @auto_attr
+    def baseline(self):
+        return self.estimate[7]
+    
+    @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
     
@@ -437,6 +445,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                 self.sigma_center, self.sigma_surround,
                                 self.beta_center, self.beta_surround, 
                                 self.hrf_delay,
+                                self.baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
