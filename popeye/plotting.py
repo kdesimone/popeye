@@ -1,9 +1,16 @@
 from __future__ import division
 
+import numpy as np
+import matplotlib.pyplot as plt
+from pylab import find
+from scipy.stats import gaussian_kde
+from matplotlib.colors import LogNorm
+from matplotlib.ticker import LogFormatterMathtext
+from matplotlib.patches import Circle
+
+from popeye.spinach import generate_og_receptive_field
+
 def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -32,9 +39,7 @@ def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
 
 
 def eccentricity_hist(x, y, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
+
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -61,9 +66,6 @@ def eccentricity_hist(x, y, xlim, voxel_dim, plot_color, label_name, fig=None, a
     return fig, ax
 
 def hrf_delay_hist(hrf_delay, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -87,9 +89,6 @@ def hrf_delay_hist(hrf_delay, xlim, voxel_dim, plot_color, label_name, fig=None,
     return fig, ax
 
 def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name, fig=None, ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -137,10 +136,7 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name,
 
 
 def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
-    
+
     ecc = np.array(ecc)
     sigma = np.array(sigma)
     
@@ -193,9 +189,6 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
 
 def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, 
                               plot_color, label_name, fig=None, ax=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pylab import find
     
     ecc = np.sqrt(x**2+y**2)
     
@@ -241,7 +234,6 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n,
     return fig,ax
     
 def hrf_delay_kde(delays,kernel_width,plot_color,label_name,fig=None,ax=None):
-    from scipy.stats import gaussian_kde
     import numpy as np
     import matplotlib.pyplot as plt
     
@@ -334,16 +326,81 @@ def location_estimate_jointdist(x,y,plot_color):
     
     return None
 
-def location_and_size_map(x,y,s, plot_color):
+def hexbin_location_map(x,y):
     from matplotlib import pyplot as plt
-    from matplotlib.patches import Circle
+    
+    # set up figure
+    fig = plt.figure(figsize=(8,8),dpi=100)
+    ax = fig.add_subplot(111, aspect='equal')
+    
+    # get the upper bound
+    ub = max(np.max(x),np.max(y))*0.9
+    
+    im = ax.hexbin(x,y,gridsize=25,extent=(-12,12,-12,12),vmax=ub,cmap='hot')
+    
+    # beautify
+    plt.xticks(np.arange(-12,13,3),fontsize='16')
+    plt.yticks(np.arange(-12,13,3),fontsize='16')
+    plt.xlabel('degrees in X',fontsize='20')
+    plt.ylabel('degrees in Y',fontsize='20')
+    plt.xlim((-12,12))
+    plt.ylim((-12,12))
+    plt.subplots_adjust(left=0.12, right=0.98, top=0.98, bottom=.06)
+    plt.show()
+    
+    return None
+
+def field_coverage(x, y, s, deg_x, deg_y, log=False, polar=False):
+    
+    # set up figure
+    fig = plt.figure(figsize=(8,8),dpi=100)
+    if polar:
+        ax = fig.add_subplot(111, projection='polar')
+    else:
+        ax = fig.add_subplot(111, aspect='equal')
+    
+    # set up a blank field
+    field = np.zeros_like(deg_x)
+    
+    # create the RFs
+    for r in np.arange(len(x)):
+        rf = generate_og_receptive_field(deg_x, deg_y, x[r], y[r], s[r], 1)
+        # d = np.sqrt((x[r]-deg_x)**2 + (y[r]-deg_y)**2)<s[r]
+        field += rf
+    
+    # normalize
+    field /= np.max(field)
+    field *= 100
+    
+    # create image
+    if log:
+        im = ax.imshow(field,cmap='jet',extent=(-12,12,-12,12),norm=LogNorm(),vmin=1e0,vmax=1e2)
+        cb = plt.colorbar(im, format=LogFormatterMathtext(),)
+    else:
+        im = ax.imshow(field,cmap='jet',extent=(-12,12,-12,12),vmin=1e0,vmax=1e2)
+        cb = plt.colorbar(im)
+        
+    # beautify
+    plt.xticks(np.arange(-12,13,3),fontsize='16')
+    plt.yticks(np.arange(-12,13,3),fontsize='16')
+    plt.xlabel('degrees in X',fontsize='20')
+    plt.ylabel('degrees in Y',fontsize='20')
+    plt.xlim((-12,12))
+    plt.ylim((-12,12))
+    plt.subplots_adjust(left=0.12, right=0.98, top=0.98, bottom=.06)
+    plt.grid('on',c='w')
+    plt.show()
+    
+    return field
+
+def location_and_size_map(x,y,s, plot_color):
     
     ind = np.argsort(s)[::-1]
     
     fig = plt.figure(figsize=(8,8),dpi=100)
     ax = fig.add_subplot(111, aspect='equal')
     for i in ind:
-        ax.add_artist(Circle(xy=(x[i], y[i]),radius=s[i],fc=plot_color,ec='k',alpha=0.25))
+        ax.add_artist(Circle(xy=(x[i], y[i]),radius=s[i],fc=plot_color,ec=plot_color,alpha=0.25))
     
     # beautify
     plt.xticks(np.arange(-12,13,3),fontsize='16')
