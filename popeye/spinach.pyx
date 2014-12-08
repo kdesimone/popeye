@@ -224,13 +224,13 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     
     # cdef's
     cdef int i,j,k,num_pixels_used
-    cdef DTYPE2_t s_factor2 = (2.0*s**2)
-    cdef DTYPE2_t s_factor3 = (3.0*s)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef int zlim = stim_arr.shape[2]
     cdef DTYPE2_t pi = 3.14159265
-    cdef DTYPE2_t gauss_integral = 2*pi*s**2
+    cdef DTYPE2_t gauss_area = 2.0*s**2
+    cdef DTYPE2_t gauss_distance = (3.0*s)**2
+    cdef DTYPE2_t gauss_integral = 2.0*pi*s**2
     cdef DTYPE2_t d, gauss1D
     
     # initialize output variable
@@ -240,8 +240,8 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
-            if d <= s_factor3:
-                gauss1D = exp(-d/s_factor2)
+            if d <= gauss_distance:
+                gauss1D = exp(-d/gauss_area)
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*gauss1D/gauss_integral
                     
