@@ -16,7 +16,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent):
     """
@@ -147,17 +147,13 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     """
     
     # otherwise generate a prediction
-    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
-    stim /= sigma**2 * 2 * np.pi
+    response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
-    model = fftconvolve(stim, hrf)[0:len(stim)]
-    
-    # scale it
-    model *= beta
+    model = fftconvolve(response, hrf)[0:len(response)]
     
     return model
 

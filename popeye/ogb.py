@@ -61,7 +61,7 @@ def recast_estimation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(7)
+    dims.append(8)
     
     # initialize the statmaps
     polar = np.zeros(dims)
@@ -73,18 +73,20 @@ def recast_estimation_results(output, grid_parent):
         if fit.__dict__.has_key('fit_stats'):
         
             cartes[fit.voxel_index] = (fit.x, 
-                                      fit.y,
-                                      fit.sigma,
-                                      fit.beta,
-                                      fit.hrf_delay,
-                                      fit.rss,
-                                      fit.fit_stats[2])
+                                       fit.y,
+                                       fit.sigma,
+                                       fit.beta,
+                                       fit.hrf_delay,
+                                       fit.baseline,
+                                       fit.rss,
+                                       fit.fit_stats[2])
                                  
             polar[fit.voxel_index] = (fit.theta,
                                       fit.rho,
                                       fit.sigma,
                                       fit.beta,
                                       fit.hrf_delay,
+                                      fit.baseline,
                                       fit.rss,
                                       fit.fit_stats[2])
                                  
@@ -147,18 +149,13 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay, baseline,
     """
     
     # otherwise generate a prediction
-    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)
-    stim /= sigma**2 * 2 * np.pi
+    response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)+baseline
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
-    model = fftconvolve(stim, hrf)[0:len(stim)]
-    
-    # scale it
-    model *= beta
-    model += baseline
+    model = fftconvolve(response, hrf)[0:len(response)]
     
     return model
 
