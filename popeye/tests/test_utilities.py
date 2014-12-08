@@ -81,10 +81,10 @@ def test_brute_force_search():
     args = ('blah',)
     
     # we need to define some search bounds
-    search_bounds = ((0,10),(5,15))
+    grids = ((0,10),(5,15))
     
     # we don't need to specify bounds for the error function
-    fit_bounds = ()
+    bounds = ()
     
     # create a simple function to transform the parameters
     func = lambda x, y, arg: np.arange(x,x+100)*y
@@ -92,7 +92,7 @@ def test_brute_force_search():
     # create a "response"
     response = func(params[0], params[1], args)
     
-    estimate = utils.brute_force_search(args, search_bounds, fit_bounds,
+    estimate = utils.brute_force_search(args, grids, bounds,
                                         response, utils.error_function, func)
                                         
     # assert that the estimate is equal to the parameter

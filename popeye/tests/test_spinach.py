@@ -25,7 +25,7 @@ def test_generate_og_receptive_field():
                                          scale_factor)
     
     # generate a pRF at (0,0) and 1 sigma wide
-    rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma, 1)
+    rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma)
     
     # compare the volume of the pRF to a known value
     nt.assert_equal(np.round(np.sum(rf)), test_value)
