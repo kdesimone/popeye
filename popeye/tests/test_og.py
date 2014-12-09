@@ -30,6 +30,8 @@ def test_og_fit():
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    
+    # resample the stimulus
     bar = resample_stimulus(bar, resample_factor)
     
     # create an instance of the Stimulus class
@@ -58,11 +60,11 @@ def test_og_fit():
     fit = og.GaussianFit(model, data, search_bounds, fit_bounds, tr_length)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x)
-    nt.assert_almost_equal(fit.y, y)
-    nt.assert_almost_equal(fit.sigma, sigma)
-    nt.assert_almost_equal(fit.beta, beta)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay)
+    nt.assert_almost_equal(fit.x, x, 2)
+    nt.assert_almost_equal(fit.y, y, 2)
+    nt.assert_almost_equal(fit.sigma, sigma, 2)
+    nt.assert_almost_equal(fit.beta, beta, 2)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
 
 def test_parallel_og_fit():
 
@@ -76,12 +78,16 @@ def test_parallel_og_fit():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.05
+    scale_factor = 0.20
+    resample_factor = 0.25
     dtype = ctypes.c_short
     num_voxels = multiprocessing.cpu_count()-1
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    
+    # resample the stimulus
+    bar = resample_stimulus(bar, resample_factor)
     
     # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
@@ -134,8 +140,8 @@ def test_parallel_og_fit():
     
     # assert equivalence
     for fit in output:
-        nt.assert_almost_equal(fit.x, x)
-        nt.assert_almost_equal(fit.y, y)
-        nt.assert_almost_equal(fit.sigma, sigma)
-        nt.assert_almost_equal(fit.beta, beta)
-        nt.assert_almost_equal(fit.hrf_delay, hrf_delay)
+        nt.assert_almost_equal(fit.x, x, 2)
+        nt.assert_almost_equal(fit.y, y, 2)
+        nt.assert_almost_equal(fit.sigma, sigma, 2)
+        nt.assert_almost_equal(fit.beta, beta, 2)
+        nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
