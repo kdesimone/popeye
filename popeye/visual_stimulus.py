@@ -218,6 +218,10 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
     if blanks:
         thetas = list(thetas)
         thetas.insert(0,-1)
+        thetas.insert(2,-1)
+        thetas.insert(5,-1)
+        thetas.insert(8,-1)
+        thetas.insert(11,-1)
         thetas.append(-1)
         
     # initialize the stimulus array
