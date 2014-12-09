@@ -106,8 +106,7 @@ def recast_estimation_results(output, grid_parent):
     
     return nif_cartes, nif_polar
 
-def compute_model_ts(x, y, sigma_center, sigma_surround,
-                     beta_center, beta_surround, hrf_delay,
+def compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -157,27 +156,17 @@ def compute_model_ts(x, y, sigma_center, sigma_surround,
     
     """
     
-    # limiting cases for a center-surround receptive field
-    if sigma_center > sigma_surround:
-        return np.inf
-    if beta_center <= beta_surround:
-        return np.inf
+    # extract the response
+    rf_center = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
+    rf_surround = generate_og_receptive_field(deg_x, deg_y, x, y, sigma*sigma_ratio) * 1/sigma_ratio**2
+    rf = rf_center - np.sqrt(volume_ratio)*rf_surround
+    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma*sigma_ratio)
     
-    # calculate the hrf
+    # generate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
-    # center
-    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_center)
-    model_center = fftconvolve(stim, hrf)[0:len(stim)]
-    model_center *= beta_center
-    
-    # surround
-    stim = generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma_surround)
-    model_surround = fftconvolve(stim, hrf)[0:len(stim)]
-    model_surround *= -beta_surround
-    
-    # dog
-    model = model_center + model_surround
+    # convolve it
+    model = fftconvolve(response,hrf)[0:len(response)]
     
     return model
 
@@ -322,7 +311,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
             self.fit_stats;
             toc = time.clock()
                 
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   BETA_1=%.04f   BETA_%.04f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   VOLUME_2=%.02f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
@@ -330,10 +319,9 @@ class DifferenceOfGaussiansFit(PopulationFit):
                       self.fit_stats[2],
                       self.theta,
                       self.rho,
-                      self.sigma_center,
-                      self.sigma_surround,
-                      self.beta_center,
-                      self.beta_surround))
+                      self.sigma,
+                      self.sigma*self.sigma_ratio,
+                      self.volume_ratio))
             
             if self.verbose:
                 print(msg)
@@ -352,10 +340,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0,
-                                              self.sigma_center0, self.sigma_surround0,
-                                              self.beta_center0, self.beta_surround0,
-                                              self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.sr0, self.vr0, self.h0),
                                               (self.model.stimulus.deg_x,
                                                self.model.stimulus.deg_y,
                                                self.model.stimulus.stim_arr,
@@ -374,24 +359,20 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.ballpark[1]
     
     @auto_attr
-    def sigma_center0(self):
+    def s0(self):
         return self.ballpark[2]
     
     @auto_attr
-    def sigma_surround0(self):
+    def sr0(self):
         return self.ballpark[3]
     
     @auto_attr
-    def beta_center0(self):
+    def vr0(self):
         return self.ballpark[4]
-    
+                
     @auto_attr
-    def beta_surround0(self):
+    def h0(self):
         return self.ballpark[5]
-    
-    @auto_attr
-    def hrf0(self):
-        return self.ballpark[6]
         
     @auto_attr
     def x(self):
@@ -402,24 +383,20 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.estimate[1]
         
     @auto_attr
-    def sigma_center(self):
+    def sigma(self):
         return self.estimate[2]
         
     @auto_attr
-    def sigma_surround(self):
+    def sigma_ratio(self):
         return self.estimate[3]
-        
-    @auto_attr
-    def beta_center(self):
-        return self.estimate[4]
     
     @auto_attr
-    def beta_surround(self):
-        return self.estimate[5]
+    def volume_ratio(self):
+        return self.estimate[4]
         
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[6]
+        return self.estimate[5]
     
     @auto_attr
     def rho(self):
@@ -431,10 +408,8 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y,
-                                self.sigma_center, self.sigma_surround,
-                                self.beta_center, self.beta_surround, 
-                                self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, 
+                                self.sigma_ratio, self.volume_ratio, self.hrf_delay,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -450,3 +425,17 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def hemodynamic_response(self):
         return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+    
+    @auto_attr
+    def receptive_field(self):
+            rf_center = generate_og_receptive_field(self.model.stimulus.deg_x, 
+                                                    self.model.stimulus.deg_y, 
+                                                    self.x, self.y, self.sigma)
+                                                    
+            rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x, 
+                                                      self.model.stimulus.deg_y, 
+                                                      self.x, self.y, self.sigma*self.sigma_ratio) * 1.0/self.sigma_ratio**2
+            
+            rf = rf_center - np.sqrt(self.volume_ratio)*rf_surround
+            
+            return rf
