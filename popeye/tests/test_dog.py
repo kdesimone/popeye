@@ -20,8 +20,9 @@ def test_dog():
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,45)
-    num_steps = 20
-    ecc = 10
+    num_blank_steps = 20
+    num_bar_steps = 40
+    ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.20
@@ -29,7 +30,8 @@ def test_dog():
     dtype = ctypes.c_short
     
     # create the sweeping bar stimulus in memory
-    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
     
     # resample the stimulus
     bar = resample_stimulus(bar, resample_factor)

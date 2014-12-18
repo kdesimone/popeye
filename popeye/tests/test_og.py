@@ -20,8 +20,9 @@ def test_og_fit():
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,45)
-    num_steps = 20
-    ecc = 10
+    num_blank_steps = 20
+    num_bar_steps = 40
+    ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.20
@@ -29,8 +30,9 @@ def test_og_fit():
     dtype = ctypes.c_short
     
     # create the sweeping bar stimulus in memory
-    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
-    
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+        
     # resample the stimulus
     bar = resample_stimulus(bar, resample_factor)
     
@@ -68,14 +70,14 @@ def test_og_fit():
 
 def test_parallel_og_fit():
 
-    # stimulus features
     pixels_across = 800
     pixels_down = 600
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,45)
-    num_steps = 20
-    ecc = 10
+    num_blank_steps = 20
+    num_bar_steps = 40
+    ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.20
@@ -84,7 +86,8 @@ def test_parallel_og_fit():
     num_voxels = multiprocessing.cpu_count()-1
     
     # create the sweeping bar stimulus in memory
-    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, thetas, num_steps, ecc)
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
     
     # resample the stimulus
     bar = resample_stimulus(bar, resample_factor)
