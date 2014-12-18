@@ -155,7 +155,7 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     return Z
 
 def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, 
-                         thetas, num_steps, ecc, blanks=True, threshold = 0.33):
+                         thetas, num_bar_steps, num_blank_steps, ecc, threshold = 0.33):
 
     """
     A utility function for creating a sweeping bar stimulus in memory.
@@ -211,21 +211,22 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
     deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
     
+    # insert blanks
+    thetas = list(thetas)
+    thetas.insert(0,-1)
+    thetas.insert(2,-1)
+    thetas.insert(5,-1)
+    thetas.insert(8,-1)
+    thetas.insert(11,-1)
+    thetas.append(-1)
+    thetas = np.array(thetas)
+    
+    # initialize the stimulus array
+    total_trs = len(thetas[thetas==-1])*num_blank_steps + len(thetas[thetas!=-1])*num_bar_steps
+    bar_stimulus = np.zeros((pixels_down, pixels_across, total_trs))
+    
     # initialize a counter
     tr_num = 0
-    
-    # insert blanks
-    if blanks:
-        thetas = list(thetas)
-        thetas.insert(0,-1)
-        thetas.insert(2,-1)
-        thetas.insert(5,-1)
-        thetas.insert(8,-1)
-        thetas.insert(11,-1)
-        thetas.append(-1)
-        
-    # initialize the stimulus array
-    bar_stimulus = np.zeros((pixels_down, pixels_across, len(thetas)*num_steps))
     
     # main loop
     for theta in thetas:
@@ -248,10 +249,11 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
                 sigma_y = 1
             
             # step through each position along the trajectory
-            for step in np.arange(0,num_steps):
+            for step in np.arange(0,num_bar_steps):
                 
                 # get the position of the bar at each step
-                xy0 = run_and_rise * step/num_steps + start_pos
+                xy0 = run_and_rise * step/num_bar_steps + start_pos
+                print('%.02f,%.02f' %(xy0[0],xy0[1]))
                 
                 # generate the gaussian
                 Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],sigma_x,sigma_y,theta)
@@ -261,7 +263,8 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
                 tr_num += 1
                 
         else:
-            for step in np.arange(0,num_steps):
+            for step in np.arange(0,num_blank_steps):
+                print('blank,blank')
                 tr_num += 1
                 
     
