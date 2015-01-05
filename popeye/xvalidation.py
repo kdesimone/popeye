@@ -128,7 +128,6 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
         fold_mask = np.zeros(data.shape[-1], dtype=bool)
         fold_mask[0:len(fold_mask)/folds] = 1
         fold_mask = np.random.permutation(fold_mask)
-        print(fold_mask)
         
         # Grab the left-in data and concatenate the runs
         left_in_data = np.reshape(data[...,fold_mask], data.shape[0]*data.shape[1]/folds, order='F')
@@ -140,13 +139,14 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
         if len(models) == 1:
             
             # Grab the stimulus instance from one of the models
+            stimulus = deepcopy(models[0].stimulus)
+            
+            # Create a new Model instance
+            model = models[0].__class__(stimulus)
             
             # Tile it according to the number of runs ...
             model.stimulus.stim_arr = np.tile(model.stimulus.stim_arr, data.shape[1]/folds)
             model.stimulus.stim_arr_coarse = np.tile(model.stimulus.stim_arr_coarse, data.shape[1]/folds)
-            
-            # Create a new Model instance
-            model = models[0].__class__(stimulus)
         
         # otherwise, concatenate each of the unique stimuli
         elif len(models) == data.shape[-1]:
