@@ -435,7 +435,7 @@ class GaussianFit(PopulationFit):
     def receptive_field(self):
         rf = generate_og_receptive_field(self.model.stimulus.deg_x,
                                          self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma, self.beta)
+                                         self.x, self.y, self.sigma)
         
         return rf
     
