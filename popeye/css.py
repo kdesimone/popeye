@@ -12,13 +12,14 @@ import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
 import nibabel
+import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_og_receptive_field, generate_rf_timeseries
 
-def recast_estimation_results(output, grid_parent):
+def recast_estimation_results(output, grid_parent, polar=False):
     """
     Recasts the output of the prf estimation into two nifti_gz volumes.
     
@@ -61,49 +62,45 @@ def recast_estimation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(8)
+    dims.append(9)
     
     # initialize the statmaps
-    polar = np.zeros(dims)
-    cartes = np.zeros(dims)
+    estimates = np.zeros(dims)
     
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        if fit.__dict__.has_key('fit_stats'):
-        
-            cartes[fit.voxel_index] = (fit.x, 
-                                       fit.y,
-                                       fit.sigma,
-                                       fit.n,
-                                       fit.beta,
-                                       fit.hrf_delay,
-                                       fit.rss,
-                                       fit.fit_stats[2])
-                                 
-            polar[fit.voxel_index] = (fit.theta,
-                                      fit.rho,
-                                      fit.sigma,
-                                      fit.n,
-                                      fit.beta,
-                                      fit.hrf_delay,
-                                      fit.rss,
-                                      fit.fit_stats[2])
-                                 
+        if polar is True:
+            estimates[fit.voxel_index] = (fit.theta,
+                                          fit.rho,
+                                          fit.sigma,
+                                          fit.n,
+                                          fit.beta,
+                                          fit.hrf_delay,
+                                          fit.rsquared,
+                                          fit.coefficient,
+                                          fit.stderr)
+        else:
+            estimates[fit.voxel_index] = (fit.x, 
+                                          fit.y,
+                                          fit.sigma,
+                                          fit.n,
+                                          fit.beta,
+                                          fit.hrf_delay,
+                                          fit.rsquared,
+                                          fit.coefficient,
+                                          fit.stderr)
+                                       
+                             
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
     hdr = grid_parent.get_header()
     hdr.set_data_shape(dims)
     
     # recast as nifti
-    nif_polar = nibabel.Nifti1Image(polar,aff,header=hdr)
-    nif_polar.set_data_dtype('float32')
-   
-    nif_cartes = nibabel.Nifti1Image(cartes,aff,header=hdr)
-    nif_cartes.set_data_dtype('float32')
+    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
-    return nif_cartes, nif_polar
-
+    return nifti_estimates
 def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
     
@@ -149,7 +146,11 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     """
     
     # generate the response
-    response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
+    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
+    rf /= (2*np.pi*sigma**2)
+    rf **= n
+    response = beta*generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
+    # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
@@ -315,21 +316,22 @@ class CompressiveSpatialSummationFit(PopulationFit):
             tic = time.clock()
             self.ballpark;
             self.estimate;
-            self.fit_stats;
+            self.OLS;
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   POWER=%.02f   BETA=%.08f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
                       toc-tic,
-                      self.fit_stats[2],
+                      self.rsquared,
                       self.theta,
                       self.rho,
                       self.sigma,
                       self.n,
-                      self.beta))
+                      self.beta,
+                      self.hrf_delay))
                           
             if self.verbose:
                 print(msg)
@@ -423,8 +425,20 @@ class CompressiveSpatialSummationFit(PopulationFit):
                                 self.tr_length)
     
     @auto_attr
-    def fit_stats(self):
-        return linregress(self.data, self.prediction)
+    def OLS(self):
+        return sm.OLS(self.data,self.prediction).fit()
+    
+    @auto_attr
+    def coefficient(self):
+        return self.OLS.params[0]
+    
+    @auto_attr
+    def rsquared(self):
+        return self.OLS.rsquared
+    
+    @auto_attr
+    def stderr(self):
+        return np.sqrt(self.OLS.mse_resid)
     
     @auto_attr
     def rss(self):

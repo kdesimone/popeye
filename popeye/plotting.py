@@ -187,10 +187,63 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     return fig,ax
 
 
-def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, 
-                              plot_color, label_name, fig=None, ax=None):
+def sigma_hrf_delay_scatter(sigma, hrf_delay, xlim, ylim, min_vox, n,
+                            plot_color, label_name, fig=None, ax=None):
+        
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+    
+    # fit a line
+    p = np.polyfit(sigma,hrf_delay,1)
+    [y1,y2] = np.polyval(p,xlim)
+    label_name += ',n=%d' %(len(sigma))
+    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
+    
+    # bin and plot the errors
+    for e in np.arange(xlim[0]+0.25,xlim[1]+0.25,1):
+        b0 = e-0.25
+        b1 = e+0.25
+        idx0 = find(sigma>=b0)
+        idx1 = find(sigma<=b1)
+        idx = np.intersect1d(idx0,idx1)
+        if len(idx) > min_vox:
+            
+            # if its only 1 subject, c
+            if num_subjects == 1:
+                n = len(idx)
+            else:
+                n = num_subjects
+                
+            mu = np.mean(hrf_delay[idx])
+            err = np.std(hrf_delay[idx])/np.sqrt(len(n))
+            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
+            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
+    
+    # beautify
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
+    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
+    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
+    ax.set_yticklabels(np.arange(ylim[0]+5,ylim[1]+1+5),fontsize='18')
+    ax.set_ylabel('HRF Delay (secs)',size='18')
+    ax.set_xlabel('pRF Size (deg)',size='18')
+    # ax.legend(loc=2)
+    
+    # show and return the fig and ax handles
+    plt.show()
+    return fig,ax
+    
+
+def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
+                              plot_color, label_name, show_legend=False, fig=None, ax=None):
     
     ecc = np.sqrt(x**2+y**2)
+    diameter = sigma
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -200,7 +253,7 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n,
         ax = fig.add_subplot(111)
     
     # fit a line
-    p = np.polyfit(ecc,sigma,1)
+    p = np.polyfit(ecc,diameter,1)
     [y1,y2] = np.polyval(p,xlim)
     label_name += ',n=%d' %(len(ecc))
     ax.plot([0,0],[0,0],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
@@ -213,8 +266,8 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n,
         idx1 = find(ecc<=b1)
         idx = np.intersect1d(idx0,idx1)
         if len(idx) > min_n:
-            mu = np.mean(sigma[idx])
-            err = np.std(sigma[idx])/np.sqrt(len(idx))
+            mu = np.mean(diameter[idx])
+            err = np.std(diameter[idx])/np.sqrt(dof)
             ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
             ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
     
@@ -227,7 +280,9 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n,
     ax.set_yticklabels(np.arange(ylim[0],ylim[1]+1),fontsize='18')
     ax.set_ylabel('pRF Size (deg)',size='18')
     ax.set_xlabel('Eccentricity (deg)',size='18')
-    ax.legend(fancybox=True,loc=2)
+    
+    if show_legend:
+        ax.legend(fancybox=True,loc=2)
     
     # show and return the fig and ax handles
     plt.show()
@@ -364,7 +419,7 @@ def field_coverage(x, y, s, deg_x, deg_y, log=False, polar=False):
     
     # create the RFs
     for r in np.arange(len(x)):
-        rf = generate_og_receptive_field(deg_x, deg_y, x[r], y[r], s[r], 1)
+        rf = generate_og_receptive_field(deg_x, deg_y, x[r], y[r], s[r])
         # d = np.sqrt((x[r]-deg_x)**2 + (y[r]-deg_y)**2)<s[r]
         field += rf
     
@@ -392,6 +447,38 @@ def field_coverage(x, y, s, deg_x, deg_y, log=False, polar=False):
     plt.show()
     
     return field
+
+def lazy_field_coverage(field, log=False, polar=False):
+    
+    # set up figure
+    fig = plt.figure(figsize=(8,8),dpi=100)
+    if polar:
+        ax = fig.add_subplot(111, projection='polar')
+    else:
+        ax = fig.add_subplot(111, aspect='equal')
+    
+    limit = np.ceil(np.max([np.abs(field.min()),np.abs(field.max())]))
+    
+    # create image
+    if log:
+        im = ax.imshow(field+1,cmap='jet',extent=(-12,12,-12,12),norm=LogNorm(),vmin=-limit,vmax=limit)
+        cb = plt.colorbar(im, format=LogFormatterMathtext(),)
+    else:
+        im = ax.imshow(field,cmap='jet',extent=(-12,12,-12,12),vmin=-limit,vmax=limit)
+        cb = plt.colorbar(im)
+        
+    # beautify
+    plt.xticks(np.arange(-12,13,3),fontsize='16')
+    plt.yticks(np.arange(-12,13,3),fontsize='16')
+    plt.xlabel('degrees in X',fontsize='20')
+    plt.ylabel('degrees in Y',fontsize='20')
+    plt.xlim((-12,12))
+    plt.ylim((-12,12))
+    plt.subplots_adjust(left=0.12, right=0.98, top=0.98, bottom=.06)
+    plt.grid('on',c='w')
+    plt.show()
+    
+    return None
 
 def location_and_size_map(x,y,s, plot_color):
     

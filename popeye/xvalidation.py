@@ -1,11 +1,41 @@
 """
-Cross-validation analysis of diffusion models
+Cross-validation analysis of population receptive field models
 """
+
 from __future__ import division, print_function, absolute_import
 from copy import deepcopy
-
+import time
 import numpy as np
+import nibabel
 
+def recast_xval_results(output, grid_parent):
+    
+    # set dims for model+data
+    dims = list(grid_parent.shape)
+    dims.append(4)
+    
+    # initialize the cod array
+    cod = np.zeros(dims)
+    
+    # extract the prf model estimates from the results queue output
+    for o in output:
+        xvoxel = o[0].voxel_index[0]
+        yvoxel = o[0].voxel_index[1]
+        zvoxel = o[0].voxel_index[2]
+        cod[xvoxel,yvoxel,zvoxel,0] = np.mean((o[0].cod,o[1].cod))
+        cod[xvoxel,yvoxel,zvoxel,1] = np.mean((o[0].rsquared,o[1].rsquared))
+        cod[xvoxel,yvoxel,zvoxel,2] = np.mean((o[0].coefficient,o[1].coefficient))
+        cod[xvoxel,yvoxel,zvoxel,3] = np.mean((o[0].mse,o[1].mse))
+        
+    # get header information from the gridParent and update for the prf volume
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    
+    # recast as nifti
+    nif = nibabel.Nifti1Image(cod,aff,header=hdr)
+    nif.set_data_dtype('float32')
+    
+    return nif
 
 def coeff_of_determination(data, model, axis=-1):
     """
@@ -55,7 +85,6 @@ def coeff_of_determination(data, model, axis=-1):
 
     return 100 * (1 - (ss_err/ss_tot))
 
-
 def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     
     """
@@ -70,8 +99,11 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
         runs with the same, repeated stimulus presented.  
     
     data : ndarray
+        An m x n array representing a single voxel time-series, where m is the number of
+        time-points and n is the number of runs
     
-    Fit : the Fit class that will be instantiated with the left-in and left-out datasets.
+    Fit : Fit class object instance 
+        The Fit class that will be instantiated with the left-in and left-out datasets.
     
     folds : int
         The number of divisions to apply to the data
@@ -105,7 +137,7 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     if div_by_folds!= 0:
         msg = "The number of folds must divide the diffusion-weighted "
         msg += "data equally, but "
-        msg = "np.mod(%s, %s) is %s"%(data.shape[-1], folds, div_by_folds)
+        msg = "np.mod(%s, %s) is %s"%(data.shape[0], folds, div_by_folds)
         raise ValueError(msg)
     
     # number of samples per fold
@@ -115,62 +147,32 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     prediction = np.zeros(data.shape[-1])
     
     # We are going to leave out some randomly chosen samples in each iteration
-    order = np.random.permutation(data.shape[-1])
+    order = np.random.permutation(data.shape[0])
+    order = np.reshape(order,(folds,len(order)/folds))
     
     # initilize a list of predictions
-    predictions = []
-    dat = []
+    fits = []
     
     # Do the thing
     for k in range(folds):
         
         # Select the timepoints for this fold
-        fold_mask = np.zeros(data.shape[-1], dtype=bool)
-        fold_mask[0:len(fold_mask)/folds] = 1
-        fold_mask = np.random.permutation(fold_mask)
+        fold_mask = np.zeros(data.shape[0], dtype=bool)
+        fold_mask[order[k]] = 1
         
-        # Grab the left-in data and concatenate the runs
-        left_in_data = np.reshape(data[...,fold_mask], data.shape[0]*data.shape[1]/folds, order='F')
+        # Grab left-in data
+        left_in_data = data[fold_mask,:]
         
-        # Grab the left-out data and concatenate the runs
-        left_out_data = np.reshape(data[...,~fold_mask], data.shape[0]*data.shape[1]/folds, order='F')
+        # Grab left-out data
+        left_out_data = data[~fold_mask,:]
         
-        # If there is only 1 model specified, repeat it over the concatenated functionals
+        # If there is only 1 model specified, compute the mean time-series for the voxel
         if len(models) == 1:
             
-            # Grab the stimulus instance from one of the models
-            stimulus = deepcopy(models[0].stimulus)
-            
-            # Create a new Model instance
-            model = models[0].__class__(stimulus)
-            
-            # Tile it according to the number of runs ...
-            model.stimulus.stim_arr = np.tile(model.stimulus.stim_arr, data.shape[1]/folds)
-            model.stimulus.stim_arr_coarse = np.tile(model.stimulus.stim_arr_coarse, data.shape[1]/folds)
+            left_in_data = np.mean(left_in_data,axis=0)
+            left_out_data = np.mean(left_out_data,axis=0)
+            model = models[0]
         
-        # otherwise, concatenate each of the unique stimuli
-        elif len(models) == data.shape[-1]:
-            
-            # Grab the stimulus instance from one of the models
-            stimulus = deepcopy(models[fold_idx[0]].stimulus)
-            
-            # Grab the first model in the fold
-            stim_arr_cat = stimulus.stim_arr
-            stim_arr_coarse_cat = stimulus.stim_arr_coarse
-            
-            # Grab the remaining models in the fold
-            for f in fold_idx[1::]:
-                
-                stim_arr_cat = np.concatenate((stim_arr_cat, models[f].stimulus.stim_arr.copy()), axis=-1)
-                stim_arr_coarse_cat = np.concatenate((stim_arr_coarse_cat, models[f].stimulus.stim_arr_coarse.copy()), axis=-1)
-            
-            # Put the concatenated arrays into the Stimulus instance
-            stimulus.stim_arr = stim_arr_cat
-            stimulus.stim_arr_coarse = stim_arr_coarse_cat
-            
-            # Create a new Model instance
-            model = models[0].__class__(stimulus)
-            
         # initialize the left-in fit object
         ensemble = []
         ensemble.append(model)
@@ -188,12 +190,78 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
         left_out_fit = Fit(*ensemble)
         
         # run the left-in Fit
+        left_in_fit.estimate;
+        
+        # assign that estimate to the left out fit
         left_out_fit.estimate = left_in_fit.estimate
         
-        # store the prediction
-        predictions.append(left_out_fit.prediction)
+        # predict the left-out data
+        left_out_fit.prediction;
+        left_out_fit.dof = fold_mask.sum()-1
+        
         
         # store the left-out data
-        dat.append(left_out_fit.data)
+        fits.append(left_out_fit)
     
-    return dat, predictions
+    return fits
+
+
+def parallel_xval(args):
+    
+    """
+    This is a convenience function for parallelizing the fitting
+    procedure.  Each call is handed a tuple or list containing
+    all the necessary inputs for instantiaing a `GaussianFit`
+    class object and estimating the model parameters.
+    
+    
+    Paramaters
+    ----------
+    args : list/tuple
+        A list or tuple containing all the necessary inputs for fitting
+        the kfold_xval method.
+    
+    Returns
+    -------
+    
+    fits : `PopulationFit` class objects that have been cross-validated.
+        
+    
+    """ 
+    
+    # start timestamp
+    tic = time.clock()
+    
+    # unpackage the arguments
+    models = args[0]
+    data = args[1]
+    Fit = args[2]
+    folds = args[3]
+    fit_args = args[4]
+    fit_kwargs = args[5]
+    voxel_index = args[6]
+    
+    # cross-validate
+    xval_fits =  kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs)
+    
+    # compute the cod
+    for fit in xval_fits:
+        fit.cod = coeff_of_determination(fit.data, fit.prediction)
+        fit.voxel_index = voxel_index
+        fit.mse = np.std(fit.data)/np.sqrt(fit.dof)
+    
+    # end timestamp
+    toc = time.clock()
+    
+    # print statement
+    xvox = voxel_index[0]
+    yvox = voxel_index[1]
+    zvox = voxel_index[2]
+    duration = toc-tic
+    mean_cod = (xval_fits[0].cod+xval_fits[1].cod)/2/100
+    mean_mse = (xval_fits[0].mse+xval_fits[1].mse)/2
+    mean_bco = (xval_fits[0].coefficient+xval_fits[1].coefficient)/2
+    print("Finished voxel %.03d,%.03d,%.03d in %.03d seconds  CoD=%.02f  MSE=%.02f  BCO=%.02f" % (xvox,yvox,zvox,duration,mean_cod,mean_mse,mean_bco))
+    return xval_fits
+    
+    

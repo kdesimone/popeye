@@ -5,17 +5,16 @@ import numpy as np
 from scipy.ndimage.measurements import standard_deviation
 from scipy.optimize import fmin_powell, fmin
 
-def error_function(sigma,old_sigma,xs,ys,degX,degY,voxel_RF):
+def error_function(sigma,old_sigma,xs,ys,deg_x,deg_y,voxel_RF):
     if sigma <= 0:
         return np.inf
     if sigma > old_sigma:
         return np.inf
-    neural_RF = MakeFastRFs(degX,degY,xs,ys,sigma)
-    neural_RF /= np.max(neural_RF)
+    neural_RF = MakeFastRFs(deg_x,deg_y,xs,ys,sigma)
     error = np.sum((neural_RF-voxel_RF)**2)
     return error
 
-def simulate_neural_sigma(stimData,funcData,metaData,results_q,verbose=True):
+def simulate_neural_sigma(estimate,volume_meshgrid,verbose=True):
     
     # grab voxel indices
     xi,yi,zi = metaData['core_voxels']

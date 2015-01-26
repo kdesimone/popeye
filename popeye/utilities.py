@@ -12,9 +12,10 @@ import numpy as np
 import nibabel
 from scipy.misc import imresize
 from scipy.special import gamma
-from scipy.optimize import brute, fmin_powell
+from scipy.optimize import brute, fmin_powell, fmin
 from scipy.integrate import romb, trapz
 import sharedmem
+from statsmodels import api as sm
 
 def generate_shared_array(unshared_arr,dtype):
     
@@ -218,7 +219,7 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
         brute(error_function,
               args=(args, fit_bounds, data, objective_function),
               ranges=search_bounds,
-              Ns=5,
+              Ns=3,
               finish=None,
               full_output=True,
               disp=False)
@@ -271,7 +272,8 @@ def error_function(parameters, args, bounds, data, objective_function, debug=Fal
     ensemble.extend(args)
     
     # compute the RSS
-    error = np.sum((data-objective_function(*ensemble))**2)
+    prediction = objective_function(*ensemble)
+    error = np.sum((data-prediction)**2)
     
     # print for debugging
     if debug:
