@@ -10,35 +10,11 @@ from matplotlib.patches import Circle
 
 from popeye.spinach import generate_og_receptive_field
 
-def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
-    
-    # arguments can include figure and axes handles for plotting multiple ROIs
-    if not fig:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-    else:
-        ax = fig.add_subplot(111)
-    
-    spacing = np.linspace(xlim[0],xlim[1],xlim[2],endpoint=False)
-    
-    n,bins = np.histogram(beta,bins=spacing)
-    bincenters = list(0.5*(bins[1:]+bins[:-1]))
-    mu = (n*voxel_dim**3)/(len(beta)*voxel_dim**3)
-    sme = mu / np.sqrt(n)
-    cumsum = np.cumsum(mu)
-    
-    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name)
-    ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
-    plt.xticks(spacing,fontsize=18)
-    plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
-    ax.bar(bincenters,mu,color=plot_color,width=0.33)
-    plt.xlim(spacing[0]+0.15,spacing[-1]+0.25)
-    plt.ylim(0,1)
-    
-    return fig, ax
 
-
-def eccentricity_hist(x, y, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
+def eccentricity_hist(x, y, xlim, voxel_dim, dof, 
+                     plot_alpha=1.0, plot_color='k',
+                     label_name=None, show_legend=False,
+                     fig=None, ax=None):
 
     
     # arguments can include figure and axes handles for plotting multiple ROIs
@@ -52,20 +28,25 @@ def eccentricity_hist(x, y, xlim, voxel_dim, plot_color, label_name, fig=None, a
     n,bins = np.histogram(ecc,bins=np.arange(xlim[0],xlim[1]))
     bincenters = list(0.5*(bins[1:]+bins[:-1]))
     mu = (n*voxel_dim**3)/(len(ecc)*voxel_dim**3)
-    sme = mu / np.sqrt(n)
+    sme = mu / np.sqrt(dof)
     cumsum = np.cumsum(mu)
     
-    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name)
+    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name, alpha=plot_alpha)
     ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
     plt.xticks(np.arange(xlim[0],xlim[1]+1,5),fontsize=18)
     plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
-    ax.bar(bincenters,mu,color=plot_color)
+    ax.bar(bincenters,mu,color=plot_color,alpha=plot_alpha)
     plt.xlim(0.5,xlim[1]+0.5)
     plt.ylim(0,1)
     
+    if show_legend:
+        ax.legend(loc=0)
+    
     return fig, ax
 
-def hrf_delay_hist(hrf_delay, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
+def hrf_delay_hist(hrf_delay, xlim, voxel_dim, dof,
+                   plot_alpha=1.0,plot_color='k',label_name=None,
+                   show_legend=False, fig=None, ax=None):
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -77,18 +58,23 @@ def hrf_delay_hist(hrf_delay, xlim, voxel_dim, plot_color, label_name, fig=None,
     n,bins = np.histogram(hrf_delay,bins=np.arange(-6,6,0.5))
     bincenters = list(0.5*(bins[1:]+bins[:-1]))
     mu = (n*voxel_dim**3)/(len(hrf_delay)*voxel_dim**3)
-    sme = mu / np.sqrt(n)
+    sme = mu / np.sqrt(dof)
     cumsum = np.cumsum(mu)
     
-    ax.bar(bincenters,mu,color=plot_color,width=0.33)
+    ax.bar(bincenters,mu,color=plot_color,alpha=plot_alpha,width=0.33)
     plt.xticks(np.arange(-5,6,5),fontsize=28)
     plt.yticks(np.arange(.1,.31,.1),['10%','20%','30%'],fontsize=28)
     plt.xlim(-5,5.75)
     plt.ylim(0,0.3)
     
+    if show_legend:
+        ax.legend(loc=0)
+    
     return fig, ax
 
-def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name, fig=None, ax=None):
+def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, dof,
+                    plot_alpha=1.0, plot_color='k', label_name=None, 
+                    show_legend=False, fig=None, ax=None):
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -103,7 +89,7 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name,
     # calculate the volume of ROI at a given polar angle sector ...
     n,bins = np.histogram(polar_angle,bins=np.arange(0,(2*np.pi)+2*np.pi/num_radians,2*np.pi/num_radians))
     mu = (n*voxel_dim**3)/(len(polar_angle)*voxel_dim**3)
-    sme = mu / np.sqrt(n)
+    sme = mu / np.sqrt(dof)
     bincenters = list(0.5*(bins[1:]+bins[:-1]))
     
     # wrap it to make it circular & then recast back to ndarray
@@ -111,9 +97,8 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name,
     sme = np.append(sme, sme[0])
     bincenters = np.append(bincenters, bincenters[0])
     
-    label_name += ',n=%d' %(len(polar_angle))
-    ax.plot(bincenters,mu,c=plot_color,lw=2, label=label_name)
-    ax.fill_between(bincenters,mu-sme,mu+sme,color=plot_color,alpha=0.5)
+    ax.plot(bincenters, mu, c=plot_color,lw=2, alpha=plot_alpha, label=label_name)
+    ax.fill_between(bincenters, mu-sme, mu+sme,color=plot_color, alpha=plot_alpha)
     
     
     ax.set_rlim(0,rlim)
@@ -126,13 +111,121 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, plot_color, label_name,
     
     ax.set_rgrids(np.arange(0.05,rlim,0.05),labels,angle=90,fontsize=24)
     ax.set_thetagrids(np.arange(0,360,360/8),[],fontsize=24)
-    ax.legend(fancybox=True,loc=4)
+    
+    if show_legend:
+        ax.legend(loc=0)
     
     # show and return the fig and ax handles
     plt.show()
     
     # return handles
     return fig,ax
+
+
+def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
+                              plot_alpha=1.0, plot_color='k',label_name=None, 
+                              show_legend=False, fig=None, ax=None):
+    
+    ecc = np.sqrt(x**2+y**2)
+    diameter = sigma
+    
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+    
+    # fit a line
+    p = np.polyfit(ecc,diameter,1)
+    [y1,y2] = np.polyval(p,xlim)
+    ax.plot([0,0],[0,0],c='%s' %(plot_color),lw=5,label=label_name)
+    
+    # bin and plot the errors
+    for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
+        b0 = e-0.5
+        b1 = e+0.5
+        idx0 = find(ecc>=b0)
+        idx1 = find(ecc<=b1)
+        idx = np.intersect1d(idx0,idx1)
+        if len(idx) > min_n:
+            mu = np.mean(diameter[idx])
+            err = np.std(diameter[idx])/np.sqrt(dof)
+            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4,alpha=plot_alpha)
+            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color),alpha=plot_alpha)
+    
+    # beautify
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
+    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
+    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
+    ax.set_yticklabels(np.arange(ylim[0],ylim[1]+1),fontsize='18')
+    ax.set_ylabel('pRF Size (deg)',size='18')
+    ax.set_xlabel('Eccentricity (deg)',size='18')
+    
+    if show_legend:
+        ax.legend(loc=0)
+    
+    # show and return the fig and ax handles
+    plt.show()
+    
+    return fig,ax
+
+
+def sigma_hrf_delay_scatter(sigma, hrf_delay, xlim, ylim, 
+                            min_vox, n, plot_color, label_name, 
+                            show_legend=False, fig=None, ax=None):
+        
+    # arguments can include figure and axes handles for plotting multiple ROIs
+    if not fig:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig.add_subplot(111)
+    
+    # fit a line
+    p = np.polyfit(sigma,hrf_delay,1)
+    [y1,y2] = np.polyval(p,xlim)
+    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
+    
+    # bin and plot the errors
+    for e in np.arange(xlim[0]+0.25,xlim[1]+0.25,1):
+        b0 = e-0.25
+        b1 = e+0.25
+        idx0 = find(sigma>=b0)
+        idx1 = find(sigma<=b1)
+        idx = np.intersect1d(idx0,idx1)
+        if len(idx) > min_vox:
+            
+            # if its only 1 subject, c
+            if num_subjects == 1:
+                n = len(idx)
+            else:
+                n = num_subjects
+                
+            mu = np.mean(hrf_delay[idx])
+            err = np.std(hrf_delay[idx])/np.sqrt(len(n))
+            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
+            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
+    
+    # beautify
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
+    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
+    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
+    ax.set_yticklabels(np.arange(ylim[0]+5,ylim[1]+1+5),fontsize='18')
+    ax.set_ylabel('HRF Delay (secs)',size='18')
+    ax.set_xlabel('pRF Size (deg)',size='18')
+    
+    if show_legend:
+        ax.legend(loc=2)
+    
+    # show and return the fig and ax handles
+    plt.show()
+    return fig,ax
+    
 
 
 def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
@@ -186,64 +279,7 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     plt.show()
     return fig,ax
 
-
-def sigma_hrf_delay_scatter(sigma, hrf_delay, xlim, ylim, min_vox, n,
-                            plot_color, label_name, fig=None, ax=None):
-        
-    # arguments can include figure and axes handles for plotting multiple ROIs
-    if not fig:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-    else:
-        ax = fig.add_subplot(111)
-    
-    # fit a line
-    p = np.polyfit(sigma,hrf_delay,1)
-    [y1,y2] = np.polyval(p,xlim)
-    label_name += ',n=%d' %(len(sigma))
-    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
-    
-    # bin and plot the errors
-    for e in np.arange(xlim[0]+0.25,xlim[1]+0.25,1):
-        b0 = e-0.25
-        b1 = e+0.25
-        idx0 = find(sigma>=b0)
-        idx1 = find(sigma<=b1)
-        idx = np.intersect1d(idx0,idx1)
-        if len(idx) > min_vox:
-            
-            # if its only 1 subject, c
-            if num_subjects == 1:
-                n = len(idx)
-            else:
-                n = num_subjects
-                
-            mu = np.mean(hrf_delay[idx])
-            err = np.std(hrf_delay[idx])/np.sqrt(len(n))
-            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
-            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
-    
-    # beautify
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
-    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
-    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
-    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
-    ax.set_yticklabels(np.arange(ylim[0]+5,ylim[1]+1+5),fontsize='18')
-    ax.set_ylabel('HRF Delay (secs)',size='18')
-    ax.set_xlabel('pRF Size (deg)',size='18')
-    # ax.legend(loc=2)
-    
-    # show and return the fig and ax handles
-    plt.show()
-    return fig,ax
-    
-
-def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
-                              plot_color, label_name, show_legend=False, fig=None, ax=None):
-    
-    ecc = np.sqrt(x**2+y**2)
-    diameter = sigma
+def beta_hist(beta, xlim, voxel_dim, plot_color, label_name, fig=None, ax=None):
     
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
@@ -252,41 +288,26 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
     else:
         ax = fig.add_subplot(111)
     
-    # fit a line
-    p = np.polyfit(ecc,diameter,1)
-    [y1,y2] = np.polyval(p,xlim)
-    label_name += ',n=%d' %(len(ecc))
-    ax.plot([0,0],[0,0],c='%s' %(plot_color),lw=5,label='%s' %(label_name))
+    spacing = np.linspace(xlim[0],xlim[1],xlim[2],endpoint=False)
     
-    # bin and plot the errors
-    for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
-        b0 = e-0.5
-        b1 = e+0.5
-        idx0 = find(ecc>=b0)
-        idx1 = find(ecc<=b1)
-        idx = np.intersect1d(idx0,idx1)
-        if len(idx) > min_n:
-            mu = np.mean(diameter[idx])
-            err = np.std(diameter[idx])/np.sqrt(dof)
-            ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4)
-            ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color))
+    n,bins = np.histogram(beta,bins=spacing)
+    bincenters = list(0.5*(bins[1:]+bins[:-1]))
+    mu = (n*voxel_dim**3)/(len(beta)*voxel_dim**3)
+    sme = mu / np.sqrt(n)
+    cumsum = np.cumsum(mu)
     
-    # beautify
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
-    ax.set_xticks(np.arange(xlim[0],xlim[1]+1))
-    ax.set_yticks(np.arange(ylim[0],ylim[1]+1))
-    ax.set_xticklabels(np.arange(xlim[0],xlim[1]+1),fontsize='18')
-    ax.set_yticklabels(np.arange(ylim[0],ylim[1]+1),fontsize='18')
-    ax.set_ylabel('pRF Size (deg)',size='18')
-    ax.set_xlabel('Eccentricity (deg)',size='18')
+    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name)
+    ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
+    plt.xticks(spacing,fontsize=18)
+    plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
+    ax.bar(bincenters,mu,color=plot_color,width=0.33)
+    plt.xlim(spacing[0]+0.15,spacing[-1]+0.25)
+    plt.ylim(0,1)
     
-    if show_legend:
-        ax.legend(fancybox=True,loc=2)
+    return fig, ax
     
-    # show and return the fig and ax handles
-    plt.show()
-    return fig,ax
+
+
     
 def hrf_delay_kde(delays,kernel_width,plot_color,label_name,fig=None,ax=None):
     import numpy as np
