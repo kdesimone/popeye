@@ -310,26 +310,14 @@ class GaussianFit(PopulationFit):
         
         if self.auto_fit:
             
-            tic = time.clock()
+            self.start = time.clock()
             self.ballpark;
             self.estimate;
             self.OLS;
-            toc = time.clock()
+            self.finish = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   HRF=%.02f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      toc-tic,
-                      self.rsquared,
-                      self.theta,
-                      self.rho,
-                      self.sigma,
-                      self.beta,
-                      self.hrf_delay))
-                          
             if self.verbose:
-                print(msg)
+                print(self.msg)
         
     @auto_attr
     def ballpark(self):
@@ -442,3 +430,19 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def hemodynamic_response(self):
         return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+    
+    @auto_attr
+    def msg(self):
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   HRF=%.02f" 
+            %(self.voxel_index[0],
+              self.voxel_index[1],
+              self.voxel_index[2],
+              self.finish-self.start,
+              self.rsquared,
+              self.theta,
+              self.rho,
+              self.sigma,
+              self.beta,
+              self.hrf_delay))
+        return txt
+    
