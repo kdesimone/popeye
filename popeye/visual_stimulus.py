@@ -154,8 +154,130 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     
     return Z
 
-def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_width, 
-                         thetas, num_bar_steps, num_blank_steps, ecc, threshold = 0.33):
+def simulate_checkerboard_bar(pixels_across, pixels_down, 
+                              viewing_distance, screen_width, 
+                              thetas, bar_steps, blank_steps,
+                              bar_width, ecc, tr_length, flicker_hz, 
+                              projector_hz=60, threshold = 0.33):
+    
+    # get number of frames per volume
+    frames_per_vol = tr_length*projector_hz
+    total_trs = len(thetas[thetas==-1])*blank_steps + len(thetas[thetas!=-1])*bar_steps
+    total_frames = frames_per_vol * total_trs
+    
+    # timing parameters for ensuring the proper flicker rate
+    run_length_in_seconds = total_trs*tr_length
+    sample_resoluton = 1/projector_hz
+    flicker_time = 1/flicker_hz/2
+    num_off_flicks = flicker_time / sample_resoluton
+    cycle_1of2 = np.zeros(num_off_flicks)
+    cycle_2of2 = np.ones(num_off_flicks)
+    cycle = np.concatenate((cycle_1of2,cycle_2of2))
+    num_flips = run_length_in_seconds / sample_resoluton
+    num_flickers = num_flips / len(cycle)
+    full_run = np.tile(cycle, num_flickers)
+    
+    # visuotopic stuff
+    ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
+    deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
+    
+    # create the checkerboard
+    hi_index = 255
+    lo_index = 0
+    check_freq = 0.25
+    pixels_per_cycle = ppd * check_freq
+    checks_1 = np.zeros((pixels_down,pixels_across),dtype='uint8')
+    checks_2 = np.zeros((pixels_down,pixels_across),dtype='uint8')
+    checks_1[:,:] = 0.5* (1+np.sign(np.sin(2*np.pi*deg_x/pixels_per_cycle))*np.sign(np.sin(2*np.pi*deg_y/pixels_per_cycle)))*(hi_index-lo_index) + lo_index
+    checks_2[:,:] = hi_index-checks_1
+    checks = np.zeros((checks_1.shape[0],checks_1.shape[1],2),'uint8')
+    checks[:,:,0] = checks_1
+    checks[:,:,1] = checks_2
+    
+    # mean luminance frame for blanks
+    baseline = np.zeros((pixels_down,pixels_across),dtype='uint8')+int(hi_index/2)
+    
+    # initialize the bar array
+    bar_stimulus = np.zeros((pixels_down, pixels_across, total_frames,),dtype='uint8')
+    
+    # initialize TR counter
+    tr_num = 0
+    
+    # main loop
+    for theta in thetas:
+        
+        if theta != -1:
+            
+            # convert to radians
+            theta_rad = theta * np.pi / 180
+            
+            # get the starting point and trajectory
+            start_pos = np.array([-np.cos(theta_rad)*ecc, -np.sin(theta_rad)*ecc])
+            end_pos = np.array([np.cos(theta_rad)*ecc, np.sin(theta_rad)*ecc])
+            run_and_rise = end_pos - start_pos;
+            
+            if np.mod(theta,90) == 0:
+                sigma_x = bar_width/2
+                sigma_y = 100
+            else:
+                sigma_x = 100
+                sigma_y = bar_width/2
+            
+            # step through each position along the trajectory
+            for step in np.arange(0,bar_steps):
+                
+                # get the position of the bar at each step
+                xy0 = run_and_rise * step/bar_steps + start_pos
+                
+                # generate the gaussian
+                Z = gaussian_2D(deg_x,deg_y,xy0[0],xy0[1],sigma_x,sigma_y,theta)
+                Z_mask = np.zeros_like(Z,dtype='uint8')
+                Z_mask[Z>0.33] = 1
+                
+                # loop over each flip
+                for f in np.arange(frames_per_vol):
+                    
+                    # get the frame number
+                    f_num = tr_num * frames_per_vol + f
+                    
+                    # generate the frame
+                    frame = np.zeros_like(Z_mask,dtype='uint8')
+                    frame = checks[:,:,full_run[f_num]]*Z_mask
+                    frame[Z_mask==0] = int(hi_index/2)
+                    
+                    # set the frame
+                    bar_stimulus[:,:,f_num] = frame[:,:]
+                    
+                    print(f_num)
+                    
+                # iterate TR
+                tr_num += 1
+                
+        else:
+            
+            # step through each volume
+            for step in np.arange(0,blank_steps):
+                                
+                # step through each flip
+                for f in np.arange(frames_per_vol):
+                    
+                    # get the frame number
+                    f_num = tr_num * frames_per_vol + f
+                    
+                    # set the frame to mean luminance
+                    bar_stimulus[:,:,f_num] = baseline[:,:]
+                    
+                    print(f_num)
+                    
+                # iterate
+                tr_num += 1
+       
+    return bar_stimulus
+
+def simulate_bar_stimulus(pixels_across, pixels_down, 
+                          viewing_distance, screen_width, 
+                          thetas, num_bar_steps, num_blank_steps, 
+                          ecc, threshold = 0.33):
 
     """
     A utility function for creating a sweeping bar stimulus in memory.
@@ -193,9 +315,9 @@ def simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, screen_w
         and the end of the stimulus run.
     
     threshold : float
-        The bar stimulus is created by thresholding a very oblong two-dimensional 
-        Gaussian at various orientations.
-    
+        The bar stimulus is created by thresholding a very oblong two-dimensional
+        Gaussian oriented orthogonally to the direction of the sweep.
+        
     Returns
     -------
     bar : ndarray
