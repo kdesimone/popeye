@@ -7,7 +7,7 @@
 language: python
 env:
     global:
-        - DEPENDS="cython numpy scipy matplotlib nibabel statsmodels"
+        - DEPENDS="cython numpy scipy matplotlib nibabel"
 matrix:
   include:
     - python: 2.7
@@ -21,6 +21,7 @@ before_install:
     - sudo apt-get install libblas-dev liblapack-dev libatlas3gf-base
     - pip install --timeout=60 --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
     - pip install git+git://github.com/rainwoodman/sharedmem
+    - pip install statsmodels
     - if [ "${COVERAGE}" == "1" ]; then
       pip install coverage;
       pip install coveralls;
