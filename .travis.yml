@@ -19,6 +19,7 @@ before_install:
     - python --version # just to check
     - pip install nose # always
     - sudo apt-get install libblas-dev liblapack-dev libatlas3gf-base
+    - pip install pillow
     - pip install --timeout=60 --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
     - pip install git+git://github.com/rainwoodman/sharedmem
     - pip install statsmodels
