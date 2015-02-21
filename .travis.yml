@@ -7,7 +7,7 @@
 language: python
 env:
     global:
-        - DEPENDS="cython numpy scipy matplotlib nibabel"
+        - DEPENDS="cython numpy scipy matplotlib nibabel statsmodels"
 matrix:
   include:
     - python: 2.7
