@@ -63,6 +63,6 @@ MAJOR = _version_major
 MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
-PACKAGES = ['popeye']
+PACKAGES = ['popeye', 'popeye.tests']
 PACKAGE_DATA = {"popeye": ["LICENSE"]}
 REQUIRES = []
