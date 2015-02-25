@@ -5,8 +5,8 @@ cimport numpy as np
 from scipy.signal.sigtools import _correlateND
 import ctypes
 
-DTYPE = np.int
-ctypedef np.int_t DTYPE_t
+DTYPE = np.uint8
+ctypedef np.uint8_t DTYPE_t
 
 DTYPE2 = np.double
 ctypedef np.double_t DTYPE2_t
@@ -68,7 +68,7 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.wraparound(False)
 def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                            np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                           np.ndarray[short, ndim=3] stim_arr, 
+                           np.ndarray[DTYPE_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
                            DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
     
