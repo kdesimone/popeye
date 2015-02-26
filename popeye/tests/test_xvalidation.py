@@ -77,22 +77,22 @@ def test_kfold_xval_repeated_runs():
     fit_kwargs = {'auto_fit': False, 'verbose' : False}    
     
     # create a series of "runs"
-    data = np.zeros((stimulus.stim_arr.shape[-1],num_runs))
+    data = np.zeros((num_runs,stimulus.stim_arr.shape[-1]))
     
     for r in range(num_runs):
         
         # fill out the data list
-        data[:,r] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
+        data[r,:] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
                                         stimulus.deg_x, stimulus.deg_y, 
                                         stimulus.stim_arr, tr_length)
     
     # get predictions out for each of the folds ...
     models = (model,)
-    left_out_data, predictions = xval.kfold_xval(models, data, og.GaussianFit, folds, fit_args, fit_kwargs)
+    predictions = xval.kfold_xval(models, data, og.GaussianFit, folds, fit_args, fit_kwargs)
     
     # assert the coeff of determination is 100 for each prediction
-    for k in range(folds):
-        cod = xval.coeff_of_determination(left_out_data[k], predictions[k])
+    for p in predictions:
+        cod = xval.coeff_of_determination(p.data,p.prediction)
         npt.assert_almost_equal(cod,100, 4)
 
 # def test_kfold_xval_unique_runs():
