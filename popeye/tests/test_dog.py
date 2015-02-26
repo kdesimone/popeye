@@ -27,7 +27,7 @@ def test_dog():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
-    dtype = ctypes.c_short
+    dtype = ctypes.c_uint8
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 

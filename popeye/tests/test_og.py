@@ -27,7 +27,7 @@ def test_og_fit():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
-    dtype = ctypes.c_short
+    dtype = ctypes.c_uint8
     
     # insert blanks
     thetas = list(thetas)
@@ -92,7 +92,7 @@ def test_parallel_og_fit():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
-    dtype = ctypes.c_short
+    dtype = ctypes.c_uint8
     num_voxels = multiprocessing.cpu_count()-1
     
     # create the sweeping bar stimulus in memory
