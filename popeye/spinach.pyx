@@ -97,7 +97,7 @@ def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.wraparound(False)
 def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                  np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                 np.ndarray[short, ndim=3] stim_arr,
+                                 np.ndarray[DTYPE_t, ndim=3] stim_arr,
                                  DTYPE2_t x, DTYPE2_t y, 
                                  DTYPE2_t sigma_center, 
                                  DTYPE2_t sigma_surround):
@@ -194,7 +194,7 @@ def generate_dog_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.wraparound(False)
 def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                            np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                           np.ndarray[short, ndim=3] stim_arr,
+                           np.ndarray[DTYPE_t, ndim=3] stim_arr,
                            DTYPE2_t x, DTYPE2_t y, DTYPE2_t s):
                                  
     """
@@ -417,7 +417,7 @@ def generate_gabor_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.wraparound(False)
 def generate_gabor_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                               np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                              np.ndarray[short, ndim=3] stim_arr,
+                              np.ndarray[DTYPE_t, ndim=3] stim_arr,
                               DTYPE2_t x0,
                               DTYPE2_t y0,
                               DTYPE2_t s0,
