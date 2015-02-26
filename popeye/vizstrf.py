@@ -189,6 +189,18 @@ def compute_model_ts(x, y, s_sigma, t_sigma, beta, hrf_delay,
     # transient_response = np.insert(transient_response,0,np.ones(len(t)/2)*transient_response[0])
     # transient_response = np.insert(transient_response,len(transient_response),np.ones(len(t)/2-1)*transient_response[-1])
     # transient_response += 127
+
+    # create sustained response for whole time-series
+    sustained_response = fftconvolve(sustained_1vol_norm,response,'valid')/len(t)
+    sustained_response = np.insert(sustained_response,0,np.ones(len(t)/2)*sustained_response[0])
+    sustained_response = np.insert(sustained_response,len(sustained_response),np.ones(len(t)/2-1)*sustained_response[-1])
+    sustained_response += 127
+    
+    # create transient response for whole time-series
+    transient_response = fftconvolve(transient_1vol_norm,response,'valid')/len(t)
+    transient_response = np.insert(transient_response,0,np.ones(len(t)/2)*transient_response[0])
+    transient_response = np.insert(transient_response,len(transient_response),np.ones(len(t)/2-1)*transient_response[-1])
+    transient_response += 127
     
     # take the mean of each TR
     sustained_ts = np.array([np.mean(sustained_response[tp:tp+projector_hz]) for tp in np.arange(0,len(response),projector_hz*tr_length)])
