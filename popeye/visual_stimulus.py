@@ -506,7 +506,7 @@ def simulate_bar_stimulus(pixels_across, pixels_down,
     bar[bar_stimulus > clip] = 1
     bar = np.short(bar)
     
-    return bar, full_run
+    return bar
 
 
 # This should eventually be VisualStimulus, and there would be an abstract class layer
