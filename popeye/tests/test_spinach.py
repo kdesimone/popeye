@@ -50,7 +50,7 @@ def test_generate_og_timeseries():
     timeseries_length = 15 # number of frames to simulate our stimulus array
     
     # initialize the stimulus array
-    stim_arr = np.zeros((xpixels, ypixels, timeseries_length)).astype('short')
+    stim_arr = np.zeros((xpixels, ypixels, timeseries_length)).astype('uint8')
     
     # make a circular mask appear for the first 5 frames
     xi,yi = np.nonzero(np.sqrt((dx-xcenter)**2 + (dy-ycenter)**2)<sigma)
