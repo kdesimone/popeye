@@ -325,9 +325,9 @@ def simulate_movie_bar(images, pixels_across, pixels_down,
             
             if np.mod(theta,90) == 0:
                 sigma_x = bar_width/2
-                sigma_y = 100
+                sigma_y = 500
             else:
-                sigma_x = 100
+                sigma_x = 500
                 sigma_y = bar_width/2
             
             # step through each position along the trajectory

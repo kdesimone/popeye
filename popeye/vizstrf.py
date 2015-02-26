@@ -170,17 +170,25 @@ def compute_model_ts(x, y, s_sigma, t_sigma, beta, hrf_delay,
     transient_1vol = np.append(np.diff(sustained_1vol),0)
     transient_1vol_norm = transient_1vol/(simps(np.abs(transient_1vol),t)/2)
     
-    # create sustained response for whole time-series
-    sustained_response = fftconvolve(sustained_1vol_norm,response,'valid')/len(t)
-    sustained_response = np.insert(sustained_response,0,np.ones(len(t)/2)*sustained_response[0])
-    sustained_response = np.insert(sustained_response,len(sustained_response),np.ones(len(t)/2-1)*sustained_response[-1])
-    sustained_response += 127
+    transient_all = np.tile(transient_1vol_norm,stim_arr.shape[-1]/projector_hz)
+    sustained_all = np.tile(sustained_1vol_norm,stim_arr.shape[-1]/projector_hz)
     
-    # create transient response for whole time-series
-    transient_response = fftconvolve(transient_1vol_norm,response,'valid')/len(t)
-    transient_response = np.insert(transient_response,0,np.ones(len(t)/2)*transient_response[0])
-    transient_response = np.insert(transient_response,len(transient_response),np.ones(len(t)/2-1)*transient_response[-1])
+    transient_response = transient_all * response
+    sustained_response = sustained_all * response
     transient_response += 127
+    sustained_response += 127
+
+    # create sustained response for whole time-series
+    # sustained_response = fftconvolve(sustained_1vol_norm,response,'valid')/len(t)
+    # sustained_response = np.insert(sustained_response,0,np.ones(len(t)/2)*sustained_response[0])
+    # sustained_response = np.insert(sustained_response,len(sustained_response),np.ones(len(t)/2-1)*sustained_response[-1])
+    # sustained_response += 127
+    # 
+    # # create transient response for whole time-series
+    # transient_response = fftconvolve(transient_1vol_norm,response,'valid')/len(t)
+    # transient_response = np.insert(transient_response,0,np.ones(len(t)/2)*transient_response[0])
+    # transient_response = np.insert(transient_response,len(transient_response),np.ones(len(t)/2-1)*transient_response[-1])
+    # transient_response += 127
     
     # take the mean of each TR
     sustained_ts = np.array([np.mean(sustained_response[tp:tp+projector_hz]) for tp in np.arange(0,len(response),projector_hz*tr_length)])
