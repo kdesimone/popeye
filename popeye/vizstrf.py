@@ -215,6 +215,11 @@ def compute_model_ts(x, y, s_sigma, t_sigma, beta, hrf_delay,
     sustained_model = fftconvolve(hrf,sustained_pct)[0:len(sustained_pct)]
     transient_model = fftconvolve(hrf,transient_pct)[0:len(transient_pct)]
     
+    sustained_model *= -1
+    transient_model *= -1
+    
+    mixture = sustained_model * w + transient_model * (1-w)
+    
     # scale it
     model *= beta
     
