@@ -10,6 +10,7 @@ warnings.simplefilter("ignore")
 
 import numpy as np
 from scipy.signal import fftconvolve
+from scipy.integrate import simps
 import nibabel
 import statsmodels.api as sm
 
@@ -145,10 +146,14 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay, baseline,
     
     """
     
-        
+    # generate the rf
     rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
-    rf = rf/(2*np.pi*sigma**2)
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)*beta
+    
+    # divide by numeric integral
+    rf /= simps(simps(rf))
+    
+    # extract the response
+    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
@@ -156,7 +161,7 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay, baseline,
     # convolve it with the stimulus
     model = fftconvolve(response, hrf)[0:len(response)]
     
-    return model+baseline
+    return model*beta+baseline
 
 def parallel_fit(args):
     

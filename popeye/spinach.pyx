@@ -70,11 +70,10 @@ def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                            np.ndarray[DTYPE2_t, ndim=2] deg_y,
                            np.ndarray[DTYPE_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
-                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
+                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t distance):
     
     # cdef's
     cdef int i,j,k
-    cdef DTYPE2_t s_factor3 = (3.0*sigma)**2
     cdef int xlim = stim_arr.shape[0]
     cdef int ylim = stim_arr.shape[1]
     cdef int zlim = stim_arr.shape[2]
@@ -87,7 +86,7 @@ def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
-            if d <= s_factor3:
+            if d <= distance:
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*rf[i,j]
     
@@ -313,7 +312,7 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
 @cython.wraparound(False)
 def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
+                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma, DTYPE2_t distance):
     """
     Generate a Gaussian.
     
@@ -342,7 +341,6 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     # cdef's
     cdef int i,j,k
     cdef DTYPE2_t s_factor2 = (2.0*sigma**2)
-    cdef DTYPE2_t s_factor3 = (3.0*sigma)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef DTYPE2_t d, gauss1D
@@ -356,7 +354,7 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
-            if d <= s_factor3:
+            if d <= distance:
                 rf[i,j] = exp(-d/s_factor2)
 
     return rf

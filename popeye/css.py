@@ -147,9 +147,15 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     
     # generate the response
     rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
-    rf /= (2*np.pi*sigma**2)
+    
+    # normalize by the integral
+    rf /= simps(simps(rf))
+    
+    # raise it to the n
     rf **= n
-    response = beta*generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
+    
+    # extract the response
+    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
     # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
     
     # create the HRF
@@ -158,7 +164,10 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     # convolve it with the stimulus
     model = fftconvolve(response, hrf)[0:len(response)]
     
-    return model
+    # scale it by beta
+    model *= beta
+    
+    return model*beta
 
 def parallel_fit(args):
     

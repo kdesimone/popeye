@@ -159,7 +159,13 @@ def compute_model_ts(x, y, sigma, beta, baseline,
     # convolve it with the stimulus
     model = fftconvolve(response, hrf)[0:len(response)]
     
-    return model*beta+baseline
+    # scale it by beta
+    model *= beta
+    
+    # baseline offset
+    model += baseline
+    
+    return model
 
 def parallel_fit(args):
     

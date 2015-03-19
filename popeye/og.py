@@ -11,7 +11,7 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
-from scipy.integrate import trapz
+from scipy.integrate import trapz, simps
 import nibabel
 import statsmodels.api as sm
 
@@ -144,9 +144,17 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     event-related BOLD fMRI. NeuroImage 9: 416-429.
     
     """
-        
-    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
-    rf = rf/(2*np.pi*sigma**2)
+    
+    # set the distance to compute the gaussian
+    distance = (5*sigma)**2
+    
+    # generate the receptive field
+    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma, distance)
+    
+    # divide by numeric integral
+    rf /= simps(simps(rf))
+    
+    # extract the response
     response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
     
     # create the HRF

@@ -11,14 +11,14 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
-from scipy.integrate import trapz, simps
+from scipy.integrate import simps
 import nibabel
 import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent, polar=False):
     """
@@ -63,7 +63,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(7)
+    dims.append(9)
     
     # initialize the statmaps
     estimates = np.zeros(dims)
@@ -75,7 +75,9 @@ def recast_estimation_results(output, grid_parent, polar=False):
             estimates[fit.voxel_index] = (fit.theta,
                                           fit.rho,
                                           fit.sigma,
+                                          fit.n,
                                           fit.beta,
+                                          fit.hrf_delay,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
@@ -83,7 +85,9 @@ def recast_estimation_results(output, grid_parent, polar=False):
             estimates[fit.voxel_index] = (fit.x, 
                                           fit.y,
                                           fit.sigma,
+                                          fit.n,
                                           fit.beta,
+                                          fit.hrf_delay,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
@@ -98,8 +102,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
-
-def compute_model_ts(x, y, sigma, beta,
+def compute_model_ts(x, y, sigma, n, beta,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -143,17 +146,18 @@ def compute_model_ts(x, y, sigma, beta,
     
     """
     
-    # set the distance to compute the gaussian
-    distance = (5*sigma)**2
+    # generate the response
+    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
     
-    # generate the receptive field
-    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma, distance)
-    
-    # divide by numeric integral
+    # normalize by the integral
     rf /= simps(simps(rf))
     
-    # extract response
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, distance)
+    # raise it to the n
+    rf **= n
+    
+    # extract the response
+    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
+    # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
     
     # create the HRF
     hrf = utils.double_gamma_hrf(0, tr_length)
@@ -202,21 +206,21 @@ def parallel_fit(args):
     verbose = args[7]
     
     # fit the data
-    fit = GaussianFit(model,
-                      data,
-                      grids,
-                      bounds,
-                      tr_length,
-                      voxel_index,
-                      auto_fit,
-                      verbose)
+    fit = CompressiveSpatialSummationFit(model,
+                                          data,
+                                          grids,
+                                          bounds,
+                                          tr_length,
+                                          voxel_index,
+                                          auto_fit,
+                                          verbose)
     return fit
 
 
-class GaussianModel(PopulationModel):
+class CompressiveSpatialSummationModel(PopulationModel):
     
     """
-    A Gaussian population receptive field model class
+    A CSS population receptive field model class
     
     """
     
@@ -243,10 +247,10 @@ class GaussianModel(PopulationModel):
         
         PopulationModel.__init__(self, stimulus)
         
-class GaussianFit(PopulationFit):
+class CompressiveSpatialSummationFit(PopulationFit):
     
     """
-    A Gaussian population receptive field fit class
+    A CSS population receptive field fit class
     
     """
     
@@ -319,14 +323,27 @@ class GaussianFit(PopulationFit):
         
         if self.auto_fit:
             
-            self.start = time.clock()
+            tic = time.clock()
             self.ballpark;
             self.estimate;
             self.OLS;
-            self.finish = time.clock()
+            self.rss;
+            toc = time.clock()
             
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f" 
+                    %(self.voxel_index[0],
+                      self.voxel_index[1],
+                      self.voxel_index[2],
+                      toc-tic,
+                      self.rsquared,
+                      self.theta,
+                      self.rho,
+                      self.sigma,
+                      self.n,
+                      self.beta))
+                          
             if self.verbose:
-                print(self.msg)
+                print(msg)
         
     @auto_attr
     def ballpark(self):
@@ -342,7 +359,7 @@ class GaussianFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.beta0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -365,8 +382,12 @@ class GaussianFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
-    def beta0(self):
+    def n0(self):
         return self.ballpark[3]
+        
+    @auto_attr
+    def beta0(self):
+        return self.ballpark[4]
         
     @auto_attr
     def x(self):
@@ -381,8 +402,12 @@ class GaussianFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def beta(self):
+    def n(self):
         return self.estimate[3]
+    
+    @auto_attr
+    def beta(self):
+        return self.estimate[4]
     
     @auto_attr
     def rho(self):
@@ -394,7 +419,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.beta,
+        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -422,27 +447,12 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        rf = gaussian_2D(self.model.stimulus.deg_x,
-                         self.model.stimulus.deg_y,
-                         self.x, self.y, self.sigma, self.sigma, 0)
+        rf = generate_og_receptive_field(self.model.stimulus.deg_x,
+                                         self.model.stimulus.deg_y,
+                                         self.x, self.y, self.sigma/np.sqrt(self.n), self.beta)
         
         return rf
     
     @auto_attr
     def hemodynamic_response(self):
         return utils.double_gamma_hrf(0, self.tr_length)
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.theta,
-              self.rho,
-              self.sigma,
-              self.beta))
-        return txt
-    
