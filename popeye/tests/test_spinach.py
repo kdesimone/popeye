@@ -10,7 +10,7 @@ def test_generate_og_receptive_field():
     ypixels = 500 # simulated screen height
     ppd = 1 # simulated visual angle
     scale_factor = 1.0 # simulated stimulus resampling rate
-    
+    distance = 5 # standard deviations to compute gauss out to
     xcenter = 0 # x coordinate of the pRF center
     ycenter = 0 # y coordinate of the pRF center
     sigma = 1 # width of the pRF
@@ -27,8 +27,11 @@ def test_generate_og_receptive_field():
     # generate a pRF at (0,0) and 1 sigma wide
     rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma)
     
+    # divide by integral
+    rf /= 2 * np.pi * sigma ** 2
+    
     # compare the volume of the pRF to a known value
-    nt.assert_equal(np.round(np.sum(rf)), test_value)
+    nt.assert_almost_equal(np.sum(rf),1)
 
 
 def test_generate_og_timeseries():
