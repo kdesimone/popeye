@@ -66,11 +66,8 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                           np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                           np.ndarray[DTYPE_t, ndim=3] stim_arr, 
-                           np.ndarray[DTYPE2_t, ndim=2] rf,
-                           DTYPE2_t x, DTYPE2_t y, DTYPE2_t distance):
+def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr, 
+                           np.ndarray[DTYPE2_t, ndim=2] rf):
     
     # cdef's
     cdef int i,j,k
@@ -85,10 +82,8 @@ def generate_rf_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     # the loop
     for i in xrange(xlim):
         for j in xrange(ylim):
-            d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
-            if d <= distance:
-                for k in xrange(zlim):
-                    stim[k] += stim_arr[i,j,k]*rf[i,j]
+            for k in xrange(zlim):
+                stim[k] += stim_arr[i,j,k]*rf[i,j]
     
     return stim
 
@@ -312,7 +307,7 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
 @cython.wraparound(False)
 def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma, DTYPE2_t distance):
+                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
     """
     Generate a Gaussian.
     
@@ -354,8 +349,7 @@ def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             d = (deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2
-            if d <= distance:
-                rf[i,j] = exp(-d/s_factor2)
+            rf[i,j] = exp(-d/s_factor2)
 
     return rf
 
