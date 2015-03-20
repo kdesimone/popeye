@@ -149,9 +149,9 @@ def compute_model_ts(x, y, sigma, beta, baseline,
     rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
     
     # divide by numeric integral
-    rf /= simps(simps(rf))
+    rf /= 2 * np.pi * sigma ** 2
     
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)*beta
+    response = generate_rf_timeseries(stim_arr, rf)
     
     # create the HRF
     hrf = utils.double_gamma_hrf(0, tr_length)
