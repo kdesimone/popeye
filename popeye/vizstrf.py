@@ -148,11 +148,11 @@ def compute_model_ts(x, y, s_sigma, t_sigma, beta, hrf_delay,
     # create Gaussian
     srf = generate_og_receptive_field(deg_x, deg_y, x, y, s_sigma)
     
-    # normalize it
-    srf /= simps(simps(srf))
+    # normalize it by integral
+    srf /= 2 * np.pi * sigma ** 2
     
     # extract the timeseries
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, srf, x, y, s_sigma)
+    response = generate_rf_timeseries(stim_arr, srf)
     response_pad = np.insert(response,0,np.ones(10*projector_hz))
     response_pad = np.insert(response,len(response),np.ones(10*projector_hz))
     
