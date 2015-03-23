@@ -67,7 +67,8 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr, 
-                           np.ndarray[DTYPE2_t, ndim=2] rf):
+                           np.ndarray[DTYPE2_t, ndim=2] rf,
+                           np.ndarray[DTYPE_t, ndim=2] mask):
     
     # cdef's
     cdef int i,j,k
@@ -83,7 +84,8 @@ def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr,
     for i in xrange(xlim):
         for j in xrange(ylim):
             for k in xrange(zlim):
-                stim[k] += stim_arr[i,j,k]*rf[i,j]
+                if mask[i,j] == 1:
+                    stim[k] += stim_arr[i,j,k]*rf[i,j]
     
     return stim
 
