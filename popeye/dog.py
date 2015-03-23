@@ -171,8 +171,13 @@ def compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
     # difference
     rf = rf_center - np.sqrt(volume_ratio)*rf_surround
     
-    # generate the response
-    response = generate_rf_timeseries(stim_arr, rf)
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*sigma)**2] = 1
+    
+    # extract the response
+    response = generate_rf_timeseries(stim_arr, rf, mask)
     
     # generate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)

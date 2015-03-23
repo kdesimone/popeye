@@ -151,8 +151,13 @@ def compute_model_ts(x, y, sigma, beta, hrf_delay,
     # normalize by integral
     rf /= 2 * np.pi * sigma**2
     
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*sigma)**2] = 1
+    
     # extract the response
-    response = generate_rf_timeseries(stim_arr, rf)
+    response = generate_rf_timeseries(stim_arr, rf, mask)
     
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
