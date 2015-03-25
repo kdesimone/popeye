@@ -325,9 +325,9 @@ def simulate_movie_bar(images, pixels_across, pixels_down,
             
             if np.mod(theta,90) == 0:
                 sigma_x = bar_width/2
-                sigma_y = 100
+                sigma_y = 500
             else:
-                sigma_x = 100
+                sigma_x = 500
                 sigma_y = bar_width/2
             
             # step through each position along the trajectory
@@ -354,15 +354,13 @@ def simulate_movie_bar(images, pixels_across, pixels_down,
                     #     frame = np.array(image)
                     
                     # open the movie frame
-                    image = np.array(Image.open(images[f_num]))
-                    
+                    image = np.array(Image.open(images[f_num]),dtype='single')                    
                     
                     # get just luminance
                     frame = image[:,:,0]
                     
-                    # binarize the luminances
-                    # frame[frame>=gray_index] = hi_index
-                    # frame[frame<gray_index] = lo_index
+                    # rescale the luminance to full uint8
+                    frame[Z_mask==1] = utils.normalize(frame[Z_mask==1],0,255)
                     
                     # resize the frame if its bigger than stimulus
                     if frame.shape != bar_stimulus[:,:,f_num].shape:
