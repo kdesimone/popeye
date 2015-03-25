@@ -156,11 +156,28 @@ def compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
     
     """
     
-    # extract the response
+    # extract the center response
     rf_center = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
+    
+    # normalize by integral
+    rf_center /= 2 * np.pi * sigma ** 2
+    
+    # extract surround response
     rf_surround = generate_og_receptive_field(deg_x, deg_y, x, y, sigma*sigma_ratio) * 1/sigma_ratio**2
+    
+    # normalize by integral
+    rf_surround /= 2 * np.pi * sigma ** 2
+    
+    # difference
     rf = rf_center - np.sqrt(volume_ratio)*rf_surround
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma*sigma_ratio)
+    
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*sigma)**2] = 1
+    
+    # extract the response
+    response = generate_rf_timeseries(stim_arr, rf, mask)
     
     # generate the hrf
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)

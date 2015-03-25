@@ -11,6 +11,7 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
+from scipy.integrate import simps
 import nibabel
 import statsmodels.api as sm
 
@@ -101,7 +102,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
-def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
+def compute_model_ts(x, y, sigma, n, beta,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -159,7 +160,7 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
     
     # create the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
+    hrf = utils.double_gamma_hrf(0, tr_length)
     
     # convolve it with the stimulus
     model = fftconvolve(response, hrf)[0:len(response)]
@@ -167,7 +168,7 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     # scale it by beta
     model *= beta
     
-    return model*beta
+    return model
 
 def parallel_fit(args):
     
@@ -329,7 +330,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
@@ -339,8 +340,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
                       self.rho,
                       self.sigma,
                       self.n,
-                      self.beta,
-                      self.hrf_delay))
+                      self.beta))
                           
             if self.verbose:
                 print(msg)
@@ -359,7 +359,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0, self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -390,10 +390,6 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.ballpark[4]
         
     @auto_attr
-    def hrf0(self):
-        return self.ballpark[5]
-        
-    @auto_attr
     def x(self):
         return self.estimate[0]
         
@@ -414,10 +410,6 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.estimate[4]
     
     @auto_attr
-    def hrf_delay(self):
-        return self.estimate[5]
-    
-    @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
     
@@ -427,7 +419,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -463,4 +455,4 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return utils.double_gamma_hrf(0, self.tr_length)

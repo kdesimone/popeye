@@ -9,15 +9,16 @@ import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-from scipy.stats import linregress
 from scipy.signal import fftconvolve
+from scipy.integrate import simps
+
 import nibabel
 import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent, polar=False):
     """
@@ -62,7 +63,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(9)
+    dims.append(8)
     
     # initialize the statmaps
     estimates = np.zeros(dims)
@@ -70,13 +71,12 @@ def recast_estimation_results(output, grid_parent, polar=False):
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        if polar is True:
+        if polar:
             estimates[fit.voxel_index] = (fit.theta,
                                           fit.rho,
                                           fit.sigma,
-                                          fit.n,
                                           fit.beta,
-                                          fit.hrf_delay,
+                                          fit.baseline,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
@@ -84,14 +84,13 @@ def recast_estimation_results(output, grid_parent, polar=False):
             estimates[fit.voxel_index] = (fit.x, 
                                           fit.y,
                                           fit.sigma,
-                                          fit.n,
                                           fit.beta,
-                                          fit.hrf_delay,
+                                          fit.baseline,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
-                                       
-                             
+                                          
+                                 
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
     hdr = grid_parent.get_header()
@@ -101,7 +100,8 @@ def recast_estimation_results(output, grid_parent, polar=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
-def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
+
+def compute_model_ts(x, y, sigma, beta, baseline,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -145,29 +145,33 @@ def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
     
     """
     
-    # generate the response
+    # generate the receptive field
     rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
     
-    # normalize by the integral
-    rf /= simps(simps(rf))
+    # normalize by integral
+    rf /= 2 * np.pi * sigma**2
     
-    # raise it to the n
-    rf **= n
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*sigma)**2] = 1
     
     # extract the response
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
-    # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
+    response = generate_rf_timeseries(stim_arr, rf, mask)
     
     # create the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
+    hrf = utils.double_gamma_hrf(0, tr_length)
     
     # convolve it with the stimulus
     model = fftconvolve(response, hrf)[0:len(response)]
     
-    # scale it by beta
+    # scale it
     model *= beta
     
-    return model*beta
+    # add offset
+    model += baseline
+    
+    return model
 
 def parallel_fit(args):
     
@@ -205,21 +209,21 @@ def parallel_fit(args):
     verbose = args[7]
     
     # fit the data
-    fit = CompressiveSpatialSummationFit(model,
-                                          data,
-                                          grids,
-                                          bounds,
-                                          tr_length,
-                                          voxel_index,
-                                          auto_fit,
-                                          verbose)
+    fit = GaussianFit(model,
+                      data,
+                      grids,
+                      bounds,
+                      tr_length,
+                      voxel_index,
+                      auto_fit,
+                      verbose)
     return fit
 
 
-class CompressiveSpatialSummationModel(PopulationModel):
+class GaussianModel(PopulationModel):
     
     """
-    A CSS population receptive field model class
+    A Gaussian population receptive field model class
     
     """
     
@@ -246,10 +250,10 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         PopulationModel.__init__(self, stimulus)
         
-class CompressiveSpatialSummationFit(PopulationFit):
+class GaussianFit(PopulationFit):
     
     """
-    A CSS population receptive field fit class
+    A Gaussian population receptive field fit class
     
     """
     
@@ -329,18 +333,18 @@ class CompressiveSpatialSummationFit(PopulationFit):
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
+            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQUARED=%.02f   STDERR=%.02f   THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   BASELINE=%.03f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
                       toc-tic,
                       self.rsquared,
+                      self.stderr,
                       self.theta,
                       self.rho,
                       self.sigma,
-                      self.n,
                       self.beta,
-                      self.hrf_delay))
+                      self.baseline))
                           
             if self.verbose:
                 print(msg)
@@ -359,7 +363,8 @@ class CompressiveSpatialSummationFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0, self.hrf0),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, 
+                                              self.beta0, self.baseline0),
                                              (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
@@ -382,16 +387,12 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
-    def n0(self):
-        return self.ballpark[3]
-        
-    @auto_attr
     def beta0(self):
-        return self.ballpark[4]
-        
+        return self.ballpark[3]
+    
     @auto_attr
-    def hrf0(self):
-        return self.ballpark[5]
+    def baseline0(self):
+        return self.ballpark[4]
         
     @auto_attr
     def x(self):
@@ -406,16 +407,12 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def n(self):
+    def beta(self):
         return self.estimate[3]
     
     @auto_attr
-    def beta(self):
+    def baseline(self):
         return self.estimate[4]
-    
-    @auto_attr
-    def hrf_delay(self):
-        return self.estimate[5]
     
     @auto_attr
     def rho(self):
@@ -427,7 +424,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -435,7 +432,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def OLS(self):
-        return sm.OLS(self.data,self.prediction).fit()
+        return sm.OLS(self.prediction, self.data).fit()
     
     @auto_attr
     def coefficient(self):
@@ -457,10 +454,10 @@ class CompressiveSpatialSummationFit(PopulationFit):
     def receptive_field(self):
         rf = generate_og_receptive_field(self.model.stimulus.deg_x,
                                          self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma/np.sqrt(self.n), self.beta)
+                                         self.x, self.y, self.sigma)
         
         return rf
     
     @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return utils.double_gamma_hrf(0, self.tr_length)

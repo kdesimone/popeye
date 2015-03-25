@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 from pylab import find
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, linregress
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext
 from matplotlib.patches import Circle
@@ -139,7 +139,11 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
     # fit a line
     p = np.polyfit(ecc,diameter,1)
     [y1,y2] = np.polyval(p,xlim)
-    ax.plot([0,0],[0,0],c='%s' %(plot_color),lw=5,label=label_name)
+    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label=label_name)
+    
+    # add text of fit params
+    linfit = linregress(ecc,sigma)
+    ax.text(xlim[0]+1,ylim[1]-1,r'$\sigma = %.02f * \rho + %.02f$' %(linfit[0],linfit[1]) ,fontsize=24)
     
     # bin and plot the errors
     for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
