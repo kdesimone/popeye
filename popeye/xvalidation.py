@@ -12,7 +12,7 @@ def recast_xval_results(output, grid_parent):
     
     # set dims for model+data
     dims = list(grid_parent.shape)
-    dims.append(4)
+    dims.append(5)
     
     # initialize the cod array
     cod = np.zeros(dims)
@@ -26,6 +26,7 @@ def recast_xval_results(output, grid_parent):
         cod[xvoxel,yvoxel,zvoxel,1] = np.mean((o[0].rsquared,o[1].rsquared))
         cod[xvoxel,yvoxel,zvoxel,2] = np.mean((o[0].coefficient,o[1].coefficient))
         cod[xvoxel,yvoxel,zvoxel,3] = np.mean((o[0].mse,o[1].mse))
+        cod[xvoxel,yvoxel,zvoxel,3] = np.mean((o[0].stderr,o[1].stderr))
         
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
@@ -261,7 +262,8 @@ def parallel_xval(args):
     mean_cod = (xval_fits[0].cod+xval_fits[1].cod)/2/100
     mean_mse = (xval_fits[0].mse+xval_fits[1].mse)/2
     mean_bco = (xval_fits[0].coefficient+xval_fits[1].coefficient)/2
-    print("Finished voxel %.03d,%.03d,%.03d in %.03d seconds  CoD=%.02f  MSE=%.02f  BCO=%.02f" % (xvox,yvox,zvox,duration,mean_cod,mean_mse,mean_bco))
+    mean_stderr = (xval_fits[0].stderr+xval_fits[1].stderr)/2
+    print("Finished voxel %.03d,%.03d,%.03d in %.03d seconds  COD=%.02f BETACOEFF=%.02f  MSE=%.02f  STDERR=%.02f" % (xvox,yvox,zvox,duration,mean_cod,mean_bco,mean_mse,mean_stderr))
     return xval_fits
     
     
