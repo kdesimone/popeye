@@ -17,6 +17,18 @@ from scipy.integrate import romb, trapz
 import sharedmem
 from statsmodels import api as sm
 
+def make_nifti(data, grid_parent):
+    
+    # get header information from the gridParent and update for the prf volume
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    
+    # recast as nifti
+    nifti = nibabel.Nifti1Image(data,aff,header=hdr)
+    
+    return nifti
+
+
 def generate_shared_array(unshared_arr,dtype):
     
     """
@@ -84,8 +96,8 @@ def normalize(array, imin=-1, imax=1):
     
 
 # generic gradient descent
-def gradient_descent_search(parameters, args, fit_bounds, data,
-                            error_function, objective_function):
+def gradient_descent_search(parameters, args, bounds, data,
+                            error_function, objective_function, verbose):
                             
     """
     A generic gradient-descent error minimization function.
@@ -146,22 +158,23 @@ def gradient_descent_search(parameters, args, fit_bounds, data,
     """
     
     estimate, err,  _, _, _, warnflag =\
-        fmin_powell(error_function, parameters,
-                    args=(args, fit_bounds, data, objective_function),
+        fmin_powell(error_function, 
+                    parameters,
+                    args=(args, bounds, data, objective_function, verbose),
                     full_output=True,
                     disp=False)
     
     return estimate
 
-def brute_force_search(args, search_bounds, fit_bounds, data,
-                       error_function, objective_function):
+def brute_force_search(args, grids, bounds, Ns, data,
+                       error_function, objective_function, verbose):
                        
     """
     A generic brute-force grid-search error minimization function.
     
     The user specifies an `objective_function` and the corresponding
     `args` for generating a model prediction.  The `brute_force_search`
-    uses `search_bounds` to dictact the bounds for evenly sample the 
+    uses `search_bounds` to dictate the bounds for evenly sample the 
     parameter space.  
     
     In addition, the user must also supply  `fit_bounds`, containing pairs 
@@ -217,9 +230,9 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
                        
     estimate, err,  _, _ =\
         brute(error_function,
-              args=(args, fit_bounds, data, objective_function),
-              ranges=search_bounds,
-              Ns=3,
+              args=(args, bounds, data, objective_function, verbose),
+              ranges=grids,
+              Ns=Ns,
               finish=None,
               full_output=True,
               disp=False)
@@ -227,7 +240,7 @@ def brute_force_search(args, search_bounds, fit_bounds, data,
     return estimate
 
 # generic error function
-def error_function(parameters, args, bounds, data, objective_function, debug=False):
+def error_function(parameters, args, bounds, data, objective_function, verbose):
     
     """
     A generic error function with bounding.
@@ -276,7 +289,7 @@ def error_function(parameters, args, bounds, data, objective_function, debug=Fal
     error = np.sum((data-prediction)**2)
     
     # print for debugging
-    if debug:
+    if verbose:
         print(parameters, error)
     
     return error
