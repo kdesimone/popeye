@@ -124,7 +124,7 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, dof,
 
 def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
                               plot_alpha=1.0, plot_color='k',label_name=None, 
-                              show_legend=False, fig=None, ax=None):
+                              show_legend=False, show_fit = False, fig=None, ax=None):
     
     ecc = np.sqrt(x**2+y**2)
     diameter = sigma
@@ -137,13 +137,14 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
         ax = fig.add_subplot(111)
     
     # fit a line
-    p = np.polyfit(ecc,diameter,1)
-    [y1,y2] = np.polyval(p,xlim)
-    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label=label_name)
-    
-    # add text of fit params
     linfit = linregress(ecc,sigma)
-    ax.text(xlim[0]+1,ylim[1]-1,r'$\sigma = %.02f * \rho + %.02f$' %(linfit[0],linfit[1]) ,fontsize=24)
+    
+    # show fit
+    if show_fit:
+        ax.text(xlim[0]+1,ylim[1]-1,r'$\sigma = %.02f * \rho + %.02f$' %(linfit[0],linfit[1]) ,fontsize=24)
+    
+    mus = []
+    es = []
     
     # bin and plot the errors
     for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
@@ -157,6 +158,13 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
             err = np.std(diameter[idx])/np.sqrt(dof)
             ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4,alpha=plot_alpha)
             ax.scatter(e,mu,c='%s' %(plot_color),s=100,edgecolor='%s' %(plot_color),alpha=plot_alpha)
+            mus.append(mu)
+            es.append(e)
+    
+    # fit a line
+    p = np.polyfit(es,mus,1)
+    [y1,y2] = np.polyval(p,xlim)
+    ax.plot(xlim,[y1,y2],c='%s' %(plot_color),lw=5,label=label_name)
     
     # beautify
     ax.set_xlim(xlim)
