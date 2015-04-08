@@ -83,8 +83,8 @@ def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr,
     # the loop
     for i in xrange(xlim):
         for j in xrange(ylim):
-            for k in xrange(zlim):
-                if mask[i,j] == 1:
+            if mask[i,j] == 1:
+                for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*rf[i,j]
     
     return stim
