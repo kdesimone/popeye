@@ -20,7 +20,27 @@ class PopulationFit(object):
     """ Abstract class which holds the PopulationFit
     """
     
-    def __init__(self, model, data):
+    def __init__(self, model, data, grids, bounds, Ns, tr_length, voxel_index, auto_fit, verbose):
+        
+        # absorb vars
+        self.grids = grids
+        self.bounds = bounds
+        self.Ns = Ns
+        self.tr_length = tr_length
+        self.voxel_index = voxel_index
+        self.auto_fit = auto_fit
+        
+        # set verbose
+        if verbose == 0:
+            self.verbose = False
+            self.very_verbose = False
+        if verbose == 1:
+            self.verbose = True
+            self.very_verbose = False
+        if verbose == 2:
+            self.verbose = True
+            self.very_verbose = True
+        
         self.model = model
         self.data = data
 
