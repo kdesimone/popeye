@@ -254,8 +254,8 @@ class GaussianFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
+    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
         """
@@ -312,14 +312,8 @@ class GaussianFit(PopulationFit):
 
         """
         
-        PopulationFit.__init__(self, model, data)
-        
-        self.grids = grids
-        self.bounds = bounds
-        self.tr_length = tr_length
-        self.voxel_index = voxel_index
-        self.auto_fit = auto_fit
-        self.verbose = verbose
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
+                               tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
@@ -340,9 +334,11 @@ class GaussianFit(PopulationFit):
                                          self.tr_length),
                                         self.grids,
                                         self.bounds,
+                                        self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts)
+                                        compute_model_ts,
+                                        self.very_verbose)
 
     @auto_attr
     def estimate(self):
@@ -354,7 +350,8 @@ class GaussianFit(PopulationFit):
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts)
+                                             compute_model_ts,
+                                             self.very_verbose)
  
     @auto_attr
     def x0(self):
@@ -458,4 +455,3 @@ class GaussianFit(PopulationFit):
               self.beta,
               self.hrf_delay))
         return txt
-    
