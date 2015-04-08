@@ -13,6 +13,30 @@ from popeye import og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 from popeye.spinach import generate_og_receptive_field, generate_og_receptive_fields
 
+
+def recast_simulation_results(output, grid_parent):
+    
+    # load the gridParent
+    dims = list(grid_parent.shape)
+    dims = dims[0:3]
+    
+    # initialize the statmaps
+    estimates = np.zeros(dims)
+    
+    # extract the prf model estimates from the results queue output
+    for o in output:
+        estimates[o[0]] = o[1]
+        
+    # get header information from the gridParent and update for the prf volume
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    hdr.set_data_shape(dims)
+    
+    # recast as nifti
+    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
+    
+    return nifti_estimates
+
 def error_function(neural_sigma, voxel_sigma, voxel_rf, deg_x, deg_y, xs, ys):
     
     if neural_sigma <= 0:
