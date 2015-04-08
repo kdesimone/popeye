@@ -68,7 +68,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05):
+def resample_stimulus(stim_arr, scale_factor=0.05, interp='cubic'):
     
     """Resamples the visual stimulus
     
@@ -102,7 +102,7 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     for tr in np.arange(dims[-1]):
         
         # resize it
-        f = imresize(stim_arr[:,:,tr], scale_factor, interp='cubic')
+        f = imresize(stim_arr[:,:,tr], scale_factor, interp=interp)
         
         # normalize it to the same range as the non-resampled frames
         f *= np.max(stim_arr[:,:,tr]) / np.max(f)
@@ -514,7 +514,8 @@ class VisualStimulus(StimulusModel):
     """ A child of the StimulusModel class for visual stimuli. """
     
     
-    def __init__(self, stim_arr, viewing_distance, screen_width, scale_factor, dtype):
+    def __init__(self, stim_arr, viewing_distance, screen_width,
+                 scale_factor, dtype, interp='bilinear'):
         
         """
         
@@ -548,6 +549,7 @@ class VisualStimulus(StimulusModel):
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
         self.scale_factor = scale_factor
+        self.interp = interp
         
         # ascertain stimulus features
         self.pixels_across = self.stim_arr.shape[1]
@@ -555,17 +557,29 @@ class VisualStimulus(StimulusModel):
         self.run_length = self.stim_arr.shape[2]
         self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
         
-        # create downsampled stimulus
-        stim_arr_coarse = resample_stimulus(self.stim_arr,self.scale_factor)
-        
-        # generate the coordinate matrices
+        # generate coordinate matrices
         deg_x, deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
-        deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
         
-        # share the arrays
+        # share coordinate matrices
         self.deg_x = utils.generate_shared_array(deg_x, ctypes.c_double)
         self.deg_y = utils.generate_shared_array(deg_y, ctypes.c_double)
-        self.deg_x_coarse = utils.generate_shared_array(deg_x_coarse, ctypes.c_double)
-        self.deg_y_coarse = utils.generate_shared_array(deg_y_coarse, ctypes.c_double)
-        self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, dtype)
+        
+        if self.scale_factor == 1.0:
+            
+            self.stim_arr_coarse = self.stim_arr
+            self.deg_x_coarse = self.deg_x
+            self.deg_y_coarse = self.deg_y
+            
+        else:
+            
+            # create downsampled stimulus
+            stim_arr_coarse = resample_stimulus(self.stim_arr, self.scale_factor, self.interp)
+            
+            # generate the coordinate matrices
+            deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
+            
+            # share the arrays
+            self.deg_x_coarse = utils.generate_shared_array(deg_x_coarse, ctypes.c_double)
+            self.deg_y_coarse = utils.generate_shared_array(deg_y_coarse, ctypes.c_double)
+            self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, dtype)
         
