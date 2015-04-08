@@ -62,6 +62,9 @@ def test_kfold_xval_repeated_runs():
     grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
     bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
     
+    # set the grid smaples
+    Ns = 5
+    
     # initialize the gaussian model
     model = og.GaussianModel(stimulus)
     
@@ -73,8 +76,8 @@ def test_kfold_xval_repeated_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [grids, bounds, tr_length, [0,0,0]]
-    fit_kwargs = {'auto_fit': False, 'verbose' : False}    
+    fit_args = [grids, bounds, Ns, tr_length, [0,0,0]]
+    fit_kwargs = {'auto_fit': False, 'verbose' : 0}
     
     # create a series of "runs"
     data = np.zeros((num_runs,stimulus.stim_arr.shape[-1]))

@@ -28,6 +28,10 @@ def test_og_fit():
     scale_factor = 0.20
     resample_factor = 0.25
     dtype = ctypes.c_uint8
+    Ns = 5
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
     
     # insert blanks
     thetas = list(thetas)
@@ -83,7 +87,7 @@ def test_og_fit():
                                stimulus.stim_arr, tr_length)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, tr_length)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns, tr_length, voxel_index, verbose)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)

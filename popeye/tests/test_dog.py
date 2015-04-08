@@ -28,6 +28,10 @@ def test_dog():
     scale_factor = 0.20
     resample_factor = 0.25
     dtype = ctypes.c_uint8
+    Ns = 5
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -73,7 +77,7 @@ def test_dog():
     bounds = (x_bound, y_bound, s_bound, sr_bound, vr_bound, h_bound,)
     
     # fit it
-    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, tr_length)
+    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, Ns, tr_length, voxel_index, verbose)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 1)

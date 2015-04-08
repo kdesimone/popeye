@@ -32,6 +32,9 @@ def test_error_function():
     # we don't need to specify bounds for the error function
     fit_bounds = ()
     
+    # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
+    verbose = 0
+    
     # create a simple function to transform the parameters
     func = lambda x, y, arg: np.arange(x,x+100)*y
     
@@ -39,7 +42,7 @@ def test_error_function():
     response = func(params[0], params[1], args)
     
     # assert 0 error
-    npt.assert_equal(utils.error_function(params,args,fit_bounds,response,func),0)
+    npt.assert_equal(utils.error_function(params,args,fit_bounds,response,func, verbose),0)
 
 def test_gradient_descent_search():
     
@@ -55,6 +58,12 @@ def test_gradient_descent_search():
     # we don't need to specify bounds for the error function
     fit_bounds = ()
     
+    # set the number of grid samples for the coarse search
+    Ns = 5
+    
+    # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
+    verbose = 0
+    
     # create a simple function to transform the parameters
     func = lambda x, y, arg: np.arange(x,x+100)*y
     
@@ -62,12 +71,12 @@ def test_gradient_descent_search():
     response = func(params[0], params[1], args)
     
     # get the ball-park estimate
-    p0 = utils.brute_force_search(args, search_bounds, fit_bounds,
-                                  response, utils.error_function, func)
+    p0 = utils.brute_force_search(args, search_bounds, fit_bounds, Ns,
+                                  response, utils.error_function, func, verbose)
     
     # get the fine estimate
     estimate = utils.gradient_descent_search(p0, args, fit_bounds, response,
-                                             utils.error_function, func)
+                                             utils.error_function, func, verbose)
     
     # assert that the estimate is equal to the parameter
     npt.assert_almost_equal(params, estimate)
@@ -86,14 +95,20 @@ def test_brute_force_search():
     # we don't need to specify bounds for the error function
     bounds = ()
     
+    # set the number of grid samples for the coarse search
+    Ns = 5
+    
+    # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
+    verbose = 0
+    
     # create a simple function to transform the parameters
     func = lambda x, y, arg: np.arange(x,x+100)*y
     
     # create a "response"
     response = func(params[0], params[1], args)
     
-    estimate = utils.brute_force_search(args, grids, bounds,
-                                        response, utils.error_function, func)
+    estimate = utils.brute_force_search(args, grids, bounds, Ns, response,
+                                        utils.error_function, func, verbose)
                                         
     # assert that the estimate is equal to the parameter
     npt.assert_equal(params, estimate)
