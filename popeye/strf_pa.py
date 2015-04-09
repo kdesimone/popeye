@@ -300,7 +300,7 @@ class SpatioTemporalFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns, tr_length, projector_hz=60,
+    def __init__(self, model, data, grids, bounds, Ns, tr_length,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
@@ -351,27 +351,7 @@ class SpatioTemporalFit(PopulationFit):
                 
         """
         
-        PopulationFit.__init__(self, model, data)
-        
-        # absorb vars
-        self.grids = grids
-        self.bounds = bounds
-        self.Ns = Ns
-        self.tr_length = tr_length
-        self.projector_hz = projector_hz
-        self.voxel_index = voxel_index
-        self.auto_fit = auto_fit
-        
-        # set verbose
-        if verbose == 0:
-            self.verbose = False
-            self.very_verbose = False
-        if verbose == 1:
-            self.verbose = True
-            self.very_verbose = False
-        if verbose == 2:
-            self.verbose = True
-            self.very_verbose = True
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
@@ -391,7 +371,7 @@ class SpatioTemporalFit(PopulationFit):
                                          self.model.stimulus.deg_y_coarse,
                                          self.model.stimulus.stim_arr_coarse,
                                          self.tr_length,
-                                         self.projector_hz),
+                                         self.model.stimulus.projector_hz),
                                         self.grids,
                                         self.bounds,
                                         self.Ns,
@@ -408,7 +388,7 @@ class SpatioTemporalFit(PopulationFit):
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
                                               self.tr_length,
-                                              self.projector_hz),
+                                              self.model.stimulus.projector_hz),
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
@@ -485,7 +465,7 @@ class SpatioTemporalFit(PopulationFit):
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length,
-                                self.projector_hz)
+                                self.model.stimulus.projector_hz)
     
     def generate_prediction(self, theta, spatial_sigma, temporal_sigma, weight, beta):
         return compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
@@ -494,7 +474,7 @@ class SpatioTemporalFit(PopulationFit):
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length,
-                                self.projector_hz)
+                                self.model.stimulus.projector_hz)
         
         
     
@@ -520,7 +500,7 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def tr_timescale(self):
-        return np.linspace(0,self.tr_length,self.projector_hz*self.tr_length)
+        return np.linspace(0,self.tr_length,self.model.stimulus.projector_hz*self.tr_length)
     
     @auto_attr
     def response_center(self):
