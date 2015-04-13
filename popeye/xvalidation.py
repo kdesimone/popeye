@@ -8,7 +8,7 @@ import time
 import numpy as np
 import nibabel
 
-def recast_xval_results(output, grid_parent):
+def recast_xval_results(output, grid_parent, folds):
     
     # set dims for model+data
     dims = list(grid_parent.shape)
@@ -132,7 +132,7 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     
     
     # fold the data
-    div_by_folds =  np.mod(data.shape[-1], folds)
+    div_by_folds =  np.mod(data.shape[0], folds)
     
     # Make sure that an equal* number of samples get left out in each fold:
     if div_by_folds!= 0:
