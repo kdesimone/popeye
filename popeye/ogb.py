@@ -204,16 +204,18 @@ def parallel_fit(args):
     data = args[1]
     grids = args[2]
     bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    Ns = args[4]
+    tr_length = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
     
     # fit the data
     fit = GaussianFit(model,
                       data,
                       grids,
                       bounds,
+                      Ns,
                       tr_length,
                       voxel_index,
                       auto_fit,
@@ -258,8 +260,8 @@ class GaussianFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
+    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
         """
@@ -316,39 +318,20 @@ class GaussianFit(PopulationFit):
 
         """
         
-        PopulationFit.__init__(self, model, data)
-        
-        self.grids = grids
-        self.bounds = bounds
-        self.tr_length = tr_length
-        self.voxel_index = voxel_index
-        self.auto_fit = auto_fit
-        self.verbose = verbose
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
+                               tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
-            tic = time.clock()
+            self.start = time.clock()
             self.ballpark;
             self.estimate;
             self.OLS;
             self.rss;
-            toc = time.clock()
+            self.finish = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQUARED=%.02f   STDERR=%.02f   THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   BASELINE=%.03f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      toc-tic,
-                      self.rsquared,
-                      self.stderr,
-                      self.theta,
-                      self.rho,
-                      self.sigma,
-                      self.beta,
-                      self.baseline))
-                          
             if self.verbose:
-                print(msg)
+                print(self.msg)
         
     @auto_attr
     def ballpark(self):
@@ -358,9 +341,11 @@ class GaussianFit(PopulationFit):
                                          self.tr_length),
                                         self.grids,
                                         self.bounds,
+                                        self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts)
+                                        compute_model_ts,
+                                        self.very_verbose)
 
     @auto_attr
     def estimate(self):
@@ -373,7 +358,8 @@ class GaussianFit(PopulationFit):
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts)
+                                             compute_model_ts,
+                                             self.very_verbose)
  
     @auto_attr
     def x0(self):
@@ -470,3 +456,24 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def hemodynamic_response(self):
         return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+    
+    
+    @auto_attr
+    def msg(self):
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQUARED=%.02f   STDERR=%.02f   THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   BASELINE=%.03f" 
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.finish-self.start,
+                  self.rsquared,
+                  self.stderr,
+                  self.theta,
+                  self.rho,
+                  self.sigma,
+                  self.beta,
+                  self.baseline))
+        
+        return txt
+                          
+    
+    
