@@ -75,8 +75,7 @@ def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr,
     cdef int xlim = stim_arr.shape[0]
     cdef int ylim = stim_arr.shape[1]
     cdef int zlim = stim_arr.shape[2]
-    cdef DTYPE2_t d, gauss1D
-    
+        
     # initialize output variable
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
     
@@ -86,6 +85,28 @@ def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr,
             if mask[i,j] == 1:
                 for k in xrange(zlim):
                     stim[k] += stim_arr[i,j,k]*rf[i,j]
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_rf_timeseries_1D(np.ndarray[DTYPE2_t, ndim=2] stim_arr, 
+                              np.ndarray[DTYPE2_t, ndim=1] rf,
+                              np.ndarray[DTYPE_t, ndim=1] mask):
+    
+    # cdef's
+    cdef int i,j,k
+    cdef int xlim = stim_arr.shape[0]
+    cdef int ylim = stim_arr.shape[1]
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(ylim,dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        if mask[i] == 1:
+            for j in xrange(ylim):
+                stim[j] += stim_arr[i,j]*rf[i]
     
     return stim
 
