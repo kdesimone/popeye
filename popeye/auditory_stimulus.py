@@ -32,7 +32,7 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, target_times, dtype):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr, dtype=dtype)
@@ -50,5 +50,4 @@ class AuditoryStimulus(StimulusModel):
         self.freqs = utils.generate_shared_array(freqs, ctypes.c_double)
         
         # why don't the times returned from specgram start at 0? they are time bin centers?
-        source_times = np.linspace(0,np.ceil(times[-1]),len(times))
-        self.source_times = utils.generate_shared_array(source_times, ctypes.c_double)
+        self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)
