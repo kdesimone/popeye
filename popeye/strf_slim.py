@@ -520,7 +520,7 @@ class SpatioTemporalFit(PopulationFit):
               self.rho,
               self.spatial_sigma,
               self.temporal_sigma,
-              self.weight
+              self.weight,
               self.beta,
               self.baseline))
         return txt
