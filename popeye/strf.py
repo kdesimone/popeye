@@ -470,7 +470,7 @@ class SpatioTemporalFit(PopulationFit):
                                 self.model.stimulus.projector_hz)
     
     def generate_prediction(self, x, y, spatial_sigma, temporal_sigma, weight, beta, baseline):
-        return compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline
+        return compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
