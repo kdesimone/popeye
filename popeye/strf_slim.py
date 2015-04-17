@@ -99,8 +99,8 @@ def recast_estimation_results(output, grid_parent, polar=False):
     
     return nifti_estimates
 
-def compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
-                     rho, deg_x, deg_y, stim_arr, tr_length, projector_hz):
+def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline,
+                     deg_x, deg_y, stim_arr, tr_length, projector_hz):
     
     
     """
@@ -143,12 +143,6 @@ def compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
     
     """
     
-    theta = np.mod(theta,2*np.pi)
-    
-    # convert from polar to cartesian
-    x = np.cos(theta) * rho
-    y = np.sin(theta) * rho
-    
     # create Gaussian
     spatial_rf = generate_og_receptive_field(deg_x, deg_y, x, y, spatial_sigma)
     
@@ -158,13 +152,13 @@ def compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
     # create mask for speed
     distance = (deg_x - x)**2 + (deg_y - y)**2
     mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (5*spatial_sigma)**2] = 1
+    mask[distance < (37*spatial_sigma)**2] = 1
     
     # extract the timeseries
     spatial_response = generate_rf_timeseries(stim_arr, spatial_rf, mask)
     
     # get rid of zeros
-    spatial_response[spatial_response==0] = np.mean(spatial_response)
+    spatial_response[spatial_response==0] = spatial_response[0]
     
     # set the coordinate
     t = np.linspace(0,1,projector_hz)
@@ -210,11 +204,8 @@ def compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
     # mix it together
     model = sustained_norm * weight + transient_norm * (1-weight)
     
-    # scale by beta
-    model *= beta
-    
-    # baseline offset
-    model += baseline
+    # normalize it
+    model = utils.zscore(model)
     
     return model
 
@@ -250,10 +241,9 @@ def parallel_fit(args):
     bounds = args[3]
     Ns = args[4]
     tr_length = args[5]
-    projector_hz = args[6]
-    voxel_index = args[7]
-    auto_fit = args[8]
-    verbose = args[9]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
     
     # fit the data
     fit = SpatioTemporalFit(model,
@@ -262,7 +252,6 @@ def parallel_fit(args):
                             bounds,
                             Ns,
                             tr_length,
-                            projector_hz,
                             voxel_index,
                             auto_fit,
                             verbose)
@@ -351,7 +340,8 @@ class SpatioTemporalFit(PopulationFit):
                 
         """
         
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, tr_length, voxel_index, auto_fit, verbose)
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
+                               tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
@@ -366,8 +356,7 @@ class SpatioTemporalFit(PopulationFit):
         
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.rho,
-                                         self.model.stimulus.deg_x_coarse,
+        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
                                          self.model.stimulus.deg_y_coarse,
                                          self.model.stimulus.stim_arr_coarse,
                                          self.tr_length,
@@ -382,9 +371,8 @@ class SpatioTemporalFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.theta0, self.spatial_s0, self.temporal_s0, self.weight0, self.beta0),
-                                             (self.rho,
-                                              self.model.stimulus.deg_x,
+        return utils.gradient_descent_search((self.x, self.y, self.spatial_s0, self.temporal_s0, self.weight0),
+                                             (self.model.stimulus.deg_x,
                                               self.model.stimulus.deg_y,
                                               self.model.stimulus.stim_arr,
                                               self.tr_length,
@@ -396,53 +384,45 @@ class SpatioTemporalFit(PopulationFit):
                                              self.very_verbose)
     
     @auto_attr
-    def theta0(self):
-        return np.mod(self.ballpark[0],2*np.pi)
+    def x0(self):
+        return self.ballpark[0]
     
+    @auto_attr
+    def y0(self):
+        return self.ballpark[1]
+        
     @auto_attr
     def spatial_s0(self):
-        return self.ballpark[1]
-    
-    @auto_attr
-    def temporal_s0(self):
         return self.ballpark[2]
     
     @auto_attr
-    def weight0(self):
+    def temporal_s0(self):
         return self.ballpark[3]
     
     @auto_attr
-    def beta0(self):
+    def weight0(self):
         return self.ballpark[4]
     
     @auto_attr
-    def theta(self):
-        return np.mod(self.estimate[0],2*np.pi)
-    
-    @auto_attr
-    def spatial_sigma(self):
-        return self.estimate[1]
-    
-    @auto_attr
-    def temporal_sigma(self):
-        return self.estimate[2]
-    
-    @auto_attr
-    def weight(self):
-        return self.estimate[3]
-    
-    @auto_attr
-    def beta(self):
-        return self.estimate[4]
-    
-    @auto_attr
     def x(self):
-        return np.cos(self.theta) * self.rho
+        return self.estimate[0]
     
     @auto_attr
     def y(self):
-        return np.sin(self.theta) * self.rho
+        return self.estimate[1]
     
+    @auto_attr
+    def spatial_sigma(self):
+        return self.estimate[2]
+    
+    @auto_attr
+    def temporal_sigma(self):
+        return self.estimate[3]
+    
+    @auto_attr
+    def weight(self):
+        return self.estimate[4]
+        
     @auto_attr
     def spatial_rf(self):
         return generate_og_receptive_field(self.model.stimulus.deg_x, 
@@ -454,22 +434,24 @@ class SpatioTemporalFit(PopulationFit):
         return self.spatial_rf / (2 * np.pi * spatial_sigma ** 2)
     
     @auto_attr
+    def theta(self):
+        return np.mod(np.arctan2(self.y,self.x),2*np.pi)
+    
+    @auto_attr
     def rho(self):
-        return 2
+        return np.sqrt(self.x**2+self.y**2)
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.theta, self.spatial_sigma, self.temporal_sigma, self.weight,self.beta,
-                                self.rho,
+        return compute_model_ts(self.x, self.y, self.spatial_sigma, self.temporal_sigma, self.weight,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length,
                                 self.model.stimulus.projector_hz)
     
-    def generate_prediction(self, theta, spatial_sigma, temporal_sigma, weight, beta):
-        return compute_model_ts(theta, spatial_sigma, temporal_sigma, weight, beta,
-                                self.rho,
+    def generate_prediction(self, x, y, spatial_sigma, temporal_sigma, weight):
+        return compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -528,15 +510,18 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   SSIGMA=%.02f   TSIGMA=%.02f   WEIGHT=%.02f" 
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02f   SSIGMA=%.02f   TSIGMA=%.02f   WEIGHT=%.02f"
             %(self.voxel_index[0],
               self.voxel_index[1],
               self.voxel_index[2],
               self.finish-self.start,
               self.rsquared,
               self.theta,
+              self.rho,
               self.spatial_sigma,
               self.temporal_sigma,
-              self.weight))
+              self.weight
+              self.beta,
+              self.baseline))
         return txt
     
