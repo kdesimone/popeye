@@ -11,8 +11,8 @@ ctypedef np.uint8_t DTYPE_t
 DTYPE2 = np.double
 ctypedef np.double_t DTYPE2_t
 
-# DTYPE3 = np.short
-# ctypedef np.short DTYPE3_t
+DTYPE3 = np.short
+ctypedef short DTYPE3_t
 
 from libc.math cimport sin, cos, exp, sqrt
 
@@ -66,7 +66,7 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_rf_timeseries(np.ndarray[DTYPE_t, ndim=3] stim_arr, 
+def generate_rf_timeseries(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
                            np.ndarray[DTYPE_t, ndim=2] mask):
     
