@@ -27,7 +27,7 @@ def test_og_fit():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
-    dtype = ctypes.c_uint8
+    dtype = ctypes.c_int16
     Ns = 5
     voxel_index = (1,2,3)
     auto_fit = True

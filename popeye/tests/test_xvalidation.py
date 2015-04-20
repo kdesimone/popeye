@@ -43,7 +43,7 @@ def test_kfold_xval_repeated_runs():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
-    dtype = ctypes.c_uint8
+    dtype = ctypes.c_int16
     num_runs = 4
     folds = 2
     
