@@ -16,6 +16,7 @@ import PIL.ImageOps
 
 import numpy as np
 from scipy.misc import imresize, imread
+from scipy.ndimage.interpolation import zoom
 from scipy.io import loadmat
 from scipy.signal import square
 
@@ -68,7 +69,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05, interp='cubic'):
+def resample_stimulus(stim_arr, scale_factor=0.05):
     
     """Resamples the visual stimulus
     
@@ -99,14 +100,13 @@ def resample_stimulus(stim_arr, scale_factor=0.05, interp='cubic'):
     
     resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]))
     
+    # loop
     for tr in np.arange(dims[-1]):
         
         # resize it
-        f = imresize(stim_arr[:,:,tr], scale_factor, interp=interp)
+        f = zoom(stim_arr[:,:,tr], scale_factor)
         
-        # normalize it to the same range as the non-resampled frames
-        f *= np.max(stim_arr[:,:,tr]) / np.max(f)
-        
+        # insert it
         resampled_arr[:,:,tr] = f
     
     return resampled_arr
@@ -573,7 +573,7 @@ class VisualStimulus(StimulusModel):
         else:
             
             # create downsampled stimulus
-            stim_arr_coarse = resample_stimulus(self.stim_arr, self.scale_factor, self.interp)
+            stim_arr_coarse = resample_stimulus(self.stim_arr, self.scale_factor)
             
             # generate the coordinate matrices
             deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
