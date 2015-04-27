@@ -1,15 +1,88 @@
 from __future__ import division
-
 import numpy as np
-import matplotlib.pyplot as plt
 from pylab import find
 from scipy.stats import gaussian_kde, linregress
+from matplotlib import cm
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext
 from matplotlib.patches import Circle
 
 from popeye.spinach import generate_og_receptive_field
 
+def make_movie_static(stim_arr, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
+    
+    # this function requires ffmpeg -- https://www.ffmpeg.org/
+    # http://matplotlib.org/examples/animation/dynamic_image2.html
+    
+    # set up the figure
+    dims = tuple(stim_arr.shape[0:2])
+    fig = plt.figure(figsize=(dims[1]/dpi,dims[0]/dpi),dpi=dpi)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    ax = plt.axes(xlim=(0,dims[1]),ylim=(0,dims[0]))
+    
+    ims = []
+    
+    # loop over each frame
+    for frame in xrange(stim_arr.shape[-1]):
+        
+        # create figure
+        im = ax.imshow(stim_arr[:,:,frame],cmap=cm.gray, 
+                       vmin=vmin, vmax=vmax, interpolation='nearest')
+        plt.axis('off')
+        
+        # stash it
+        ims.append([im])
+    
+    # animate it
+    anim = animation.ArtistAnimation(fig, ims, interval=fps)
+    
+    plt.show()
+    
+    # this is a bug see here -- http://stackoverflow.com/questions/20137792/using-ffmpeg-and-ipython
+    mywriter = animation.FFMpegWriter(fps=fps)
+    
+    if write and fname:
+        anim.save('%s.mp4' %(fname), writer=mywriter, extra_args=['-vcodec', 'libx264'])
+    
+    return anim
+
+def make_movie_calleable(stim_arr, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
+    
+    # this function requires ffmpeg -- https://www.ffmpeg.org/
+    # https://jakevdp.github.io/blog/2012/08/18/matplotlib-animation-tutorial/
+    
+    # set up the figure
+    dims = tuple(stim_arr.shape[0:2])
+    fig = plt.figure(figsize=(dims[1]/dpi,dims[0]/dpi),dpi=dpi)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    ax = plt.axes(xlim=(0,dims[1]),ylim=(0,dims[0]))
+    im = ax.imshow(np.zeros_like(stim_arr[:,:,0]),cmap=cm.gray, 
+                   vmin=vmin, vmax=vmax, interpolation='nearest')
+    
+    # define the animator
+    def animate(frame, stim_arr):
+        print("doing frame %d" %(frame))
+        im.set_data(stim_arr[:,:,frame])
+        plt.axis('off')
+        return im,
+    
+    # initialization function: plot the background of each frame
+    def init():
+        im.set_data(())
+        return im,
+    
+    anim = animation.FuncAnimation(fig=fig, func=animate, blit=False, repeat=False,
+                                   fargs=(stim_arr,), interval=fps*20, frames=stim_arr.shape[-1])
+    
+    # this is a bug see here -- http://stackoverflow.com/questions/20137792/using-ffmpeg-and-ipython
+    mywriter = animation.FFMpegWriter(fps=fps)
+    
+    if write and fname:
+        anim.save('%s.mp4' %(fname), writer=mywriter, extra_args=['-vcodec', 'libx264'])
+    
+    return anim
 
 def eccentricity_hist(x, y, xlim, voxel_dim, dof, 
                      plot_alpha=1.0, plot_color='k',
