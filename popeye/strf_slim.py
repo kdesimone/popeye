@@ -99,7 +99,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     
     return nifti_estimates
 
-def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline,
+def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight,
                      deg_x, deg_y, stim_arr, tr_length, projector_hz):
     
     
@@ -152,13 +152,7 @@ def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline
     # create mask for speed
     distance = (deg_x - x)**2 + (deg_y - y)**2
     mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (37*spatial_sigma)**2] = 1
-    
-    # extract the timeseries
-    spatial_response = generate_rf_timeseries(stim_arr, spatial_rf, mask)
-    
-    # get rid of zeros
-    spatial_response[spatial_response==0] = spatial_response[0]
+    mask[distance < (5*spatial_sigma)**2] = 1
     
     # set the coordinate
     t = np.linspace(0,1,projector_hz)
@@ -167,45 +161,41 @@ def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline
     center = t[len(t)/2]
     
     # create sustain response for 1 TR
-    sustained_1vol = np.exp(-((t-center)**2)/(2*temporal_sigma**2))
-    sustained_1vol_norm = sustained_1vol/(temporal_sigma*np.sqrt(2*np.pi))
+    p = np.exp(-((t-center)**2)/(2*temporal_sigma**2))
+    p = p * 1/(np.sqrt(2*np.pi)*temporal_sigma)
     
     # create transient response for 1 TR
-    transient_1vol = np.append(np.diff(sustained_1vol),0)
-    transient_1vol_norm = transient_1vol/(simps(np.abs(transient_1vol),t)/2)
+    m = np.insert(np.diff(p),0,0)
+    m = m/(simps(np.abs(m),t))
     
     if np.round(transient_1vol_norm[0],3) != 0 or np.round(transient_1vol_norm[0],3) != 0:
         return np.inf
     
-    # pad spatial response
-    spatial_pad = np.tile(spatial_response,3)
+    # extract the timeseries
+    spatial_response = generate_rf_timeseries(stim_arr, spatial_rf, mask)
+    spatial_rect = np.abs(spatial_response)/len(spatial_response)
+    s_response = spatial_rect
     
     # convolve with transient and sustained RF
-    sustained_response = fftconvolve(spatial_pad, sustained_1vol_norm, 'same')[len(spatial_response):-len(spatial_response)]
-    transient_response = fftconvolve(spatial_pad, transient_1vol_norm, 'same')[len(spatial_response):-len(spatial_response)]
+    p_resp = np.abs(convolve(s_resp,p,cmode,'same'))
+    m_resp = np.abs(convolve(s_resp,m,cmode,'same'))
     
     # take the mean of each TR
-    sustained_ts = np.array([np.mean(sustained_response[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(spatial_response),projector_hz*tr_length)])
-    transient_ts = np.array([np.mean(transient_response[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(spatial_response),projector_hz*tr_length)])
-    
-    # pad them
-    sustained_pad = np.tile(sustained_ts,3)
-    transient_pad = np.tile(transient_ts,3)
-    
-    # convolve with hrf
+    s_ts = np.array([np.mean(s_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+    p_ts = np.array([np.mean(p_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+    m_ts = np.array([np.mean(m_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+
+    # convolve with hrf 
     hrf = utils.double_gamma_hrf(0,tr_length)
-    sustained_model = fftconvolve(sustained_pad, hrf, 'same')[len(sustained_ts):-len(sustained_ts)]
-    transient_model = fftconvolve(transient_pad, hrf, 'same')[len(sustained_ts):-len(sustained_ts)]
+    sustained_model = fftconvolve(p_ts, hrf, 'same')
+    transient_model = fftconvolve(m_ts, hrf, 'same')
     
     # normalize to a range
     sustained_norm = utils.zscore(sustained_model)
     transient_norm = utils.zscore(transient_model)
     
     # mix it together
-    model = sustained_norm * weight + transient_norm * (1-weight)
-    
-    # normalize it
-    model = utils.zscore(model)
+    model = sustained_model * weight + transient_model * (1-weight)
     
     return model
 
