@@ -19,13 +19,16 @@ def recast_simulation_results(output, grid_parent):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
+    dims.append(3)
     
     # initialize the statmaps
     estimates = np.zeros(dims)
     
     # extract the prf model estimates from the results queue output
     for o in output:
-        estimates[o[0]] = o[1]
+        voxel_index = o[0]
+        estimates[voxel_index] = (o[1],float(o[2][0]),o[3])
+
         
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
@@ -89,17 +92,18 @@ def simulate_neural_sigma(estimate, scatter, deg_x, deg_y, voxel_index, num_neur
     
     # progress
     if verbose:
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OLD=%.02f  NEW=%.02f" 
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   OLD=%.02f  NEW=%.02f   SCATTER=%.02f" 
             %(voxel_index[0],
               voxel_index[1],
               voxel_index[2],
               finish-start,
               sigma,
-              sigma_phat[0]))
+              sigma_phat[0],
+              scatter))
         
         print(txt)
     
-    return (voxel_index,sigma_phat[0])
+    return (voxel_index,sigma,sigma_phat,scatter)
 
 def parallel_simulate_neural_sigma(args):
     
@@ -113,7 +117,7 @@ def parallel_simulate_neural_sigma(args):
     
     return neural_sigma
 
-def generate_scatter_volume(roi, prf, threshold):
+def generate_scatter_volume(roi, prf, threshold, iterations):
     
     scatter = np.zeros_like(roi,dtype='double')
     
@@ -132,7 +136,7 @@ def generate_scatter_volume(roi, prf, threshold):
         mask[xind,yind,zind] = 1
         
         # get neighborhood
-        hood = ndimage.binary_dilation(mask)
+        hood = ndimage.binary_dilation(mask,iterations=iterations)
         hood[xind,yind,zind] = 0
         
         fit = prf[mask==1][0]
