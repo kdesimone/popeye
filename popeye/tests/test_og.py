@@ -68,8 +68,8 @@ def test_og_fit():
     h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid, h_grid,)
-    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound,)
+    grids = (x_grid, y_grid, s_grid, h_grid, b_grid)
+    bounds = (x_bound, y_bound, s_bound, h_bound, b_bound)
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus)
@@ -82,7 +82,7 @@ def test_og_fit():
     hrf_delay = -0.25
     
     # create the "data"
-    data = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
+    data = og.compute_model_ts(x, y, sigma, hrf_delay, beta,
                                stimulus.deg_x, stimulus.deg_y, 
                                stimulus.stim_arr, tr_length)
     
