@@ -46,10 +46,7 @@ def test_og_fit():
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
-        
-    # resample the stimulus
-    bar = resample_stimulus(bar, resample_factor)
-    
+                                
     # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
     
