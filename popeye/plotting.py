@@ -11,13 +11,12 @@ from matplotlib.patches import Circle
 
 from popeye.spinach import generate_og_receptive_field
 
-def make_movie_static(stim_arr, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
+def make_movie_static(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
     
     # this function requires ffmpeg -- https://www.ffmpeg.org/
     # http://matplotlib.org/examples/animation/dynamic_image2.html
     
     # set up the figure
-    dims = tuple(stim_arr.shape[0:2])
     fig = plt.figure(figsize=(dims[1]/dpi,dims[0]/dpi),dpi=dpi)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     ax = plt.axes(xlim=(0,dims[1]),ylim=(0,dims[0]))
@@ -48,17 +47,16 @@ def make_movie_static(stim_arr, vmin=0, vmax=255, dpi=100, fps=60, write=False, 
     
     return anim
 
-def make_movie_calleable(stim_arr, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
+def make_movie_calleable(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
     
     # this function requires ffmpeg -- https://www.ffmpeg.org/
     # https://jakevdp.github.io/blog/2012/08/18/matplotlib-animation-tutorial/
     
     # set up the figure
-    dims = tuple(stim_arr.shape[0:2])
     fig = plt.figure(figsize=(dims[1]/dpi,dims[0]/dpi),dpi=dpi)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     ax = plt.axes(xlim=(0,dims[1]),ylim=(0,dims[0]))
-    im = ax.imshow(np.zeros_like(stim_arr[:,:,0]),cmap=cm.gray, 
+    im = ax.imshow(np.zeros(dims),cmap=cm.gray, 
                    vmin=vmin, vmax=vmax, interpolation='nearest')
     
     # define the animator
