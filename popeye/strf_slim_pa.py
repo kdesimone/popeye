@@ -349,33 +349,21 @@ class SpatioTemporalFit(PopulationFit):
         
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length,
-                                         self.model.stimulus.projector_hz,
-                                         self.rho),
-                                        self.grids,
+        return utils.brute_force_search(self.grids,
                                         self.bounds,
                                         self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts,
+                                        self.generate_prediction,
                                         self.very_verbose)
 
     @auto_attr
     def estimate(self):
         return utils.gradient_descent_search((self.theta0, self.spatial_s0, self.temporal_s0, self.weight0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length,
-                                              self.model.stimulus.projector_hz,
-                                              self.rho),
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts,
+                                             self.generate_prediction,
                                              self.very_verbose)
     
     @auto_attr
