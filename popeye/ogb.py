@@ -102,7 +102,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     
     return nifti_estimates
 
-def compute_model_ts(x, y, sigma, beta, hrf_delay, baseline,
+def compute_model_ts(x, y, sigma, hrf_delay, beta, baseline,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -335,30 +335,21 @@ class GaussianFit(PopulationFit):
         
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length),
-                                        self.grids,
+        return utils.brute_force_search(self.grids,
                                         self.bounds,
                                         self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts,
+                                        self.generate_prediction,
                                         self.very_verbose)
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, 
-                                              self.beta0, self.hrf0, self.baseline0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.beta0, self.baseline0),
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts,
+                                             self.generate_prediction,
                                              self.very_verbose)
  
     @auto_attr
@@ -372,13 +363,13 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def s0(self):
         return self.ballpark[2]
-    
-    @auto_attr
-    def beta0(self):
-        return self.ballpark[3]
         
     @auto_attr
     def hrf0(self):
+        return self.ballpark[3]
+    
+    @auto_attr
+    def beta0(self):
         return self.ballpark[4]
     
     @auto_attr
@@ -398,11 +389,11 @@ class GaussianFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def beta(self):
+    def hrf_delay(self):
         return self.estimate[3]
     
     @auto_attr
-    def hrf_delay(self):
+    def beta(self):
         return self.estimate[4]
     
     @auto_attr
@@ -419,11 +410,19 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.beta, self.hrf_delay, self.baseline,
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.beta, self.baseline,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
+    
+    def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline):
+        return compute_model_ts(x, y, sigma, hrf_delay, beta, baseline,
+                                self.model.stimulus.deg_x,
+                                self.model.stimulus.deg_y,
+                                self.model.stimulus.stim_arr,
+                                self.tr_length)
+    
     
     @auto_attr
     def OLS(self):

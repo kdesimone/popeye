@@ -101,7 +101,8 @@ def recast_estimation_results(output, grid_parent, polar=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
-def compute_model_ts(x, y, sigma, n, beta, hrf_delay,
+    
+def compute_model_ts(x, y, sigma, hrf_delay, n, beta,
                      deg_x, deg_y, stim_arr, tr_length):
     
     
@@ -329,45 +330,28 @@ class CompressiveSpatialSummationFit(PopulationFit):
             self.rss;
             toc = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      toc-tic,
-                      self.rsquared,
-                      self.theta,
-                      self.rho,
-                      self.sigma,
-                      self.n,
-                      self.beta,
-                      self.hrf_delay))
+
                           
             if self.verbose:
                 print(msg)
         
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length),
-                                        self.grids,
+        return utils.brute_force_search(self.grids,
                                         self.bounds,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts)
+                                        self.generate_prediction,
+                                        self.very_verbose)
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0, self.hrf0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length),
+        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.n0, self.beta0,
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts)
+                                             self.generate_prediction,
+                                             self.very_verbose)
  
     @auto_attr
     def x0(self):
@@ -382,15 +366,15 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
-    def n0(self):
+    def hrf0(self):
         return self.ballpark[3]
         
     @auto_attr
-    def beta0(self):
+    def n0(self):
         return self.ballpark[4]
         
     @auto_attr
-    def hrf0(self):
+    def beta0(self):
         return self.ballpark[5]
         
     @auto_attr
@@ -404,19 +388,19 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[2]
-    
+        
+    @auto_attr
+    def hrf_delay(self):
+        return self.estimate[3]
+        
     @auto_attr
     def n(self):
-        return self.estimate[3]
-    
-    @auto_attr
-    def beta(self):
         return self.estimate[4]
     
     @auto_attr
-    def hrf_delay(self):
+    def beta(self):
         return self.estimate[5]
-    
+        
     @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
@@ -427,7 +411,14 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta, self.hrf_delay,
+        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.n, self.beta,
+                                self.model.stimulus.deg_x,
+                                self.model.stimulus.deg_y,
+                                self.model.stimulus.stim_arr,
+                                self.tr_length)
+    
+    def generate_prediction(self,x, y, sigma, hrf_delay, n, beta):
+        return compute_model_ts(x, y, sigma, hrf_delay, n, beta,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
@@ -457,10 +448,28 @@ class CompressiveSpatialSummationFit(PopulationFit):
     def receptive_field(self):
         rf = generate_og_receptive_field(self.model.stimulus.deg_x,
                                          self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma/np.sqrt(self.n), self.beta)
+                                         self.x, self.y, self.sigma)
+        
+        rf **= self.n
         
         return rf
     
     @auto_attr
     def hemodynamic_response(self):
         return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+    
+    @auto_attr
+    def msg(self):
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
+                    %(self.voxel_index[0],
+                      self.voxel_index[1],
+                      self.voxel_index[2],
+                      toc-tic,
+                      self.rsquared,
+                      self.theta,
+                      self.rho,
+                      self.sigma,
+                      self.n,
+                      self.beta,
+                      self.hrf_delay))
+        return txt
