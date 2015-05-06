@@ -150,25 +150,29 @@ def compute_model_ts(x, y, sigma, hrf_delay, n, beta,
     rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
     
     # normalize by the integral
-    rf /= simps(simps(rf))
+    rf *= 1/(2 * np.pi * sigma ** 2)
     
     # raise it to the n
     rf **= n
     
-    # extract the response
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
-    # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*sigma)**2] = 1
     
+    # extract the response
+    response = generate_rf_timeseries(stim_arr, rf, mask)
+        
     # create the HRF
     hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
     
     # convolve it with the stimulus
-    model = fftconvolve(response, hrf)[0:len(response)]
+    model = fftconvolve(response, hrf, 'same')
     
     # scale it by beta
     model *= beta
     
-    return model*beta
+    return model
 
 def parallel_fit(args):
     
@@ -199,17 +203,19 @@ def parallel_fit(args):
     model = args[0]
     data = args[1]
     grids = args[2]
-    bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    Ns = args[3]
+    bounds = args[4]
+    tr_length = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
     
     # fit the data
     fit = CompressiveSpatialSummationFit(model,
                                           data,
                                           grids,
                                           bounds,
+                                          Ns,
                                           tr_length,
                                           voxel_index,
                                           auto_fit,
@@ -254,8 +260,8 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
+    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
         """
@@ -312,33 +318,26 @@ class CompressiveSpatialSummationFit(PopulationFit):
 
         """
         
-        PopulationFit.__init__(self, model, data)
-        
-        self.grids = grids
-        self.bounds = bounds
-        self.tr_length = tr_length
-        self.voxel_index = voxel_index
-        self.auto_fit = auto_fit
-        self.verbose = verbose
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
+                               tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
-            tic = time.clock()
+            self.start = time.clock()
             self.ballpark;
             self.estimate;
             self.OLS;
             self.rss;
-            toc = time.clock()
+            self.finish = time.clock()
             
-
-                          
             if self.verbose:
-                print(msg)
+                print(self.msg)
         
     @auto_attr
     def ballpark(self):
         return utils.brute_force_search(self.grids,
                                         self.bounds,
+                                        self.Ns,
                                         self.data,
                                         utils.error_function,
                                         self.generate_prediction,
@@ -346,7 +345,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.hrf0, self.n0, self.beta0,
+        return utils.gradient_descent_search(self.ballpark,
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
@@ -450,6 +449,8 @@ class CompressiveSpatialSummationFit(PopulationFit):
                                          self.model.stimulus.deg_y,
                                          self.x, self.y, self.sigma)
         
+        rf *= 1/(2 * np.pi * self.sigma**2)
+        
         rf **= self.n
         
         return rf
@@ -464,7 +465,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
-                      toc-tic,
+                      self.finish-self.start,
                       self.rsquared,
                       self.theta,
                       self.rho,

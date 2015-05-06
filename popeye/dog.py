@@ -217,17 +217,19 @@ def parallel_fit(args):
     model = args[0]
     data = args[1]
     grids = args[2]
-    bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    Ns = args[3]
+    bounds = args[4]
+    tr_length = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
     
     # fit the data
     fit = DifferenceOfGaussiansFit(model,
                                    data,
                                    grids,
                                    bounds,
+                                   Ns,
                                    tr_length,
                                    voxel_index,
                                    auto_fit,
@@ -327,29 +329,21 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length),
-                                        self.grids,
+        return utils.brute_force_search(self.grids,
                                         self.bounds,
                                         self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts,
+                                        self.generate_prediction,
                                         self.very_verbose)
     
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.sr0, self.vr0, self.h0),
-                                              (self.model.stimulus.deg_x,
-                                               self.model.stimulus.deg_y,
-                                               self.model.stimulus.stim_arr,
-                                               self.tr_length),
+        return utils.gradient_descent_search(self.ballpark,
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts,
+                                             self.generate_prediction,
                                              self.very_verbose)
                                              
     @auto_attr
@@ -416,6 +410,14 @@ class DifferenceOfGaussiansFit(PopulationFit):
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
                                 self.tr_length)
+    
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
+        return compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
+                                self.model.stimulus.deg_x,
+                                self.model.stimulus.deg_y,
+                                self.model.stimulus.stim_arr,
+                                self.tr_length)
+    
     @auto_attr
     def OLS(self):
         return sm.OLS(self.data,self.prediction).fit()
