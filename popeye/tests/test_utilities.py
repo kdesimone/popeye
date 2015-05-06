@@ -44,7 +44,7 @@ def test_error_function():
 def test_gradient_descent_search():
     
     # create a parameter to estimate
-    params = (10.0,5)
+    params = (10.0,5.0)
     
     # set grids + bounds
     grids = ((2.0,15.0),(0.0,10.0))
