@@ -270,11 +270,18 @@ def error_function(parameters, bounds, data, objective_function, verbose):
         The residual sum of squared errors between the prediction and data.
     """
     
-    # check ifparameters are inside bounds
+    ############
+    #   NOTE   #
+    ############
+    # as of now, this will not work if your model has 1 parameter.
+    # i think it is because scipy.optimize.brute returns 
+    # a scalar when num params is 1, and a tuple/list
+    # when num params is > 1. have to look into this further
+    
+    # check if parameters are inside bounds
     for p, b in zip(parameters,bounds):
-        
         # if not return an inf
-        if b[0] and b[0] > p:
+        if b[0] and p < b[0]:
             return np.inf
         if b[1] and b[1] < p:
             return np.inf
