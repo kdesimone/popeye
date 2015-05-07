@@ -345,46 +345,6 @@ class SpatioTemporalFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                tr_length, voxel_index, auto_fit, verbose)
-        
-        if self.auto_fit:
-            
-            self.start = time.clock()
-            self.ballpark;
-            self.estimate;
-            self.OLS;
-            self.finish = time.clock()
-            
-            if self.verbose:
-                print(self.msg)
-        
-    @auto_attr
-    def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length,
-                                         self.model.stimulus.projector_hz),
-                                        self.grids,
-                                        self.bounds,
-                                        self.Ns,
-                                        self.data,
-                                        utils.error_function,
-                                        compute_model_ts,
-                                        self.very_verbose)
-
-    @auto_attr
-    def estimate(self):
-        return utils.gradient_descent_search((self.x, self.y, self.spatial_s0, self.temporal_s0, self.weight0, self.beta0, self.baseline0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length,
-                                              self.model.stimulus.projector_hz),
-                                             self.bounds,
-                                             self.data,
-                                             utils.error_function,
-                                             compute_model_ts,
-                                             self.very_verbose)
     
     @auto_attr
     def x0(self):

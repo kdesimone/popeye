@@ -320,38 +320,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                tr_length, voxel_index, auto_fit, verbose)
-        
-        if self.auto_fit:
-            
-            self.start = time.clock()
-            self.ballpark;
-            self.estimate;
-            self.OLS;
-            self.rss;
-            self.finish = time.clock()
-            
-            if self.verbose:
-                print(self.msg)
-        
-    @auto_attr
-    def ballpark(self):
-        return utils.brute_force_search(self.grids,
-                                        self.bounds,
-                                        self.Ns,
-                                        self.data,
-                                        utils.error_function,
-                                        self.generate_prediction,
-                                        self.very_verbose)
-
-    @auto_attr
-    def estimate(self):
-        return utils.gradient_descent_search(self.ballpark,
-                                             self.bounds,
-                                             self.data,
-                                             utils.error_function,
-                                             self.generate_prediction,
-                                             self.very_verbose)
- 
+                               
     @auto_attr
     def x0(self):
         return self.ballpark[0]

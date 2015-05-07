@@ -4,9 +4,10 @@ Base-classes for poulation encoding models and fits.
 
 
 """
-
-import numpy as np
+import time
 import ctypes
+import numpy as np
+from popeye.onetime import auto_attr
 import popeye.utilities as utils
 
 class PopulationModel(object):
@@ -29,6 +30,8 @@ class PopulationFit(object):
         self.tr_length = tr_length
         self.voxel_index = voxel_index
         self.auto_fit = auto_fit
+        self.model = model
+        self.data = data
         
         # set verbose
         if verbose == 0:
@@ -41,8 +44,43 @@ class PopulationFit(object):
             self.verbose = True
             self.very_verbose = True
         
-        self.model = model
-        self.data = data
+        # automatic fitting
+        if self.auto_fit:
+            
+            # the business
+            self.start = time.clock()
+            self.ballpark;
+            self.estimate;
+            self.OLS;
+            self.rss;
+            self.finish = time.clock()
+            
+            # print
+            if self.verbose:
+                print(self.msg)
+    
+    # the brute search
+    @auto_attr
+    def ballpark(self):
+        return utils.brute_force_search(self.grids,
+                                        self.bounds,
+                                        self.Ns,
+                                        self.data,
+                                        utils.error_function,
+                                        self.generate_prediction,
+                                        self.very_verbose)
+     
+    # the gradient search                                  
+    @auto_attr
+    def estimate(self):
+        return utils.gradient_descent_search(self.ballpark,
+                                             self.bounds,
+                                             self.data,
+                                             utils.error_function,
+                                             self.generate_prediction,
+                                             self.very_verbose)
+ 
+    
 
 class StimulusModel(object):
     """ Abstract class which holds the StimulusModel
