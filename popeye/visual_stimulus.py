@@ -515,7 +515,7 @@ class VisualStimulus(StimulusModel):
     
     
     def __init__(self, stim_arr, viewing_distance, screen_width,
-                 scale_factor, dtype, interp='bilinear'):
+                 scale_factor, tr_length, dtype, interp='bilinear'):
         
         """
         
@@ -548,6 +548,7 @@ class VisualStimulus(StimulusModel):
         # absorb the vars
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
+        self.tr_length = tr_length
         self.scale_factor = scale_factor
         self.interp = interp
         
