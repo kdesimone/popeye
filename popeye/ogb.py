@@ -15,7 +15,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_ogb_receptive_field, generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent, polar=False):
     """
