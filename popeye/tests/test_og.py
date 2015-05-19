@@ -31,7 +31,7 @@ def test_og_fit():
     Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
-    verbose = 2
+    verbose = 0
     
     # insert blanks
     thetas = list(thetas)
@@ -48,7 +48,20 @@ def test_og_fit():
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
                                 
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    hrf_delay = -0.25
+    
+    # create the "data"
+    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
     # set search grid
     x_grid = (-10,10)
@@ -65,26 +78,11 @@ def test_og_fit():
     h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, h_grid, b_grid)
-    bounds = (x_bound, y_bound, s_bound, h_bound, b_bound)
-    
-    # initialize the gaussian model
-    model = og.GaussianModel(stimulus)
-    
-    # generate a random pRF estimate
-    x = -5.24
-    y = 2.58
-    sigma = 1.24
-    beta = 2.5
-    hrf_delay = -0.25
-    
-    # create the "data"
-    data = og.compute_model_ts(x, y, sigma, hrf_delay, beta,
-                               stimulus.deg_x, stimulus.deg_y, 
-                               stimulus.stim_arr, tr_length)
+    grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
+    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns, tr_length, voxel_index, verbose)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, verbose)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)

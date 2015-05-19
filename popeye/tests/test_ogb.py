@@ -10,7 +10,7 @@ from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
 import popeye.ogb as ogb
-from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
+from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 
 def test_ogb_fit():
     
@@ -31,7 +31,7 @@ def test_ogb_fit():
     Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
-    verbose = 1
+    verbose = 0
     
     # insert blanks
     thetas = list(thetas)
@@ -48,54 +48,52 @@ def test_ogb_fit():
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
-    
-    # set search grid
-    x_grid = (-10,10)
-    y_grid = (-10,10)
-    s_grid = (1/stimulus.ppd,5.25)
-    h_grid = (-4.0,4.0)
-    b_grid = (0.1,1.0)
-    bl_grid = (-5.0,5.0)
-    
-    # set search bounds
-    x_bound = (-12.0,12.0)
-    y_bound = (-12.0,12.0)
-    s_bound = (1/stimulus.ppd,12.0)
-    h_bound = (-5.0,5.0)
-    b_bound = (1e-8,1e2)
-    bl_bound = (-100,100)
-    
-    # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, h_grid, b_grid, bl_grid,)
-    bounds = (x_bound, y_bound, s_bound, h_bound, b_bound, bl_bound,)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = ogb.GaussianModel(stimulus)
+    model = ogb.GaussianModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
     x = -5.24
     y = 2.58
     sigma = 1.24
-    beta = 1
+    beta = 1.1
+    baseline = -0.5
     hrf_delay = -0.25
-    baseline = 0
     
-    # create the "data"
-    data = ogb.compute_model_ts(x, y, sigma, hrf_delay, beta, baseline,
-                               stimulus.deg_x, stimulus.deg_y, 
-                               stimulus.stim_arr, tr_length)
+    # create data
+    data = model.generate_prediction(x, y, sigma, beta, baseline, hrf_delay)
+    
+    # set search grid
+    x_grid = (-10,10)
+    y_grid = (-10,10)
+    s_grid = (1/stimulus.ppd,5.25)
+    b_grid = (0.1,1.0)
+    bl_grid = (-1,1)
+    h_grid = (-4.0,4.0)
+    
+    # set search bounds
+    x_bound = (-12.0,12.0)
+    y_bound = (-12.0,12.0)
+    s_bound = (1/stimulus.ppd,12.0)
+    b_bound = (1e-8,1e2)
+    bl_bound = (-1,1)
+    h_bound = (-5.0,5.0)
+    
+    # loop over each voxel and set up a GaussianFit object
+    grids = (x_grid, y_grid, s_grid, b_grid, bl_grid, h_grid)
+    bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound, h_bound)
     
     # fit the response
-    fit = ogb.GaussianFit(model, data, grids, bounds, Ns, tr_length, voxel_index, verbose)
+    fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
-    nt.assert_almost_equal(fit.sigma, sigma, 2)
-    nt.assert_almost_equal(fit.beta, beta, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    nt.assert_almost_equal(fit.x, x)
+    nt.assert_almost_equal(fit.y, y)
+    nt.assert_almost_equal(fit.sigma, sigma)
+    nt.assert_almost_equal(fit.beta, beta)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay)
 
 # def test_parallel_og_fit():
 # 

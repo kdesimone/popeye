@@ -52,7 +52,7 @@ def test_kfold_xval_repeated_runs():
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # set up bounds for the grid search
     grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
@@ -62,7 +62,7 @@ def test_kfold_xval_repeated_runs():
     Ns = 5
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus)
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
     x = -5.24
@@ -72,7 +72,7 @@ def test_kfold_xval_repeated_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [grids, bounds, Ns, tr_length, [0,0,0]]
+    fit_args = [grids, bounds, Ns, [0,0,0]]
     fit_kwargs = {'auto_fit': False, 'verbose' : 0}
     
     # create a series of "runs"
@@ -81,9 +81,7 @@ def test_kfold_xval_repeated_runs():
     for r in range(num_runs):
         
         # fill out the data list
-        data[r,:] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
-                                        stimulus.deg_x, stimulus.deg_y, 
-                                        stimulus.stim_arr, tr_length)
+        data[r,:] = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
     # get predictions out for each of the folds ...
     models = (model,)
