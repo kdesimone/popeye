@@ -328,9 +328,9 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_og_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma):
+def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
+                                np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                np.ndarray[DTYPE2_t, ndim=2] deg_y):
     """
     Generate a Gaussian.
     
