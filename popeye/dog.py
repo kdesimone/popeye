@@ -109,53 +109,7 @@ def recast_estimation_results(output, grid_parent):
 
 def compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
                      deg_x, deg_y, stim_arr, tr_length):
-    
-    
-    """
-    The objective function for GaussianFi class.
-    
-    Parameters
-    ----------
-    x : float
-        The model estimate along the horizontal dimensions of the display.
-        
-    y : float
-        The model estimate along the vertical dimensions of the display.
-        
-    sigma_center : float
-        The model estimate of the dispersion of the excitatory center.
-    
-    sigma_surround : float
-        The model estimate of the dispersion of the inhibitory surround.
-    
-    beta_center : float
-        The amplitude of the excitatory center.
-    
-    beta_surround : float
-        The amplitude of the inhibitory surround.
-    
-    hrf_delay : float
-        The model estimate of the relative delay of the HRF.  The canonical
-        HRF is assumed to be 5 s post-stimulus [1]_.
-    
-    tr_length : float
-        The length of the repetition time in seconds.
-    
-    
-    Returns
-    -------
-    
-    model : ndarray
-    The model prediction time-series.
-    
-    
-    References
-    ----------
-    
-    .. [1] Glover, GH. (1999). Deconvolution of impulse response in 
-    event-related BOLD fMRI. NeuroImage 9: 416-429.
-    
-    """
+
     
     # extract the center response
     rf_center = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
@@ -219,10 +173,9 @@ def parallel_fit(args):
     grids = args[2]
     Ns = args[3]
     bounds = args[4]
-    tr_length = args[5]
-    voxel_index = args[6]
-    auto_fit = args[7]
-    verbose = args[8]
+    voxel_index = args[5]
+    auto_fit = args[6]
+    verbose = args[7]
     
     # fit the data
     fit = DifferenceOfGaussiansFit(model,
@@ -230,7 +183,6 @@ def parallel_fit(args):
                                    grids,
                                    bounds,
                                    Ns,
-                                   tr_length,
                                    voxel_index,
                                    auto_fit,
                                    verbose)
@@ -244,7 +196,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus):
+    def __init__(self, stimulus, hrf_model):
         
         """
         A Gaussian population receptive field model [1]_.
@@ -265,8 +217,65 @@ class DifferenceOfGaussiansModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus)
+        PopulationModel.__init__(self, stimulus, hrf_model)
         
+        
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma*sigma_ratio)**2] = 1
+        
+        # extract the center response
+        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        
+        # extract surround response
+        rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, 
+                                                  self.stimulus.deg_x_coarse, self.stimulus.deg_x_coarse) * 1/sigma_ratio**2
+        
+        # difference
+        rf = rf_center - np.sqrt(volume_ratio)*rf_surround
+        
+        # extract the response
+        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        
+        # generate the hrf
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        
+        # convolve it
+        model = fftconvolve(response,hrf)[0:len(response)]
+        
+        return model
+
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma*sigma_ratio)**2] = 1
+        
+        # extract the center response
+        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # extract surround response
+        rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, 
+                                                  self.stimulus.deg_x, self.stimulus.deg_y) * 1/sigma_ratio**2
+        
+        # difference
+        rf = rf_center - np.sqrt(volume_ratio)*rf_surround
+        
+        # extract the response
+        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        
+        # generate the hrf
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        
+        # convolve it
+        model = fftconvolve(response,hrf)[0:len(response)]
+        
+        return model
+    
 class DifferenceOfGaussiansFit(PopulationFit):
     
     """
@@ -274,7 +283,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+    def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
                  
         """
@@ -314,7 +323,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               tr_length, voxel_index, auto_fit, verbose)
+                               voxel_index, auto_fit, verbose)
     
     @auto_attr
     def x0(self):
@@ -374,43 +383,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, 
-                                self.sigma_ratio, self.volume_ratio, self.hrf_delay,
-                                self.model.stimulus.deg_x,
-                                self.model.stimulus.deg_y,
-                                self.model.stimulus.stim_arr,
-                                self.tr_length)
-    
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
-        return compute_model_ts(x, y, sigma, sigma_ratio, volume_ratio, hrf_delay,
-                                self.model.stimulus.deg_x,
-                                self.model.stimulus.deg_y,
-                                self.model.stimulus.stim_arr,
-                                self.tr_length)
-    
-    @auto_attr
-    def OLS(self):
-        return sm.OLS(self.data,self.prediction).fit()
-    
-    @auto_attr
-    def coefficient(self):
-        return self.OLS.params[0]
-    
-    @auto_attr
-    def rsquared(self):
-        return self.OLS.rsquared
-    
-    @auto_attr
-    def stderr(self):
-        return np.sqrt(self.OLS.mse_resid)
-    
-    @auto_attr
-    def rss(self):
-        return np.sum((self.data - self.prediction)**2)
-    
-    @auto_attr
-    def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return self.model.generate_prediction(self.x, self.y, self.sigma, self.sigma_ratio, self.volume_ratio, self.hrf_delay)
     
     @auto_attr
     def receptive_field(self):

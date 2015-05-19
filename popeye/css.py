@@ -230,7 +230,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus):
+    def __init__(self, stimulus, hrf_model):
         
         """
         A Gaussian population receptive field model [1]_.
@@ -251,7 +251,69 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus)
+        PopulationModel.__init__(self, stimulus, hrf_model)
+        
+    
+    # main method for deriving model time-series
+    def generate_ballpark_prediction(self, x, y, sigma, n, beta, hrf_delay):
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma)**2] = 1
+        
+        # generate the RF
+        rf = generate_og_receptive_field(x, y, sigma,
+                                         self.stimulus.deg_x_coarse,
+                                         self.stimulus.deg_y_coarse)
+        
+        # normalize by the integral
+        rf /= (2 * np.pi * sigma**2)
+        
+        # raise the gaussian to then n
+        rf **= n
+        
+        # extract the stimulus time-series
+        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        
+        # convolve with the HRF
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, hrf, 'same')
+        
+        # scale it by beta
+        model *= beta
+        
+        return model
+        
+    # main method for deriving model time-series
+    def generate_prediction(self, x, y, sigma, n, beta, hrf_delay):
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma)**2] = 1
+        
+        # generate the RF
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # normalize by the integral
+        rf /= (2 * np.pi * sigma**2)
+        
+        # extract the stimulus time-series
+        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        
+        # convolve with the HRF
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, hrf, 'same')
+        
+        # scale it by beta
+        model *= beta
+        
+        return model
         
 class CompressiveSpatialSummationFit(PopulationFit):
     
@@ -260,7 +322,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+    def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
@@ -319,7 +381,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
         """
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               tr_length, voxel_index, auto_fit, verbose)
+                               voxel_index, auto_fit, verbose)
                                
     @auto_attr
     def x0(self):
@@ -334,17 +396,17 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
-    def hrf0(self):
+    def n0(self):
         return self.ballpark[3]
         
     @auto_attr
-    def n0(self):
+    def beta0(self):
         return self.ballpark[4]
         
     @auto_attr
-    def beta0(self):
+    def hrf0(self):
         return self.ballpark[5]
-        
+    
     @auto_attr
     def x(self):
         return self.estimate[0]
@@ -358,15 +420,15 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.estimate[2]
         
     @auto_attr
-    def hrf_delay(self):
+    def n(self):
         return self.estimate[3]
         
     @auto_attr
-    def n(self):
+    def beta(self):
         return self.estimate[4]
     
     @auto_attr
-    def beta(self):
+    def hrf_delay(self):
         return self.estimate[5]
         
     @auto_attr
@@ -379,58 +441,11 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.hrf_delay, self.n, self.beta,
-                                self.model.stimulus.deg_x,
-                                self.model.stimulus.deg_y,
-                                self.model.stimulus.stim_arr,
-                                self.tr_length)
-    
-    def generate_prediction(self,x, y, sigma, hrf_delay, n, beta):
-        return compute_model_ts(x, y, sigma, hrf_delay, n, beta,
-                                self.model.stimulus.deg_x,
-                                self.model.stimulus.deg_y,
-                                self.model.stimulus.stim_arr,
-                                self.tr_length)
-    
-    @auto_attr
-    def OLS(self):
-        return sm.OLS(self.data,self.prediction).fit()
-    
-    @auto_attr
-    def coefficient(self):
-        return self.OLS.params[0]
-    
-    @auto_attr
-    def rsquared(self):
-        return self.OLS.rsquared
-    
-    @auto_attr
-    def stderr(self):
-        return np.sqrt(self.OLS.mse_resid)
-    
-    @auto_attr
-    def rss(self):
-        return np.sum((self.data - self.prediction)**2)
-    
-    @auto_attr
-    def receptive_field(self):
-        rf = generate_og_receptive_field(self.model.stimulus.deg_x,
-                                         self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma)
-        
-        rf *= 1/(2 * np.pi * self.sigma**2)
-        
-        rf **= self.n
-        
-        return rf
-    
-    @auto_attr
-    def hemodynamic_response(self):
-        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+        return self.model.generate_prediction(self.x, self.y, self.sigma, self.n, self.beta, self.hrf_delay)
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f  HRF=%.02f" 
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   POWER=%.02f   BETA=%.08f  HRF=%.02f" 
                     %(self.voxel_index[0],
                       self.voxel_index[1],
                       self.voxel_index[2],
