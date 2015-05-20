@@ -31,8 +31,6 @@ from popeye.spinach import generate_og_timeseries
 def test_kfold_xval_repeated_runs():
 
     # stimulus features
-    pixels_across = 800
-    pixels_down = 600
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,45)
@@ -43,6 +41,8 @@ def test_kfold_xval_repeated_runs():
     frames_per_tr = 1.0
     scale_factor = 0.20
     resample_factor = 0.25
+    pixels_across = 800 * resample_factor
+    pixels_down = 600 * resample_factor
     dtype = ctypes.c_int16
     num_runs = 4
     folds = 2
@@ -50,13 +50,9 @@ def test_kfold_xval_repeated_runs():
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
-        
-    # resample the stimulus
-    bar = resample_stimulus(bar, resample_factor)
-    
     
     # create an instance of the Stimulus class
-    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, dtype)
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # set up bounds for the grid search
     grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
@@ -66,7 +62,7 @@ def test_kfold_xval_repeated_runs():
     Ns = 5
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus)
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
     x = -5.24
@@ -76,7 +72,7 @@ def test_kfold_xval_repeated_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [grids, bounds, Ns, tr_length, [0,0,0]]
+    fit_args = [grids, bounds, Ns, [0,0,0]]
     fit_kwargs = {'auto_fit': False, 'verbose' : 0}
     
     # create a series of "runs"
@@ -85,9 +81,7 @@ def test_kfold_xval_repeated_runs():
     for r in range(num_runs):
         
         # fill out the data list
-        data[r,:] = og.compute_model_ts(x, y, sigma, beta, hrf_delay,
-                                        stimulus.deg_x, stimulus.deg_y, 
-                                        stimulus.stim_arr, tr_length)
+        data[r,:] = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
     # get predictions out for each of the folds ...
     models = (model,)

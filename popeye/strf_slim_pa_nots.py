@@ -11,14 +11,14 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
-from scipy.integrate import simps
+from scipy.integrate import trapz, simps
 import nibabel
 import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 def recast_estimation_results(output, grid_parent, polar=False):
     """
@@ -63,7 +63,7 @@ def recast_estimation_results(output, grid_parent, polar=False):
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(9)
+    dims.append(7)
     
     # initialize the statmaps
     estimates = np.zeros(dims)
@@ -73,21 +73,17 @@ def recast_estimation_results(output, grid_parent, polar=False):
         
         if polar is True:
             estimates[fit.voxel_index] = (fit.theta,
-                                          fit.rho,
-                                          fit.sigma,
-                                          fit.n,
-                                          fit.beta,
-                                          fit.hrf_delay,
+                                          fit.spatial_sigma,
+                                          fit.temporal_sigma,
+                                          fit.weight,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
         else:
-            estimates[fit.voxel_index] = (fit.x, 
-                                          fit.y,
-                                          fit.sigma,
-                                          fit.n,
-                                          fit.beta,
-                                          fit.hrf_delay,
+            estimates[fit.voxel_index] = (fit.theta, 
+                                          fit.spatial_sigma,
+                                          fit.temporal_sigma,
+                                          fit.weight,
                                           fit.rsquared,
                                           fit.coefficient,
                                           fit.stderr)
@@ -102,8 +98,9 @@ def recast_estimation_results(output, grid_parent, polar=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
-def compute_model_ts(x, y, sigma, n, beta,
-                     deg_x, deg_y, stim_arr, tr_length):
+
+def compute_model_ts(theta, spatial_sigma, weight,
+                     deg_x, deg_y, stim_arr, tr_length, projector_hz, rho, temporal_sigma):
     
     
     """
@@ -146,27 +143,60 @@ def compute_model_ts(x, y, sigma, n, beta,
     
     """
     
-    # generate the response
-    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
+    # convert polar to cartesian
+    x = np.cos(theta) * rho
+    y = np.sin(theta) * rho
     
-    # normalize by the integral
-    rf /= simps(simps(rf))
+    # create Gaussian
+    spatial_rf = generate_og_receptive_field(deg_x, deg_y, x, y, spatial_sigma)
     
-    # raise it to the n
-    rf **= n
+    # normalize it by integral
+    spatial_rf /= 2 * np.pi * spatial_sigma ** 2
     
-    # extract the response
-    response = generate_rf_timeseries(deg_x, deg_y, stim_arr, rf, x, y, sigma)
-    # response = beta*generate_og_timeseries(deg_x, deg_y, stim_arr, x, y, sigma)**n
+    # create mask for speed
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < (5*spatial_sigma)**2] = 1
     
-    # create the HRF
-    hrf = utils.double_gamma_hrf(0, tr_length)
+    # set the coordinate
+    t = np.linspace(0,1,projector_hz)
     
-    # convolve it with the stimulus
-    model = fftconvolve(response, hrf)[0:len(response)]
+    # set the center of the responses
+    center = t[len(t)/2]
     
-    # scale it by beta
-    model *= beta
+    # create sustain response for 1 TR
+    p = np.exp(-((t-center)**2)/(2*temporal_sigma**2))
+    p = p * 1/(np.sqrt(2*np.pi)*temporal_sigma)
+    
+    # create transient response for 1 TR
+    m = np.insert(np.diff(p),0,0)
+    m = m/(simps(np.abs(m),t))
+    
+    # extract the timeseries
+    s_resp = generate_rf_timeseries(stim_arr, spatial_rf, mask)
+    
+    # convolve with transient and sustained RF
+    p_resp = np.abs(fftconvolve(s_resp,p,'same'))
+    m_resp = np.abs(fftconvolve(s_resp,m,'same'))
+    
+    # take the mean of each TR
+    s_ts = np.array([np.mean(s_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+    p_ts = np.array([np.mean(p_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+    m_ts = np.array([np.mean(m_resp[tp:tp+projector_hz*tr_length]) for tp in np.arange(0,len(s_resp),projector_hz*tr_length)])
+    
+    # convolve with hrf 
+    hrf = utils.double_gamma_hrf(0,tr_length)
+    sustained_model = fftconvolve(p_ts, hrf, 'same')
+    transient_model = fftconvolve(m_ts, hrf, 'same')
+    
+    # normalize to a range
+    sustained_norm = utils.zscore(sustained_model)
+    transient_norm = utils.zscore(transient_model)
+    
+    # mix it together
+    model = sustained_model * weight + transient_model * (1-weight)
+    
+    model = utils.zscore(model)
     
     return model
 
@@ -200,34 +230,36 @@ def parallel_fit(args):
     data = args[1]
     grids = args[2]
     bounds = args[3]
-    tr_length = args[4]
-    voxel_index = args[5]
-    auto_fit = args[6]
-    verbose = args[7]
+    Ns = args[4]
+    tr_length = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
     
     # fit the data
-    fit = CompressiveSpatialSummationFit(model,
-                                          data,
-                                          grids,
-                                          bounds,
-                                          tr_length,
-                                          voxel_index,
-                                          auto_fit,
-                                          verbose)
+    fit = SpatioTemporalFit(model,
+                            data,
+                            grids,
+                            bounds,
+                            Ns,
+                            tr_length,
+                            voxel_index,
+                            auto_fit,
+                            verbose)
     return fit
 
 
-class CompressiveSpatialSummationModel(PopulationModel):
+class SpatioTemporalModel(PopulationModel):
     
     """
-    A CSS population receptive field model class
+    A Gaussian population receptive field model class
     
     """
     
     def __init__(self, stimulus):
         
         """
-        A Gaussian population receptive field model [1]_.
+        A spatiotemporal population receptive field model.
         
         Paramaters
         ----------
@@ -237,30 +269,23 @@ class CompressiveSpatialSummationModel(PopulationModel):
             containing a representation of the visual stimulus.
         
         
-        References
-        ----------
-        
-        .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
-        estimates in human visual cortex. NeuroImage 39:647-660
-        
         """
         
         PopulationModel.__init__(self, stimulus)
         
-class CompressiveSpatialSummationFit(PopulationFit):
+class SpatioTemporalFit(PopulationFit):
     
     """
-    A CSS population receptive field fit class
+    A spatiotemporal population receptive field fit class
     
     """
     
-    def __init__(self, model, data, grids, bounds, tr_length,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=True):
+    def __init__(self, model, data, grids, bounds, Ns, tr_length,
+                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         
         """
-        A Gaussian population receptive field model [1]_.
-
+        
         Paramaters
         ----------
         
@@ -303,127 +328,107 @@ class CompressiveSpatialSummationFit(PopulationFit):
         verbose : bool
             A flag for printing some summary information about the model estiamte
             after the fitting procedures have completed.
-        
-        References
-        ----------
-        
-        .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
-        estimates in human visual cortex. NeuroImage 39:647-660
-
+                
         """
         
-        PopulationFit.__init__(self, model, data)
-        
-        self.grids = grids
-        self.bounds = bounds
-        self.tr_length = tr_length
-        self.voxel_index = voxel_index
-        self.auto_fit = auto_fit
-        self.verbose = verbose
+        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
+                               tr_length, voxel_index, auto_fit, verbose)
         
         if self.auto_fit:
             
-            tic = time.clock()
+            self.start = time.clock()
             self.ballpark;
             self.estimate;
             self.OLS;
-            self.rss;
-            toc = time.clock()
+            self.finish = time.clock()
             
-            msg = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   N=%.02f   BETA=%.08f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      toc-tic,
-                      self.rsquared,
-                      self.theta,
-                      self.rho,
-                      self.sigma,
-                      self.n,
-                      self.beta))
-                          
             if self.verbose:
-                print(msg)
+                print(self.msg)
         
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search((self.model.stimulus.deg_x_coarse,
-                                         self.model.stimulus.deg_y_coarse,
-                                         self.model.stimulus.stim_arr_coarse,
-                                         self.tr_length),
-                                        self.grids,
+        return utils.brute_force_search(self.grids,
                                         self.bounds,
+                                        self.Ns,
                                         self.data,
                                         utils.error_function,
-                                        compute_model_ts)
+                                        self.generate_prediction,
+                                        self.very_verbose)
 
     @auto_attr
     def estimate(self):
-        return utils.gradient_descent_search((self.x0, self.y0, self.s0, self.n0, self.beta0),
-                                             (self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y,
-                                              self.model.stimulus.stim_arr,
-                                              self.tr_length),
+        return utils.gradient_descent_search((self.theta0, self.spatial_s0, self.weight0),
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
-                                             compute_model_ts)
- 
+                                             self.generate_prediction,
+                                             self.very_verbose)
+    
     @auto_attr
-    def x0(self):
-        return self.ballpark[0]
+    def theta0(self):
+        return np.mod(self.ballpark[0],2*np.pi)
         
     @auto_attr
-    def y0(self):
+    def spatial_s0(self):
         return self.ballpark[1]
-        
+    
     @auto_attr
-    def s0(self):
+    def weight0(self):
         return self.ballpark[2]
     
     @auto_attr
-    def n0(self):
-        return self.ballpark[3]
-        
+    def theta(self):
+        return np.mod(self.estimate[0],2*np.pi)
+    
     @auto_attr
-    def beta0(self):
-        return self.ballpark[4]
-        
-    @auto_attr
-    def x(self):
-        return self.estimate[0]
-        
-    @auto_attr
-    def y(self):
+    def spatial_sigma(self):
         return self.estimate[1]
-        
+    
     @auto_attr
-    def sigma(self):
+    def weight(self):
         return self.estimate[2]
     
     @auto_attr
-    def n(self):
-        return self.estimate[3]
-    
-    @auto_attr
-    def beta(self):
-        return self.estimate[4]
-    
-    @auto_attr
     def rho(self):
-        return np.sqrt(self.x**2+self.y**2)
+        return 4
     
     @auto_attr
-    def theta(self):
-        return np.mod(np.arctan2(self.y,self.x),2*np.pi)
+    def temporal_sigma(self):
+        return 0.005
+        
+    @auto_attr
+    def spatial_rf(self):
+        return generate_og_receptive_field(self.model.stimulus.deg_x, 
+                                           self.model.stimulus.deg_y, 
+                                           self.x, self.y, self.spatial_sigma)
+    
+    @auto_attr
+    def spatial_rf_norm(self):
+        return self.spatial_rf / (2 * np.pi * spatial_sigma ** 2)
+    
     
     @auto_attr
     def prediction(self):
-        return compute_model_ts(self.x, self.y, self.sigma, self.n, self.beta,
+        return compute_model_ts(self.theta, self.spatial_sigma, self.weight,
                                 self.model.stimulus.deg_x,
                                 self.model.stimulus.deg_y,
                                 self.model.stimulus.stim_arr,
-                                self.tr_length)
+                                self.tr_length,
+                                self.model.stimulus.projector_hz,
+                                self.rho,
+                                self.temporal_sigma)
+    
+    def generate_prediction(self, theta, spatial_sigma, weight):
+        return compute_model_ts(theta, spatial_sigma, weight,
+                                self.model.stimulus.deg_x,
+                                self.model.stimulus.deg_y,
+                                self.model.stimulus.stim_arr,
+                                self.tr_length,
+                                self.model.stimulus.projector_hz,
+                                self.rho,
+                                self.temporal_sigma)
+        
+        
     
     @auto_attr
     def OLS(self):
@@ -446,13 +451,44 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return np.sum((self.data - self.prediction)**2)
     
     @auto_attr
-    def receptive_field(self):
-        rf = generate_og_receptive_field(self.model.stimulus.deg_x,
-                                         self.model.stimulus.deg_y,
-                                         self.x, self.y, self.sigma/np.sqrt(self.n), self.beta)
-        
-        return rf
+    def tr_timescale(self):
+        return np.linspace(0,self.tr_length,self.model.stimulus.projector_hz*self.tr_length)
+    
+    @auto_attr
+    def response_center(self):
+        return self.tr_timescale[len(self.tr_timescale)/2]
+    
+    @auto_attr
+    def sustained_response(self):
+        return np.exp(-((self.tr_timescale-self.response_center)**2)/(2*self.temporal_sigma**2))
+    
+    @auto_attr
+    def sustained_response_norm(self):
+        return self.sustained_response/(self.temporal_sigma*np.sqrt(2*np.pi))
+    
+    @auto_attr
+    def transient_response(self):
+        return np.append(np.diff(self.sustained_response),0)
+    
+    @auto_attr
+    def transient_response_norm(self):
+        return self.transient_response/(simps(np.abs(self.transient_response),self.tr_timescale)/2)
     
     @auto_attr
     def hemodynamic_response(self):
-        return utils.double_gamma_hrf(0, self.tr_length)
+        return utils.double_gamma_hrf(self.hrf_delay, self.tr_length)
+    
+    @auto_attr
+    def msg(self):
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   SSIGMA=%.02f   TSIGMA=%.02f   WEIGHT=%.02f"
+            %(self.voxel_index[0],
+              self.voxel_index[1],
+              self.voxel_index[2],
+              self.finish-self.start,
+              self.rsquared,
+              self.theta,
+              self.spatial_sigma,
+              self.temporal_sigma,
+              self.weight))
+        return txt
+    

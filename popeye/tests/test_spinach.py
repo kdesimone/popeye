@@ -25,7 +25,7 @@ def test_generate_og_receptive_field():
                                          scale_factor)
     
     # generate a pRF at (0,0) and 1 sigma wide
-    rf = generate_og_receptive_field(dx, dy, xcenter, ycenter, sigma)
+    rf = generate_og_receptive_field(xcenter, ycenter, sigma, dx, dy)
     
     # divide by integral
     rf /= 2 * np.pi * sigma ** 2

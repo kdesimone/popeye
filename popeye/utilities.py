@@ -96,7 +96,7 @@ def normalize(array, imin=-1, imax=1):
     
 
 # generic gradient descent
-def gradient_descent_search(parameters, args, bounds, data,
+def gradient_descent_search(parameters, bounds, data,
                             error_function, objective_function, verbose):
                             
     """
@@ -160,13 +160,13 @@ def gradient_descent_search(parameters, args, bounds, data,
     estimate, err,  _, _, _, warnflag =\
         fmin_powell(error_function, 
                     parameters,
-                    args=(args, bounds, data, objective_function, verbose),
+                    args=(bounds, data, objective_function, verbose),
                     full_output=True,
                     disp=False)
     
     return estimate
 
-def brute_force_search(args, grids, bounds, Ns, data,
+def brute_force_search(grids, bounds, Ns, data,
                        error_function, objective_function, verbose):
                        
     """
@@ -230,7 +230,7 @@ def brute_force_search(args, grids, bounds, Ns, data,
                        
     estimate, err,  _, _ =\
         brute(error_function,
-              args=(args, bounds, data, objective_function, verbose),
+              args=(bounds, data, objective_function, verbose),
               ranges=grids,
               Ns=Ns,
               finish=None,
@@ -240,7 +240,7 @@ def brute_force_search(args, grids, bounds, Ns, data,
     return estimate
 
 # generic error function
-def error_function(parameters, args, bounds, data, objective_function, verbose):
+def error_function(parameters, bounds, data, objective_function, verbose):
     
     """
     A generic error function with bounding.
@@ -270,11 +270,18 @@ def error_function(parameters, args, bounds, data, objective_function, verbose):
         The residual sum of squared errors between the prediction and data.
     """
     
-    # check ifparameters are inside bounds
+    ############
+    #   NOTE   #
+    ############
+    # as of now, this will not work if your model has 1 parameter.
+    # i think it is because scipy.optimize.brute returns 
+    # a scalar when num params is 1, and a tuple/list
+    # when num params is > 1. have to look into this further
+    
+    # check if parameters are inside bounds
     for p, b in zip(parameters,bounds):
-        
         # if not return an inf
-        if b[0] and b[0] > p:
+        if b[0] and p < b[0]:
             return np.inf
         if b[1] and b[1] < p:
             return np.inf
@@ -282,7 +289,6 @@ def error_function(parameters, args, bounds, data, objective_function, verbose):
     # merge the parameters and arguments
     ensemble = []
     ensemble.extend(parameters)
-    ensemble.extend(args)
     
     # compute the RSS
     prediction = objective_function(*ensemble)
