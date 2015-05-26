@@ -7,6 +7,7 @@ though that might change with time.
 from __future__ import division
 import sys, os, time
 from multiprocessing import Array
+from itertools import repeat
 
 import numpy as np
 import nibabel
@@ -529,3 +530,76 @@ def randomize_voxels(voxels):
     randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
     
     return randomized_voxels
+
+    
+def parallel_fit(args):
+
+    """
+    This is a convenience function for parallelizing the fitting
+    procedure.  Each call is handed a tuple or list containing
+    all the necessary inputs for instantiaing a `GaussianFit`
+    class object and estimating the model parameters.
+    
+    
+    Paramaters
+    ----------
+    args : list/tuple
+        A list or tuple containing all the necessary inputs for fitting
+        the Gaussian pRF model.
+        
+    Returns
+    -------
+        
+    fit : `GaussianFit` class object
+        A fit object that contains all the inputs and outputs of the 
+        Gaussian pRF model estimation for a single voxel.
+        
+    """
+        
+    
+    # unpackage the arguments
+    Fit = args[0]
+    model = args[1]
+    data = args[2]
+    grids = args[3]
+    bounds = args[4]
+    Ns = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
+    
+    # fit the data
+    fit = Fit(model,
+              data,
+              grids,
+              bounds,
+              Ns,
+              voxel_index,
+              auto_fit,
+              verbose)
+              
+    return fit
+
+
+def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, verbose):
+    
+    # num voxels
+    num_voxels = np.shape(data)[0]
+    
+    # expand out grids and bounds
+    grids = [grids,]*num_voxels
+    bounds = [bounds,]*num_voxels
+    
+    # package the data structure
+    dat = zip(repeat(Fit,num_voxels),
+              repeat(model,num_voxels),
+              data,
+              grids,
+              bounds,
+              repeat(Ns,num_voxels),
+              indices,  
+              repeat(auto_fit,num_voxels),
+              repeat(verbose,num_voxels))
+    
+    return dat
+          
