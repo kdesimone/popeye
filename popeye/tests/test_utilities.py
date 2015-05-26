@@ -1,9 +1,14 @@
-import os
-import popeye.utilities as utils
+import ctypes, multiprocessing
+from itertools import repeat
+
 import numpy as np
 import nose.tools as nt
 import numpy.testing as npt
 from scipy.special import gamma
+
+import popeye.utilities as utils
+import popeye.og as og
+from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
 def test_normalize():
     
@@ -182,3 +187,102 @@ def test_percent_change():
          [-28.57142857, -14.28571429, 0., 14.28571429, 28.57142857],
           [-16.66666667, -8.33333333, 0., 8.33333333, 16.66666667],
           [-11.76470588, -5.88235294, 0., 5.88235294, 11.76470588]]))
+
+
+def test_parallel_fit():
+    
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,45)
+    num_blank_steps = 20
+    num_bar_steps = 40
+    ecc = 12
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 0.20
+    resample_factor = 0.25
+    pixels_across = 800 * resample_factor
+    pixels_down = 600 * resample_factor
+    dtype = ctypes.c_int16
+    Ns = 3
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 0
+    
+    # insert blanks
+    thetas = list(thetas)
+    thetas.insert(0,-1)
+    thetas.insert(2,-1)
+    thetas.insert(5,-1)
+    thetas.insert(8,-1)
+    thetas.insert(11,-1)
+    thetas.append(-1)
+    thetas = np.array(thetas)
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    hrf_delay = -0.25
+    
+    # create the "data"
+    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+    
+    # make 3 voxels
+    data = np.array([data,data,data])
+    num_voxels = data.shape[0]
+    
+    # set search grid
+    x_grid = (-10,10)
+    y_grid = (-10,10)
+    s_grid = (0.25,5.25)
+    b_grid = (0.1,1.0)
+    h_grid = (-4.0,4.0)
+    
+    # set search bounds
+    x_bound = (-12.0,12.0)
+    y_bound = (-12.0,12.0)
+    s_bound = (0.001,12.0)
+    b_bound = (1e-8,1e2)
+    h_bound = (-5.0,5.0)
+    
+    # make grids+bounds for all voxels in the sample
+    grids = [(x_grid, y_grid, s_grid, b_grid, h_grid),]*num_voxels
+    bounds = [(x_bound, y_bound, s_bound, b_bound, h_bound),]*num_voxels
+    
+    # package the data structure
+    dat = zip(repeat(og.GaussianFit,num_voxels),
+              repeat(model,num_voxels),
+              data,
+              grids,
+              bounds,
+              repeat(3,num_voxels),
+              repeat((1,2,3),num_voxels),
+              repeat(True,num_voxels),
+              repeat(0,num_voxels))
+              
+    # run analysis
+    pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
+    output = pool.map(utils.parallel_fit,dat)
+    pool.close()
+    pool.join()
+    
+    # assert equivalence
+    for fit in output:
+        nt.assert_almost_equal(fit.x, x, 2)
+        nt.assert_almost_equal(fit.y, y, 2)
+        nt.assert_almost_equal(fit.sigma, sigma, 2)
+        nt.assert_almost_equal(fit.beta, beta, 2)
+        nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
