@@ -543,12 +543,11 @@ class VisualStimulus(StimulusModel):
             
         """
         
-        StimulusModel.__init__(self, stim_arr, dtype)
+        StimulusModel.__init__(self, stim_arr, dtype, tr_length)
         
         # absorb the vars
         self.viewing_distance = viewing_distance
         self.screen_width = screen_width
-        self.tr_length = tr_length
         self.scale_factor = scale_factor
         self.interp = interp
         
