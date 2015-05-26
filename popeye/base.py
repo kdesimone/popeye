@@ -85,6 +85,11 @@ class PopulationFit(object):
                                              self.model.generate_prediction,
                                              self.very_verbose)
     
+    
+    @auto_attr
+    def prediction(self):
+        return self.model.generate_prediction(*self.estimate)
+    
     @auto_attr
     def OLS(self):
         return sm.OLS(self.data,self.prediction).fit()
