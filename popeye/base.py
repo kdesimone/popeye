@@ -11,14 +11,28 @@ from popeye.onetime import auto_attr
 import popeye.utilities as utils
 import statsmodels.api as sm
 
+def set_verbose(verbose):
+    # set verbose
+    if verbose == 0:
+        verbose = False
+        very_verbose = False
+    if verbose == 1:
+        verbose = True
+        very_verbose = False
+    if verbose == 2:
+        verbose = True
+        very_verbose = True
+    
+    return verbose, very_verbose
+
 class PopulationModel(object):
-    """ Abstract class which holds the PopulationModel
-    """
+    
+    """ Abstract class which holds the PopulationModel. """
     
     def __init__(self, stimulus, hrf_model):
         self.stimulus = stimulus
         self.hrf_model = hrf_model
-
+    
 class PopulationFit(object):
     """ Abstract class which holds the PopulationFit
     """
@@ -33,17 +47,7 @@ class PopulationFit(object):
         self.auto_fit = auto_fit
         self.model = model
         self.data = data
-        
-        # set verbose
-        if verbose == 0:
-            self.verbose = False
-            self.very_verbose = False
-        if verbose == 1:
-            self.verbose = True
-            self.very_verbose = False
-        if verbose == 2:
-            self.verbose = True
-            self.very_verbose = True
+        self.verbose, self.very_verbose = set_verbose(verbose)
         
         # automatic fitting
         if self.auto_fit:
@@ -100,6 +104,7 @@ class PopulationFit(object):
     @auto_attr
     def rss(self):
         return np.sum((self.data - self.prediction)**2)
+    
 class StimulusModel(object):
     """ Abstract class which holds the StimulusModel
     """
