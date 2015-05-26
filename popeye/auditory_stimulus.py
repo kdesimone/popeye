@@ -10,7 +10,7 @@ from __future__ import division
 import ctypes
 
 import numpy as np
-from pylab import specgram
+from matplotlib.pyplot import specgram
 from numpy.lib import stride_tricks
 from scipy.misc import imresize
 import nibabel
@@ -30,7 +30,7 @@ class AuditoryStimulus(StimulusModel):
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype, tr_length):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype,tr_length):
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr, dtype, tr_length)
