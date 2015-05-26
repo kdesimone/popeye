@@ -99,51 +99,6 @@ def recast_estimation_results(output, grid_parent, polar=False):
     
     return nifti_estimates
 
-def parallel_fit(args):
-    
-    """
-    This is a convenience function for parallelizing the fitting
-    procedure.  Each call is handed a tuple or list containing
-    all the necessary inputs for instantiaing a `GaussianFit`
-    class object and estimating the model parameters.
-    
-    
-    Paramaters
-    ----------
-    args : list/tuple
-        A list or tuple containing all the necessary inputs for fitting
-        the Gaussian pRF model.
-    
-    Returns
-    -------
-    
-    fit : `GaussianFit` class object
-        A fit object that contains all the inputs and outputs of the 
-        Gaussian pRF model estimation for a single voxel.
-    
-    """
-    
-    
-    # unpackage the arguments
-    model = args[0]
-    data = args[1]
-    grids = args[2]
-    bounds = args[3]
-    voxel_index = args[4]
-    auto_fit = args[5]
-    verbose = args[6]
-    
-    # fit the data
-    fit = GaussianFit(model,
-                      data,
-                      grids,
-                      bounds,
-                      voxel_index,
-                      auto_fit,
-                      verbose)
-    return fit
-
-
 class GaussianModel(PopulationModel):
     
     """
@@ -185,17 +140,14 @@ class GaussianModel(PopulationModel):
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,
-                                         self.stimulus.deg_x_coarse,
-                                         self.stimulus.deg_y_coarse)
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        rf /= 2 * np.pi * sigma**2
+        rf *= beta
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
-        # convolve with the HRF
+        # generate HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
