@@ -15,6 +15,7 @@ def test_auditory_fit():
     hi_freq = 12000 # Hz
     Fs = hi_freq*2 # Hz
     duration = 30 # seconds
+    blank = 10 # seconds
     tr_length = 1.25 # seconds
     noverlap = 0.5 # seconds
     NFFT = 1024 # this is 2x the number of freq bins we'll end up with in the spectrogram
@@ -28,9 +29,10 @@ def test_auditory_fit():
     
     # create a chirp stimulus
     c1 = chirp(time, lo_freq, duration, hi_freq, method='logarithmic')
+    c1 = np.pad(c1, blank, 'constant')
     c2 = chirp(time, lo_freq, duration, hi_freq, method='quadratic')
+    c2 = np.pad(c2, blank, 'constant')
     signal = np.concatenate((c1,c2))
-    signal = np.pad(np.concatenate((signal,signal[::-1])),duration*Fs,'constant')
     
     # instantiate an instance of the Stimulus class
     stimulus = AuditoryStimulus(signal, NFFT, Fs, noverlap, ctypes.c_double, tr_length)
@@ -71,15 +73,3 @@ def test_auditory_fit():
     nt.assert_equal(np.round(fit.sigma), sigma)
     nt.assert_almost_equal(fit.beta, beta, 2)
     nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
