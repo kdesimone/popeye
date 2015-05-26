@@ -305,10 +305,6 @@ class GaussianFit(PopulationFit):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
-    def prediction(self):
-        return self.model.generate_prediction(self.x, self.y, self.sigma, self.beta, self.hrf_delay)
-    
-    @auto_attr
     def receptive_field(self):
         return generate_og_receptive_field(self.x, self.y, self.sigma,
                                            self.stimulus.deg_x,
