@@ -24,18 +24,16 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     spectrogram, freqs, times, handle = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap);
     
     return spectrogram, freqs, times
-#
-# This should eventually be VisualStimulus, and there would be an abstract class layer
-# above this called Stimulus that would be generic for n-dimentional feature spaces.
+
 class AuditoryStimulus(StimulusModel):
     
     """ Abstract class for stimulus model """
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, target_times, dtype):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype, tr_length):
         
         # this is a weird notation
-        StimulusModel.__init__(self, stim_arr, dtype=dtype)
+        StimulusModel.__init__(self, stim_arr, dtype, tr_length)
         
         # absorb the vars
         self.NFFT = NFFT
@@ -49,5 +47,5 @@ class AuditoryStimulus(StimulusModel):
         self.spectrogram = utils.generate_shared_array(spectrogram, ctypes.c_double)
         self.freqs = utils.generate_shared_array(freqs, ctypes.c_double)
         
-        # why don't the times returned from specgram start at 0? they are time bin centers?
-        self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)
+        # # why don't the times returned from specgram start at 0? they are time bin centers?
+        # self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)
