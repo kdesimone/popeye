@@ -325,7 +325,7 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     integrator : callable
         The integration function for normalizing the units of the HRF 
         so that the area under the curve is the same for differently
-        delayed HRFs.
+        delayed HRFs.  Set integrator to None to turn off normalization.
         
     Returns
     -------
@@ -602,4 +602,16 @@ def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, 
               repeat(verbose,num_voxels))
     
     return dat
+
+def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
+    
+    theta = degrees*np.pi/180
+        
+    a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
+    b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
+    c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
+    
+    Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
+    
+    return Z
           
