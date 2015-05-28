@@ -1,15 +1,15 @@
-import ctypes, multiprocessing
-
-import numpy as np
-import nose.tools as nt
-from scipy.signal import chirp
-
-import popeye.utilities as utils
-import popeye.auditory as aud
-from popeye.auditory_stimulus import AuditoryStimulus
-
-def test_auditory_fit():
-    
+# import ctypes, multiprocessing
+# 
+# import numpy as np
+# import nose.tools as nt
+# from scipy.signal import chirp
+# 
+# import popeye.utilities as utils
+# import popeye.auditory as aud
+# from popeye.auditory_stimulus import AuditoryStimulus
+# 
+# def test_auditory_fit():
+    #
     # # stimulus features
     # lo_freq = 200 # Hz
     # hi_freq = 12000 # Hz
