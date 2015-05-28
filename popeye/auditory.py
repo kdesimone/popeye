@@ -95,7 +95,7 @@ class AuditoryModel(PopulationModel):
         hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
         
         # pad and convolve
-        model = fftconvolve(resampled_response, hrf, 'same') / len(resampled_response)
+        model = fftconvolve(resampled_response, hrf, 'same')
         
         return model
     
