@@ -614,4 +614,53 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
     
     return Z
+
+
+def parallel_fit(args):
+    
+    """
+    This is a convenience function for parallelizing the fitting
+    procedure.  Each call is handed a tuple or list containing
+    all the necessary inputs for instantiaing a `GaussianFit`
+    class object and estimating the model parameters.
+    
+    
+    Paramaters
+    ----------
+    args : list/tuple
+        A list or tuple containing all the necessary inputs for fitting
+        the Gaussian pRF model.
+    
+    Returns
+    -------
+    
+    fit : `Fit` class object
+        A fit object that contains all the inputs and outputs of the 
+        pRF model estimation for a single voxel.
+    
+    """
+    
+    
+    # unpackage the arguments
+    Fit = args[0]
+    model = args[1]
+    data = args[2]
+    grids = args[3]
+    bounds = args[4]
+    Ns = args[5]
+    voxel_index = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
+    
+    # fit the data
+    fit = Fit(model,
+              data,
+              grids,
+              bounds,
+              Ns,
+              voxel_index,
+              auto_fit,
+              verbose)
+    return fit
+
           
