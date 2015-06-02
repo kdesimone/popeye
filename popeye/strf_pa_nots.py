@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-""" Classes and functions for fitting Gaussian population encoding models """
+""" Classes and functions for fitting SpatioTemporal population receptive field models """
 
 from __future__ import division, print_function, absolute_import
 import time
@@ -124,7 +124,7 @@ class SpatioTemporalModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
     
     
-    def generate_ballpark_prediction(self, theta, spatial_sigma, weight, beta):
+    def generate_ballpark_prediction(self, theta, spatial_sigma, weight):
         
         rho = 4
         temporal_sigma = 0.005
@@ -142,7 +142,7 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf /= 2 * np.pi * spatial_sigma ** 2
         
         # create mask for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*spatial_sigma)**2] = 1
         
@@ -182,14 +182,17 @@ class SpatioTemporalModel(PopulationModel):
         transient_norm = utils.zscore(transient_model)
         
         # mix it together
-        model = sustained_model * weight + transient_model * (1-weight)
+        model = sustained_norm * weight + transient_norm * (1-weight)
         
-        # scale by beta
-        model *= beta
+        # # scale by beta
+        # model *= beta
+        # 
+        # # offset
+        # model += baseline
         
         return model
         
-    def generate_prediction(self, theta, spatial_sigma, weight, beta):
+    def generate_prediction(self, theta, spatial_sigma, weight):
         
         rho = 4
         temporal_sigma = 0.005
@@ -247,10 +250,13 @@ class SpatioTemporalModel(PopulationModel):
         transient_norm = utils.zscore(transient_model)
         
         # mix it together
-        model = sustained_model * weight + transient_model * (1-weight)
+        model = sustained_norm * weight + transient_norm * (1-weight)
         
-        # scale by beta
-        model *= beta
+        # # scale by beta
+        # model *= beta
+        # 
+        # # offset
+        # model += baseline
         
         return model
     
@@ -279,9 +285,13 @@ class SpatioTemporalFit(PopulationFit):
     def weight0(self):
         return self.ballpark[2]
     
-    @auto_attr
-    def beta0(self):
-        return self.ballpark[3]
+    # @auto_attr
+    # def beta0(self):
+    #     return self.ballpark[3]
+    # 
+    # @auto_attr
+    # def baseline0(self):
+    #     return self.ballpark[4]
     
     @auto_attr
     def theta(self):
@@ -295,9 +305,13 @@ class SpatioTemporalFit(PopulationFit):
     def weight(self):
         return self.estimate[2]
     
-    @auto_attr
-    def beta(self):
-        return self.estimate[3]
+    # @auto_attr
+    # def beta(self):
+    #     return self.estimate[3]
+    # 
+    # @auto_attr
+    # def baseline(self):
+    #     return self.estimate[4]
     
     @auto_attr
     def rho(self):
@@ -351,7 +365,7 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   SSIGMA=%.02f   WEIGHT=%.02f   BETA=%.02f"
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   SSIGMA=%.02f   WEIGHT=%.02f"
             %(self.voxel_index[0],
               self.voxel_index[1],
               self.voxel_index[2],
@@ -359,7 +373,6 @@ class SpatioTemporalFit(PopulationFit):
               self.rsquared,
               self.theta,
               self.spatial_sigma,
-              self.weight,
-              self.beta))
+              self.weight))
         return txt
     
