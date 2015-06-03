@@ -18,6 +18,39 @@ from scipy.integrate import romb, trapz
 import sharedmem
 from statsmodels import api as sm
 
+def recast_estimation_results(output, grid_parent):
+    
+    # load the gridParent
+    dims = list(grid_parent.shape)
+    dims = dims[0:3]
+    dims.append(len(output[0].estimate)+3)
+    
+    # initialize the statmaps
+    estimates = np.zeros(dims)
+    
+    # extract the prf model estimates from the results queue output
+    for fit in output:
+        
+        # gather the estimate + stats
+        voxel_dat = list(fit.estimate)
+        voxel_dat.append(fit.rsquared)
+        voxel_dat.append(fit.coefficient)
+        voxel_dat.append(fit.stderr)
+        voxel_dat = np.array(voxel_dat)
+        
+        # assign to 
+        estimates[fit.voxel_index] = voxel_dat
+        
+    # get header information from the gridParent and update for the prf volume
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    hdr.set_data_shape(dims)
+    
+    # recast as nifti
+    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
+    
+    return nifti_estimates
+
 def make_nifti(data, grid_parent):
     
     # get header information from the gridParent and update for the prf volume

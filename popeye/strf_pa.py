@@ -20,84 +20,6 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
-def recast_estimation_results(output, grid_parent, polar=False):
-    """
-    Recasts the output of the prf estimation into two nifti_gz volumes.
-    
-    Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the prf estimation for each voxel.  The prf estimates are
-    expressed in both polar and Cartesian coordinates.  If the default value
-    for the `write` parameter is set to False, then the function returns the
-    arrays without writing the nifti files to disk.  Otherwise, if `write` is
-    True, then the two nifti files are written to disk.
-    
-    Each voxel contains the following metrics: 
-    
-        0 x / polar angle
-        1 y / eccentricity
-        2 sigma
-        3 HRF delay
-        4 RSS error of the model fit
-        5 correlation of the model fit
-        
-    Parameters
-    ----------
-    output : list
-        A list of PopulationFit objects.
-    grid_parent : nibabel object
-        A nibabel object to use as the geometric basis for the statmap.  
-        The grid_parent (x,y,z) dim and pixdim will be used.
-        
-    Returns
-    ------ 
-    cartes_filename : string
-        The absolute path of the recasted prf estimation output in Cartesian
-        coordinates. 
-    plar_filename : string
-        The absolute path of the recasted prf estimation output in polar
-        coordinates. 
-        
-    """
-    
-    
-    # load the gridParent
-    dims = list(grid_parent.shape)
-    dims = dims[0:3]
-    dims.append(7)
-    
-    # initialize the statmaps
-    estimates = np.zeros(dims)
-    
-    # extract the prf model estimates from the results queue output
-    for fit in output:
-        
-        if polar is True:
-            estimates[fit.voxel_index] = (fit.theta,
-                                          fit.spatial_sigma,
-                                          fit.temporal_sigma,
-                                          fit.weight,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-        else:
-            estimates[fit.voxel_index] = (fit.theta, 
-                                          fit.spatial_sigma,
-                                          fit.temporal_sigma,
-                                          fit.weight,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-                                       
-                             
-    # get header information from the gridParent and update for the prf volume
-    aff = grid_parent.get_affine()
-    hdr = grid_parent.get_header()
-    hdr.set_data_shape(dims)
-    
-    # recast as nifti
-    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
-    
-    return nifti_estimates
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -126,6 +48,8 @@ class SpatioTemporalModel(PopulationModel):
     
     def generate_ballpark_prediction(self, theta, spatial_sigma, temporal_sigma, weight):
         
+        
+        theta = np.mod(theta,2*np.pi)
         rho = 4
         
         # convert polar to cartesian
@@ -143,7 +67,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*spatial_sigma)**2] = 1
+        mask[distance < (3*spatial_sigma)**2] = 1
         
         # set the coordinate
         t = np.linspace(0, 1, self.stimulus.projector_hz)
@@ -216,7 +140,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*spatial_sigma)**2] = 1
+        mask[distance < (3*spatial_sigma)**2] = 1
         
         # set the coordinate
         t = np.linspace(0, 1, self.stimulus.projector_hz)
@@ -292,8 +216,12 @@ class SpatioTemporalFit(PopulationFit):
         return self.ballpark[1]
     
     @auto_attr
-    def weight0(self):
+    def temporal_s0(self):
         return self.ballpark[2]
+    
+    @auto_attr
+    def weight0(self):
+        return self.ballpark[3]
     
     # @auto_attr
     # def beta0(self):
@@ -311,9 +239,13 @@ class SpatioTemporalFit(PopulationFit):
     def spatial_sigma(self):
         return self.estimate[1]
     
+    @auto_attr 
+    def temporal_sigma(self):
+        return self.estimate[2]
+    
     @auto_attr
     def weight(self):
-        return self.estimate[2]
+        return self.estimate[3]
     
     # @auto_attr
     # def beta(self):
@@ -327,10 +259,6 @@ class SpatioTemporalFit(PopulationFit):
     def rho(self):
         return 4
     
-    @auto_attr
-    def temporal_sigma(self):
-        return 0.005
-        
     @auto_attr
     def spatial_rf(self):
         return generate_og_receptive_field(self.model.stimulus.deg_x, 
@@ -375,7 +303,7 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  RSQ=%.02f  THETA=%.02f  SSIGMA=%.02f  TSIGMA=%.02f  WEIGHT=%.02f"
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)  TIME=%.03d  RSQ=%.02f  THETA=%.02f  SSIGMA=%.02f  TSIGMA=%.04f  WEIGHT=%.02f"
             %(self.voxel_index[0],
               self.voxel_index[1],
               self.voxel_index[2],
