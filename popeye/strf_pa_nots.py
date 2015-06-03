@@ -144,7 +144,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*spatial_sigma)**2] = 1
+        mask[distance < (3*spatial_sigma)**2] = 1
         
         # set the coordinate
         t = np.linspace(0, 1, self.stimulus.projector_hz)
@@ -212,7 +212,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*spatial_sigma)**2] = 1
+        mask[distance < (3*spatial_sigma)**2] = 1
         
         # set the coordinate
         t = np.linspace(0, 1, self.stimulus.projector_hz)
