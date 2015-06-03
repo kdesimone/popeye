@@ -61,9 +61,8 @@ class GaussianModel(PopulationModel):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        rf /= 2 * np.pi * sigma**2
-        rf *= beta
-        
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+                
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
@@ -87,12 +86,8 @@ class GaussianModel(PopulationModel):
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, 
-                                         self.stimulus.deg_x,
-                                         self.stimulus.deg_y)
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
