@@ -20,7 +20,6 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
-
 class SpatioTemporalModel(PopulationModel):
     
     """
@@ -48,21 +47,16 @@ class SpatioTemporalModel(PopulationModel):
     
     def generate_ballpark_prediction(self, theta, spatial_sigma, temporal_sigma, weight):
         
-        
-        theta = np.mod(theta,2*np.pi)
         rho = 4
+        theta = np.mod(theta, 2*np.pi)
         
         # convert polar to cartesian
         x = np.cos(theta) * 4
         y = np.sin(theta) * 4
         
-        # create Gaussian
-        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma,
-                                                 self.stimulus.deg_x_coarse,
-                                                 self.stimulus.deg_y_coarse)
-        
-        # normalize it by integral
-        spatial_rf /= 2 * np.pi * spatial_sigma ** 2
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
@@ -106,36 +100,23 @@ class SpatioTemporalModel(PopulationModel):
         sustained_model = fftconvolve(p_ts, hrf, 'same')
         transient_model = fftconvolve(m_ts, hrf, 'same')
         
-        # normalize to a range
-        sustained_norm = utils.zscore(sustained_model)
-        transient_norm = utils.zscore(transient_model)
-        
         # mix it together
-        model = sustained_norm * weight + transient_norm * (1-weight)
-        
-        # # scale by beta
-        # model *= beta
-        # 
-        # # offset
-        # model += baseline
+        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
         
         return model
         
     def generate_prediction(self, theta, spatial_sigma, temporal_sigma, weight):
         
         rho = 4
+        theta = np.mod(theta, 2*np.pi)
         
         # convert polar to cartesian
         x = np.cos(theta) * rho
         y = np.sin(theta) * rho
         
-        # create Gaussian
-        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma,
-                                                 self.stimulus.deg_x,
-                                                 self.stimulus.deg_y)
-        
-        # normalize it by integral
-        spatial_rf /= 2 * np.pi * spatial_sigma ** 2
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
@@ -176,21 +157,10 @@ class SpatioTemporalModel(PopulationModel):
         
         # convolve with hrf 
         hrf = self.hrf_model(0, self.stimulus.tr_length)
-        sustained_model = fftconvolve(p_ts, hrf, 'same') / len(p_ts)
-        transient_model = fftconvolve(m_ts, hrf, 'same') / len(p_ts)
+        sustained_model = fftconvolve(p_ts, hrf, 'same') 
+        transient_model = fftconvolve(m_ts, hrf, 'same')
         
-        # normalize to a range
-        sustained_norm = utils.zscore(sustained_model)
-        transient_norm = utils.zscore(transient_model)
-        
-        # mix it together
-        model = sustained_norm * weight + transient_norm * (1-weight)
-        
-        # # scale by beta
-        # model *= beta
-        # 
-        # # offset
-        # model += baseline
+        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
         
         return model
     
@@ -218,18 +188,10 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def temporal_s0(self):
         return self.ballpark[2]
-    
+        
     @auto_attr
     def weight0(self):
         return self.ballpark[3]
-    
-    # @auto_attr
-    # def beta0(self):
-    #     return self.ballpark[3]
-    # 
-    # @auto_attr
-    # def baseline0(self):
-    #     return self.ballpark[4]
     
     @auto_attr
     def theta(self):
@@ -239,7 +201,7 @@ class SpatioTemporalFit(PopulationFit):
     def spatial_sigma(self):
         return self.estimate[1]
     
-    @auto_attr 
+    @auto_attr
     def temporal_sigma(self):
         return self.estimate[2]
     
@@ -247,24 +209,17 @@ class SpatioTemporalFit(PopulationFit):
     def weight(self):
         return self.estimate[3]
     
-    # @auto_attr
-    # def beta(self):
-    #     return self.estimate[3]
-    # 
-    # @auto_attr
-    # def baseline(self):
-    #     return self.estimate[4]
-    
     @auto_attr
     def rho(self):
         return 4
     
     @auto_attr
     def spatial_rf(self):
-        return generate_og_receptive_field(self.model.stimulus.deg_x, 
-                                           self.model.stimulus.deg_y, 
-                                           self.x, self.y, self.spatial_sigma)
-    
+        return generate_og_receptive_field(self.x, self.y, self.spatial_sigma,
+                                           self.model.stimulus.deg_x, 
+                                           self.model.stimulus.deg_y)
+                                           
+                                           
     @auto_attr
     def spatial_rf_norm(self):
         return self.spatial_rf / (2 * np.pi * spatial_sigma ** 2)

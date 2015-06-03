@@ -20,85 +20,6 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
-def recast_estimation_results(output, grid_parent, polar=False):
-    """
-    Recasts the output of the prf estimation into two nifti_gz volumes.
-    
-    Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the prf estimation for each voxel.  The prf estimates are
-    expressed in both polar and Cartesian coordinates.  If the default value
-    for the `write` parameter is set to False, then the function returns the
-    arrays without writing the nifti files to disk.  Otherwise, if `write` is
-    True, then the two nifti files are written to disk.
-    
-    Each voxel contains the following metrics: 
-    
-        0 x / polar angle
-        1 y / eccentricity
-        2 sigma
-        3 HRF delay
-        4 RSS error of the model fit
-        5 correlation of the model fit
-        
-    Parameters
-    ----------
-    output : list
-        A list of PopulationFit objects.
-    grid_parent : nibabel object
-        A nibabel object to use as the geometric basis for the statmap.  
-        The grid_parent (x,y,z) dim and pixdim will be used.
-        
-    Returns
-    ------ 
-    cartes_filename : string
-        The absolute path of the recasted prf estimation output in Cartesian
-        coordinates. 
-    plar_filename : string
-        The absolute path of the recasted prf estimation output in polar
-        coordinates. 
-        
-    """
-    
-    
-    # load the gridParent
-    dims = list(grid_parent.shape)
-    dims = dims[0:3]
-    dims.append(7)
-    
-    # initialize the statmaps
-    estimates = np.zeros(dims)
-    
-    # extract the prf model estimates from the results queue output
-    for fit in output:
-        
-        if polar is True:
-            estimates[fit.voxel_index] = (fit.theta,
-                                          fit.spatial_sigma,
-                                          fit.temporal_sigma,
-                                          fit.weight,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-        else:
-            estimates[fit.voxel_index] = (fit.theta, 
-                                          fit.spatial_sigma,
-                                          fit.temporal_sigma,
-                                          fit.weight,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-                                       
-                             
-    # get header information from the gridParent and update for the prf volume
-    aff = grid_parent.get_affine()
-    hdr = grid_parent.get_header()
-    hdr.set_data_shape(dims)
-    
-    # recast as nifti
-    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
-    
-    return nifti_estimates
-
 class SpatioTemporalModel(PopulationModel):
     
     """
@@ -128,18 +49,15 @@ class SpatioTemporalModel(PopulationModel):
         
         rho = 4
         temporal_sigma = 0.005
+        theta = np.mod(theta, 2*np.pi)
         
         # convert polar to cartesian
         x = np.cos(theta) * 4
         y = np.sin(theta) * 4
         
-        # create Gaussian
-        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma,
-                                                 self.stimulus.deg_x_coarse,
-                                                 self.stimulus.deg_y_coarse)
-        
-        # normalize it by integral
-        spatial_rf /= 2 * np.pi * spatial_sigma ** 2
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
@@ -177,18 +95,7 @@ class SpatioTemporalModel(PopulationModel):
         sustained_model = fftconvolve(p_ts, hrf, 'same')
         transient_model = fftconvolve(m_ts, hrf, 'same')
         
-        # normalize to a range
-        sustained_norm = utils.zscore(sustained_model)
-        transient_norm = utils.zscore(transient_model)
-        
-        # mix it together
-        model = sustained_norm * weight + transient_norm * (1-weight)
-        
-        # # scale by beta
-        # model *= beta
-        # 
-        # # offset
-        # model += baseline
+        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
         
         return model
         
@@ -196,18 +103,15 @@ class SpatioTemporalModel(PopulationModel):
         
         rho = 4
         temporal_sigma = 0.005
+        theta = np.mod(theta, 2*np.pi)
         
         # convert polar to cartesian
         x = np.cos(theta) * rho
         y = np.sin(theta) * rho
         
-        # create Gaussian
-        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma,
-                                                 self.stimulus.deg_x,
-                                                 self.stimulus.deg_y)
-        
-        # normalize it by integral
-        spatial_rf /= 2 * np.pi * spatial_sigma ** 2
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
@@ -242,21 +146,10 @@ class SpatioTemporalModel(PopulationModel):
         
         # convolve with hrf 
         hrf = self.hrf_model(0, self.stimulus.tr_length)
-        sustained_model = fftconvolve(p_ts, hrf, 'same') / len(p_ts)
-        transient_model = fftconvolve(m_ts, hrf, 'same') / len(p_ts)
+        sustained_model = fftconvolve(p_ts, hrf, 'same') 
+        transient_model = fftconvolve(m_ts, hrf, 'same')
         
-        # normalize to a range
-        sustained_norm = utils.zscore(sustained_model)
-        transient_norm = utils.zscore(transient_model)
-        
-        # mix it together
-        model = sustained_norm * weight + transient_norm * (1-weight)
-        
-        # # scale by beta
-        # model *= beta
-        # 
-        # # offset
-        # model += baseline
+        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
         
         return model
     
@@ -285,14 +178,6 @@ class SpatioTemporalFit(PopulationFit):
     def weight0(self):
         return self.ballpark[2]
     
-    # @auto_attr
-    # def beta0(self):
-    #     return self.ballpark[3]
-    # 
-    # @auto_attr
-    # def baseline0(self):
-    #     return self.ballpark[4]
-    
     @auto_attr
     def theta(self):
         return np.mod(self.estimate[0],2*np.pi)
@@ -304,14 +189,6 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def weight(self):
         return self.estimate[2]
-    
-    # @auto_attr
-    # def beta(self):
-    #     return self.estimate[3]
-    # 
-    # @auto_attr
-    # def baseline(self):
-    #     return self.estimate[4]
     
     @auto_attr
     def rho(self):
