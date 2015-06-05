@@ -58,6 +58,13 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
         
+        # if the spatial RF is running off the screen ...
+        x_rf = np.sum(spatial_rf,axis=1)
+        y_rf = np.sum(spatial_rf,axis=0)
+        if ( np.round(x_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 or 
+             np.round(y_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 ):
+            return np.inf
+        
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
@@ -101,8 +108,10 @@ class SpatioTemporalModel(PopulationModel):
         transient_model = fftconvolve(m_ts, hrf, 'same')
         
         # mix it together
-        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
+        sustained_norm = utils.zscore(sustained_model)
+        transient_norm = utils.zscore(transient_model)
         
+        model = sustained_norm * weight + transient_norm * (1-weight)        
         return model
         
     def generate_prediction(self, theta, spatial_sigma, temporal_sigma, weight):
@@ -117,6 +126,13 @@ class SpatioTemporalModel(PopulationModel):
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, spatial_sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         spatial_rf /= (2 * np.pi * spatial_sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        
+        # if the spatial RF is running off the screen ...
+        x_rf = np.sum(spatial_rf,axis=1)
+        y_rf = np.sum(spatial_rf,axis=0)
+        if ( np.round(x_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 or 
+             np.round(y_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 ):
+            return np.inf
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
@@ -160,8 +176,11 @@ class SpatioTemporalModel(PopulationModel):
         sustained_model = fftconvolve(p_ts, hrf, 'same') 
         transient_model = fftconvolve(m_ts, hrf, 'same')
         
-        model = utils.zscore(sustained_model) * weight + utils.zscore(transient_model) * (1-weight)
+        sustained_norm = utils.zscore(sustained_model)
+        transient_norm = utils.zscore(transient_model)
         
+        model = sustained_norm * weight + transient_norm * (1-weight)
+                
         return model
     
 class SpatioTemporalFit(PopulationFit):
