@@ -52,17 +52,30 @@ class PopulationFit(object):
         # automatic fitting
         if self.auto_fit:
             
-            # the business
-            self.start = time.clock()
-            self.ballpark;
-            self.estimate;
-            self.OLS;
-            self.rss;
-            self.finish = time.clock()
+            try:
+                
+                # start
+                self.start = time.clock()
+                
+                # the business
+                self.ballpark
+                self.estimate
+                self.OLS
+                self.rss
+                self.rsquared
+                
+                # finish
+                self.finish = time.clock()
+                
+                # print
+                if self.verbose:
+                    print(self.msg)
             
-            # print
-            if self.verbose:
-                print(self.msg)
+            # failsafe
+            except:
+                pass
+            
+
     
     # the brute search
     @auto_attr
