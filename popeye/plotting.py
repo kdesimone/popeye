@@ -115,7 +115,7 @@ def eccentricity_hist(x, y, xlim, voxel_dim, dof,
     
     return fig, ax
 
-def hrf_delay_hist(hrf_delay, xlim, voxel_dim, dof,
+def hrf_delay_hist(measure, bins, voxel_dim, dof,
                    plot_alpha=1.0,plot_color='k',label_name=None,
                    show_legend=False, fig=None, ax=None):
     
@@ -126,17 +126,19 @@ def hrf_delay_hist(hrf_delay, xlim, voxel_dim, dof,
     else:
         ax = fig.add_subplot(111)
         
-    n,bins = np.histogram(hrf_delay,bins=np.arange(-6,6,0.5))
+    n,bins = np.histogram(measure,bins=bins)
     bincenters = list(0.5*(bins[1:]+bins[:-1]))
-    mu = (n*voxel_dim**3)/(len(hrf_delay)*voxel_dim**3)
+    mu = (n*voxel_dim**3)/(len(measure)*voxel_dim**3)
     sme = mu / np.sqrt(dof)
     cumsum = np.cumsum(mu)
     
+    ax.plot(bincenters,cumsum,plot_color,lw=2,label=label_name, alpha=plot_alpha)
+    ax.fill_between(bincenters,cumsum-sme,cumsum+sme,color=plot_color,alpha=0.5)
+    plt.xticks(bins,fontsize=18)
+    plt.yticks(np.arange(.2,1.2,.2),['20%','40%','60%','80%','100%'],fontsize=18)
     ax.bar(bincenters,mu,color=plot_color,alpha=plot_alpha,width=0.33)
-    plt.xticks(np.arange(-5,6,5),fontsize=28)
-    plt.yticks(np.arange(.1,.31,.1),['10%','20%','30%'],fontsize=28)
-    plt.xlim(-5,5.75)
-    plt.ylim(0,0.3)
+    plt.xlim(0.5,xlim[1]+0.5)
+    plt.ylim(0,1)
     
     if show_legend:
         ax.legend(loc=0)
