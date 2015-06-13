@@ -33,6 +33,12 @@ class PopulationModel(object):
         self.stimulus = stimulus
         self.hrf_model = hrf_model
     
+    def generate_ballpark_prediction(self):
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def generate_prediction(self):
+        raise NotImplementedError("Subclass must implement abstract method")
+    
 class PopulationFit(object):
     """ Abstract class which holds the PopulationFit
     """
