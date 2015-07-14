@@ -152,7 +152,7 @@ def compute_model_ts(x, y, spatial_sigma, temporal_sigma, weight, beta, baseline
     # create mask for speed
     distance = (deg_x - x)**2 + (deg_y - y)**2
     mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (37*spatial_sigma)**2] = 1
+    mask[distance < (3*spatial_sigma)**2] = 1
     
     # extract the timeseries
     spatial_response = generate_rf_timeseries(stim_arr, spatial_rf, mask)
