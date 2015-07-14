@@ -28,7 +28,7 @@ def make_movie_static(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=F
         
         # create figure
         im = ax.imshow(stim_arr[:,:,frame],cmap=cm.gray, 
-                       vmin=vmin, vmax=vmax, interpolation='nearest')
+                       vmin=vmin, vmax=vmax, interpolation=None, origin='lower')
         plt.axis('off')
         
         # stash it
@@ -47,7 +47,7 @@ def make_movie_static(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=F
     
     return anim
 
-def make_movie_calleable(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
+def make_movie_calleable(stim_arr, dims, vmin, vmax, fps, bitrate, dpi, fname=None):
     
     # this function requires ffmpeg -- https://www.ffmpeg.org/
     # https://jakevdp.github.io/blog/2012/08/18/matplotlib-animation-tutorial/
@@ -77,8 +77,8 @@ def make_movie_calleable(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, writ
     # this is a bug see here -- http://stackoverflow.com/questions/20137792/using-ffmpeg-and-ipython
     mywriter = animation.FFMpegWriter(fps=fps)
     
-    if write and fname:
-        anim.save('%s.mp4' %(fname), writer=mywriter, extra_args=['-vcodec', 'libx264'])
+    if fname:
+        anim.save('%s.mp4' %(fname), writer=mywriter, bitrate=bitrate, extra_args=['-vcodec', 'libx264'])
     
     return anim
 
