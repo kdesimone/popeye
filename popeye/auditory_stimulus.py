@@ -21,6 +21,37 @@ import popeye.utilities as utils
 
 def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
+    """
+    A Gaussian population receptive field model [1]_.
+    
+    Paramaters
+    ----------
+    
+    signal : ndarray
+        A 1D array containg the monophonic auditory stimulus.
+    
+    NFFT : integer
+      The number of data points used in each block for the FFT.
+      Must be even; a power 2 is most efficient.  The default value is 256.
+      This should *NOT* be used to get zero padding, or the scaling of the
+      result will be incorrect. Use *pad_to* for this instead.
+    
+     Fs : scalar
+      The sampling frequency (samples per time unit).  It is used
+      to calculate the Fourier frequencies, freqs, in cycles per time
+      unit. The default value is 2.
+    
+    
+    noverlap : integer
+        The number of points of overlap between blocks.  The default value 
+        is 128.
+    
+    
+    For more information, see help of `pylab.specgram`.
+
+    """
+    
+    
     spectrogram, freqs, times, handle = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap);
     
     return spectrogram, freqs, times
@@ -31,6 +62,39 @@ class AuditoryStimulus(StimulusModel):
     
     
     def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype,tr_length):
+        
+        
+                """
+        A Gaussian population receptive field model [1]_.
+        
+        Paramaters
+        ----------
+        
+        signal : ndarray
+            A 1D array containg the monophonic auditory stimulus.
+        
+        NFFT : integer
+          The number of data points used in each block for the FFT.
+          Must be even; a power 2 is most efficient.  The default value is 256.
+          This should *NOT* be used to get zero padding, or the scaling of the
+          result will be incorrect. Use *pad_to* for this instead.
+        
+         Fs : scalar
+          The sampling frequency (samples per time unit).  It is used
+          to calculate the Fourier frequencies, freqs, in cycles per time
+          unit. The default value is 2.
+        
+        noverlap : integer
+            The number of points of overlap between blocks.  The default value 
+            is 128.
+        
+        dtype : string
+            Sets the data type the stimulus array is cast into.
+        
+        tr_length : float
+            The repetition time (TR) in seconds.
+            
+        """
         
         # this is a weird notation
         StimulusModel.__init__(self, stim_arr, dtype, tr_length)

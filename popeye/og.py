@@ -22,14 +22,14 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 class GaussianModel(PopulationModel):
     
     """
-    A Gaussian population receptive field model class
+    A 2D Gaussian population receptive field model class.
     
     """
     
     def __init__(self, stimulus, hrf_model):
         
         """
-        A Gaussian population receptive field model [1]_.
+        A 2D Gaussian population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -106,13 +106,12 @@ class GaussianModel(PopulationModel):
 class GaussianFit(PopulationFit):
     
     """
-    A Gaussian population receptive field fit class
+    A 2D Gaussian population receptive field fit class.
     
     """
     
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
-        
         
         """
         A Gaussian population receptive field model [1]_.
@@ -165,7 +164,7 @@ class GaussianFit(PopulationFit):
         
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
         estimates in human visual cortex. NeuroImage 39:647-660
-
+        
         """
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
