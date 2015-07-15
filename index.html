@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="popeye : A population receptive field estimation tool">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>popeye</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/kdesimone/popeye">View on GitHub</a>
+
+          <h1 id="project_title">popeye</h1>
+          <h2 id="project_tagline">A population receptive field estimation tool</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/kdesimone/popeye/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/kdesimone/popeye/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>
+
+<a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>What is a population receptive field?</h3>
+
+<p>A population receptive field (pRF) is a quantitative model of the cumulative response of the population of cells contained within a single fMRI voxel <A HREF="#bottom">[1]</A>.  The pRF model allows us to interpret and predict the responses of a voxel to different stimuli. Such models can be designed to describe various sensory <A HREF="#bottom">[2]</A> and cognitive processes <A HREF="#bottom">[3]</A>.   More recently, the pRF model has been used to map the retinotopic organization of multiple subcortical nuclei <A HREF="#bottom">[4]</A>.</p>
+
+<br><h3><a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>Installation</h3>
+
+<p>Download the popeye source code from the GitHub repository.  Links to the tarball and zip files are at the top of this page for your convenience.  Using popeye requires that you have installed <a href="http://www.numpy.org/">NumPy</a>, <a href="http://www.scipy.org/">SciPy</a>, <a href="http://statsmodels.sourceforge.net/">statsmodel</a>, and <a href="http://www.cython.org/">Cython</a>.  Installing <a href="http://www.matplotlib.org/">matplotlib</a> is recommended as we'll be plotting the results of our pRF estimation but is not required for any of the model fitting procedures in popeye.</p>
+
+<p>Once you've downloaded the popeye source code and installed the aforementioned dependencies, you'll need to install popeye and build the Cython extensions I've written for speeding up the analyses.</p> 
+
+<pre><code><font size="2">
+$ cd popeye
+$ sudo python setup.py install build_ext
+$ python
+>>> import popeye
+>>> popeye.__version__
+'0.1.0.dev'
+</font></code></pre><p></p>
+
+<br><h3><a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>Sphinx Documentation</h3>
+
+<p>The code below is meant to provide only a small preview of the purpose and organization of popeye.  The sphinx documentation for popeye is available <a href="http://kdesimone.github.io/popeye/docs/_build/html/index.html">here.</a></p>
+
+
+<br><h3><a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>Getting started</h3>
+
+<p>Below is a small demonstration of how to interact with the popeye API.  Here, we'll generate our stimulus and simulate the BOLD response of a Gaussian pRF model estimate we'll just invent.  Normally, we'd be analyzing the BOLD time-series that we collect while we present a participant with a visual stimulus.</p>
+
+<pre><code><font size="2">
+import ctypes
+import numpy as np
+import popeye.og as og
+import popeye.utilities as utils
+from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
+
+### STIMULUS
+## create sweeping bar stimulus
+sweeps = np.array([-1,0,-1,90,-1,180,-1,270,-1]) # in degrees, -1 is blank
+bar = simulate_bar_stimulus(500, 500, 40, 20, sweeps, 30, 30, 10)
+                            
+## create an instance of the Stimulus class
+stimulus = VisualStimulus(bar, 50, 25, 0.25, 1.0, ctypes.c_int16)
+ 
+### MODEL
+## initialize the gaussian model
+model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+
+## generate a random pRF estimate
+x = -5.24
+y = 2.58
+sigma = 1.24
+beta = 1
+hrf_delay = -0.25
+
+## create the time-series for the invented pRF estimate
+data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+
+## add in some noise
+data += np.random.uniform(-data.max()/10,data.max()/10,len(data))
+
+### FIT
+## define search grids
+# these define min and max of the edge of the initial brute-force search. 
+x_grid = (-10,10)
+y_grid = (-10,10)
+s_grid = (0.25,5.25)
+b_grid = (0.01,1.0)
+h_grid = (-4.0,4.0)
+
+## define search bounds
+# these define the boundaries of the final gradient-descent search.
+x_bound = (-12.0,12.0)
+y_bound = (-12.0,12.0)
+s_bound = (0.001,12.0)
+b_bound = (1e-8,1e2)
+h_bound = (-5.0,5.0)
+
+## package the grids and bounds
+grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
+bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
+
+## fit the response
+# auto_fit = True fits the model on assignment
+# verbose = 0 is silent
+# verbose = 1 is a single print
+# verbose = 2 is very verbose
+fit = og.GaussianFit(model, data, grids, bounds, Ns=3, 
+                     voxel_index=(1,2,3), auto_fit=True,verbose=2)
+
+## plot the results
+import matplotlib.pyplot as plt
+plt.plot(fit.prediction,c='r',lw=3,label='model',zorder=1)
+plt.scatter(range(len(fit.data)),fit.data,s=30,c='k',label='data',zorder=2)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
+plt.xlabel('Time',fontsize=18)
+plt.ylabel('Amplitude',fontsize=18)
+plt.xlim(0,len(fit.data))
+plt.legend(loc=0)
+
+## multiprocess 3 voxels
+data = [data,data,data]
+indices = ([1,2,3],[4,6,5],[7,8,9])
+bundle = utils.multiprocess_bundle(og.GaussianFit, model, data, 
+                                   grids, bounds, 3, indices, True, 1)
+
+## run analysis
+pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
+output = pool.map(utils.parallel_fit, bundle)
+pool.close()
+pool.join()
+
+</font></code></pre></br>
+
+<p> Below is the output of the model fit we invoked in the code block above. Explore the attributes of the fit object to get a sense of the kinds of measures we've gleaned from the model.</p>
+
+<img src="images/model_fit.png">
+
+<br><h3><a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Credits</h3>
+<p>popeye was created by Kevin DeSimone (<a href="https://github.com/kdesimone" class="user-mention">@kdesimone</a>) with significant contributions and guidance from Ariel Rokem (<a href="https://github.com/arokem" class="user-mention">@arokem</a>).</p>
+
+<br><h3><a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support</h3>
+<p>Having trouble with popeye? Contact <a href="mailto:kevindesimone@gmail.com">kevindesimone@gmail.com</a></p>
+
+
+<br><h3><a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>References</h3>
+<p> [1] Dumoulin SO, Wandell BA (2008) Population receptive field estimates in human visual cortex. NeuroImage 39:647-660.</p>
+<p> [2] Thomas JM, Huber E, Stecker E, Boynton G, Saenz M, Fine I (2014) Population receptive field estimates in human auditory cortex. NeuroImage in press.</p>
+<p> [3] Harvey BM, Klein BP, Petridou N, Dumoulin SO (2013) Topographic organization of numerosity in the human parietal cortex. Science 341: 1123-1126.</p>
+<p> [4] DeSimone K, Viviano JD, Schneider KA (<i>in press</i>) Population receptive field estimation reveals two new maps in human subcortex. Journal of Neuroscience.</p>
+<A NAME="bottom"></A>
+  
+      
+      
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">popeye maintained by <a href="https://github.com/kdesimone">kdesimone</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+
+  </body>
+</html>
