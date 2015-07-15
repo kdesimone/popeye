@@ -31,9 +31,9 @@ class AuditoryModel(PopulationModel):
         Paramaters
         ----------
         
-        stimulus : `VisualStimulus` class object
-            A class instantiation of the `VisualStimulus` class
-            containing a representation of the visual stimulus.
+        stimulus : `AuditoryStimulus` class object
+            A class instantiation of the `AuditoryStimulus` class
+            containing a representation of the auditory stimulus.
             
         hrf_model : callable
             A function that generates an HRF model given an HRF delay.
@@ -146,7 +146,13 @@ class AuditoryFit(PopulationFit):
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
         """
-        A class containing tools for fitting the 1D Gaussian population receptive field model.
+        A class containing tools for fitting the 1D Gaussian pRF model.
+        
+        The `AuditoryFit` class houses all the fitting tool that are associated with 
+        estimatinga pRF model.  The `PopulationFit` takes a `AuditoryModel` instance 
+        `model` and a time-series `data`.  In addition, extent and sampling-rate of a 
+        brute-force grid-search is set with `grids` and `Ns`.  Use `bounds` to set 
+        limits on the search space for each parameter.  
         
         Paramaters
         ----------
