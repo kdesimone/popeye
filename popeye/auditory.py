@@ -190,12 +190,12 @@ class AuditoryFit(PopulationFit):
             A flag for automatically running the fitting procedures once the 
             `GaussianFit` object is instantiated.
         
-        verbose : bool
-            A flag for printing some summary information about the model estiamte
-            after the fitting procedures have completed.
+        verbose : int
+            0 = silent
+            1 = print the final solution of an error-minimization
+            2 = print each error-minimization step
         
         """
-            
         
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
