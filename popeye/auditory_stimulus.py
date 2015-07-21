@@ -58,14 +58,12 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
 
 class AuditoryStimulus(StimulusModel):
     
-    """ Abstract class for stimulus model """
-    
     
     def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype,tr_length):
         
         
-                """
-        A Gaussian population receptive field model [1]_.
+        """
+        A child of the StimulusModel class for auditory stimuli.
         
         Paramaters
         ----------

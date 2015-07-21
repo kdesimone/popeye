@@ -1,239 +1,31 @@
 #!/usr/bin/python
 
-""" Classes and functions for fitting Gaussian population encoding models """
+""" Classes and functions for estimating Compressive Spatial Summation pRF model """
 
-from __future__ import division, print_function, absolute_import
-import time
-import gc
+from __future__ import division
 import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-from scipy.stats import linregress
 from scipy.signal import fftconvolve
 import nibabel
-import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_timeseries, generate_og_receptive_field, generate_og_receptive_field, generate_rf_timeseries
-
-def recast_estimation_results(output, grid_parent, polar=False):
-    """
-    Recasts the output of the prf estimation into two nifti_gz volumes.
-    
-    Takes `output`, a list of multiprocessing.Queue objects containing the
-    output of the prf estimation for each voxel.  The prf estimates are
-    expressed in both polar and Cartesian coordinates.  If the default value
-    for the `write` parameter is set to False, then the function returns the
-    arrays without writing the nifti files to disk.  Otherwise, if `write` is
-    True, then the two nifti files are written to disk.
-    
-    Each voxel contains the following metrics: 
-    
-        0 x / polar angle
-        1 y / eccentricity
-        2 sigma
-        3 HRF delay
-        4 RSS error of the model fit
-        5 correlation of the model fit
-        
-    Parameters
-    ----------
-    output : list
-        A list of PopulationFit objects.
-    grid_parent : nibabel object
-        A nibabel object to use as the geometric basis for the statmap.  
-        The grid_parent (x,y,z) dim and pixdim will be used.
-        
-    Returns
-    ------ 
-    cartes_filename : string
-        The absolute path of the recasted prf estimation output in Cartesian
-        coordinates. 
-    plar_filename : string
-        The absolute path of the recasted prf estimation output in polar
-        coordinates. 
-        
-    """
-    
-    
-    # load the gridParent
-    dims = list(grid_parent.shape)
-    dims = dims[0:3]
-    dims.append(9)
-    
-    # initialize the statmaps
-    estimates = np.zeros(dims)
-    
-    # extract the prf model estimates from the results queue output
-    for fit in output:
-        
-        if polar is True:
-            estimates[fit.voxel_index] = (fit.theta,
-                                          fit.rho,
-                                          fit.sigma,
-                                          fit.n,
-                                          fit.beta,
-                                          fit.hrf_delay,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-        else:
-            estimates[fit.voxel_index] = (fit.x, 
-                                          fit.y,
-                                          fit.sigma,
-                                          fit.n,
-                                          fit.beta,
-                                          fit.hrf_delay,
-                                          fit.rsquared,
-                                          fit.coefficient,
-                                          fit.stderr)
-                                       
-                             
-    # get header information from the gridParent and update for the prf volume
-    aff = grid_parent.get_affine()
-    hdr = grid_parent.get_header()
-    hdr.set_data_shape(dims)
-    
-    # recast as nifti
-    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
-    
-    return nifti_estimates
-    
-def compute_model_ts(x, y, sigma, hrf_delay, n, beta,
-                     deg_x, deg_y, stim_arr, tr_length):
-    
-    
-    """
-    The objective function for GaussianFi class.
-    
-    Parameters
-    ----------
-    x : float
-        The model estimate along the horizontal dimensions of the display.
-
-    y : float
-        The model estimate along the vertical dimensions of the display.
-
-    sigma : float
-        The model estimate of the dispersion across the the display.
-    
-    hrf_delay : float
-        The model estimate of the relative delay of the HRF.  The canonical
-        HRF is assumed to be 5 s post-stimulus [1]_.
-    
-    beta : float
-        The model estimate of the amplitude of the BOLD signal.
-    
-    tr_length : float
-        The length of the repetition time in seconds.
-    
-    
-    Returns
-    -------
-    
-    model : ndarray
-    The model prediction time-series.
-    
-    
-    References
-    ----------
-    
-    .. [1] Glover, GH. (1999). Deconvolution of impulse response in 
-    event-related BOLD fMRI. NeuroImage 9: 416-429.
-    
-    """
-    
-    # generate the response
-    rf = generate_og_receptive_field(deg_x, deg_y, x, y, sigma)
-    
-    # normalize by the integral
-    rf *= 1/(2 * np.pi * sigma ** 2)
-    
-    # raise it to the n
-    rf **= n
-    
-    # create mask for speed
-    distance = (deg_x - x)**2 + (deg_y - y)**2
-    mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (5*sigma)**2] = 1
-    
-    # extract the response
-    response = generate_rf_timeseries(stim_arr, rf, mask)
-        
-    # create the HRF
-    hrf = utils.double_gamma_hrf(hrf_delay, tr_length)
-    
-    # convolve it with the stimulus
-    model = fftconvolve(response, hrf, 'same')
-    
-    # scale it by beta
-    model *= beta
-    
-    return model
-
-def parallel_fit(args):
-    
-    """
-    This is a convenience function for parallelizing the fitting
-    procedure.  Each call is handed a tuple or list containing
-    all the necessary inputs for instantiaing a `GaussianFit`
-    class object and estimating the model parameters.
-    
-    
-    Paramaters
-    ----------
-    args : list/tuple
-        A list or tuple containing all the necessary inputs for fitting
-        the Gaussian pRF model.
-    
-    Returns
-    -------
-    
-    fit : `GaussianFit` class object
-        A fit object that contains all the inputs and outputs of the 
-        Gaussian pRF model estimation for a single voxel.
-    
-    """
-    
-    
-    # unpackage the arguments
-    model = args[0]
-    data = args[1]
-    grids = args[2]
-    Ns = args[3]
-    bounds = args[4]
-    tr_length = args[5]
-    voxel_index = args[6]
-    auto_fit = args[7]
-    verbose = args[8]
-    
-    # fit the data
-    fit = CompressiveSpatialSummationFit(model,
-                                          data,
-                                          grids,
-                                          bounds,
-                                          Ns,
-                                          tr_length,
-                                          voxel_index,
-                                          auto_fit,
-                                          verbose)
-    return fit
-
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class CompressiveSpatialSummationModel(PopulationModel):
     
     """
-    A CSS population receptive field model class
+    A Compressive Spatial Summation population receptive field model class
     
     """
     
     def __init__(self, stimulus, hrf_model):
         
         """
-        A Gaussian population receptive field model [1]_.
+        A Compressive Spatial Summation population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -242,12 +34,15 @@ class CompressiveSpatialSummationModel(PopulationModel):
             A class instantiation of the `VisualStimulus` class
             containing a representation of the visual stimulus.
         
+        hrf_model : callable
+            A function that generates an HRF model given an HRF delay.
+            For more information, see `popeye.utilties.double_gamma_hrf_hrf`
         
         References
         ----------
         
-        .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
-        estimates in human visual cortex. NeuroImage 39:647-660
+        .. [1] Kay KN, Winawer J, Mezer A, Wandell BA (2014) Compressive spatial
+        summation in human visual cortex. Journal of Neurophysiology 110:481-494.
         
         """
         
@@ -318,44 +113,53 @@ class CompressiveSpatialSummationModel(PopulationModel):
 class CompressiveSpatialSummationFit(PopulationFit):
     
     """
-    A CSS population receptive field fit class
+    A Compressive Spatial Summation population receptive field fit class
     
     """
     
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        
         """
-        A Gaussian population receptive field model [1]_.
-
+        A class containing tools for fitting the CSS pRF model.
+        
+        The `CompressiveSpatialSummationFit` class houses all the fitting tool that 
+        are associated with estimating a pRF model. The `GaussianFit` takes a 
+        `CompressiveSpatialSummationModel` instance  `model` and a time-series `data`. 
+        In addition, extent and sampling-rate of a  brute-force grid-search is set 
+        with `grids` and `Ns`.  Use `bounds` to set limits on the search space for 
+        each parameter.  
+        
         Paramaters
         ----------
         
+                
+        model : `CompressiveSpatialSummationModel` class instance
+            An object representing the CSS model. 
+        
         data : ndarray
-            An array containing the measured BOLD signal.
+            An array containing the measured BOLD signal of a single voxel.
         
-        model : `GaussianModel` class instance containing the representation
-            of the visual stimulus.
-        
-        search_bounds : tuple
+        grids : tuple
             A tuple indicating the search space for the brute-force grid-search.
             The tuple contains pairs of upper and lower bounds for exploring a
-            given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
+            given dimension.  For example `grids=((-10,10),(0,5),)` will
             search the first dimension from -10 to 10 and the second from 0 to 5.
-            These values cannot be None. 
+            These values cannot be `None`. 
             
             For more information, see `scipy.optimize.brute`.
         
-        fit_bounds : tuple
+        bounds : tuple
             A tuple containing the upper and lower bounds for each parameter
             in `parameters`.  If a parameter is not bounded, simply use
             `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
         
-        tr_length : float
-            The length of the repetition time in seconds.
+        Ns : int
+            Number of samples per stimulus dimension to sample during the ballpark search.
+            
+            For more information, see `scipy.optimize.brute`.
         
         voxel_index : tuple
             A tuple containing the index of the voxel being modeled. The 
@@ -364,20 +168,15 @@ class CompressiveSpatialSummationFit(PopulationFit):
             indices. With voxel indices, the brain volume can be reconstructed 
             using the newly computed model estimates.
         
-        auto-fit : bool
+        auto_fit : bool
             A flag for automatically running the fitting procedures once the 
             `GaussianFit` object is instantiated.
         
-        verbose : bool
-            A flag for printing some summary information about the model estiamte
-            after the fitting procedures have completed.
+        verbose : int
+            0 = silent
+            1 = print the final solution of an error-minimization
+            2 = print each error-minimization step
         
-        References
-        ----------
-        
-        .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
-        estimates in human visual cortex. NeuroImage 39:647-660
-
         """
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
