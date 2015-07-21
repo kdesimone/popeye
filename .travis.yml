@@ -33,7 +33,6 @@ install:
   - pip install python-coveralls
   - pip install coverage       # Add me to install coverage.py
   - pip install nose           # Add me to install nose
-  - python setup.py test
   # command to run tests, e.g. python setup.py test
 script:
     # Change into an innocuous directory and find tests from installation
