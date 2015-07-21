@@ -36,6 +36,6 @@ install:
   # command to run tests, e.g. python setup.py test
 script:
     # Change into an innocuous directory and find tests from installation
-    - nosetests popeye --with-coverage
+    - nosetests --with-coverage popeye
 after_success:
     - coveralls
