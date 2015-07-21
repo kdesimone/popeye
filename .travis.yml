@@ -33,15 +33,10 @@ install:
   - pip install python-coveralls
   - pip install coverage       # Add me to install coverage.py
   - pip install nose           # Add me to install nose
+  - nosetests --with-coverage
   # command to run tests, e.g. python setup.py test
 script:
     # Change into an innocuous directory and find tests from installation
-    - mkdir for_testing
-    - cd for_testing
-    - if [ "${COVERAGE}" == "1" ]; then
-      cp ../.coveragerc .;
-      COVER_ARGS="--with-coverage --cover-package popeye";
-      fi
-    - nosetests --with-doctest --verbose $COVER_ARGS popeye
+    - nosetests --with-coverage popeye
 after_success:
     - coveralls
