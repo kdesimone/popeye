@@ -1,43 +1,11 @@
-# vim ft=yaml
-# Multiple lines can be made a single "virtual line" because of the way that
-# Travis munges each line before executing it to print out the exit status.
-# It's okay for it to be on multiple physical lines, so long as you remember:
-# - There can't be any leading "-"s - All newlines will be removed, so use
-# ";"s
-sudo: false
-language: python
-env:
-    global:
-        - DEPENDS="cython numpy scipy matplotlib nibabel"
-matrix:
-  include:
-    - python: 2.7
-      env:
-        - COVERAGE=1
-before_install:
-    - virtualenv --python=python venv
-    - source venv/bin/activate
-    - python --version # just to check
-    - pip install nose # always
-    - pip install pillow
-    - pip install --timeout=60 --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
-    - pip install git+git://github.com/rainwoodman/sharedmem
-    - pip install statsmodels
-    - if [ "${COVERAGE}" == "1" ]; then
-      pip install coverage;
-      pip install coveralls;
-      fi
-install:
-    - python setup.py install
-# command to run tests, e.g. python setup.py test
-script:
-    # Change into an innocuous directory and find tests from installation
-    - mkdir for_testing
-    - cd for_testing
-    - if [ "${COVERAGE}" == "1" ]; then
-      cp ../.coveragerc .;
-      COVER_ARGS="--with-coverage --cover-package popeye";
-      fi
-    - nosetests --with-doctest --verbose $COVER_ARGS popeye
-after_success:
-    - if [ "${COVERAGE}" == "1" ]; then coveralls; fi
+language: python  
+python:  
+  - "2.7"
+install:  
+  - pip install python-coveralls
+  - pip install coverage       # Add me to install coverage.py
+  - pip install nose           # Add me to install nose
+script:  
+  - python setup.py install
+after_success:  
+  - coveralls
