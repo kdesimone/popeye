@@ -1,7 +1,5 @@
-[run]
-branch = True
-source = popeye
-include = popeye
-omit = */setup.py
 [report]
-include = popeye
+omit =  
+    */python?.?/*
+    */site-packages/nose/*
+    *__init__*
