@@ -1,7 +1,7 @@
 [run]
-    branch = True
-    source = popeye
-    include = popeye
-    omit = */setup.py
+branch = True
+source = popeye
+include = popeye
+omit = */setup.py
 [report]
-    include = popeye
+include = popeye
