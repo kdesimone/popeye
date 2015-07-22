@@ -57,6 +57,8 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
     spectrogram, freqs, times, handle = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap);
     
+    print(spectrogram.shape)
+    
     return spectrogram, freqs, times
 
 class AuditoryStimulus(StimulusModel):
