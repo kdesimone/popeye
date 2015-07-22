@@ -36,6 +36,12 @@ install:
   # command to run tests, e.g. python setup.py test
 script:
     # Change into an innocuous directory and find tests from installation
-    - nosetests --with-coverage --cover-package=popeye
+    - mkdir for_testing
+    - cd for_testing
+    - if [ "${COVERAGE}" == "1" ]; then
+      cp ../.coveragerc .;
+      COVER_ARGS="--with-coverage --cover-package popeye";
+      fi
+    - nosetests --with-doctest --verbose $COVER_ARGS popeye
 after_success:
     - coveralls

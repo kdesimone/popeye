@@ -88,10 +88,10 @@ if __name__ == '__main__':
     # spinach.so in the ./popeye/ dir.  this is necessary
     # for importing the Cython methods.  don't know why it
     # doesn't build file in the propery location.
-    import os
-    import shutil
-    srcfile = find('spinach.so','.')
-    dstfile = './popeye/spinach.so'
-    shutil.copy(srcfile, dstfile)
+    # import os
+    # import shutil
+    # srcfile = find('spinach.so','.')
+    # dstfile = './popeye/spinach.so'
+    # shutil.copy(srcfile, dstfile)
     
     
