@@ -17,27 +17,17 @@ def test_css_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
-    num_blank_steps = 20
-    num_bar_steps = 40
+    thetas = np.arange(0,360,90)
+    num_blank_steps = 30
+    num_bar_steps = 30
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.40
+    scale_factor = 0.20
     resample_factor = 0.25
     pixels_across = 800 * resample_factor
     pixels_down = 600 * resample_factor
     dtype = ctypes.c_int16
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -87,7 +77,7 @@ def test_css_fit():
     verbose = 0
     
     # fit the response
-    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, 4, voxel_index, 1, 2)
+    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x)
