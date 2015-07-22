@@ -172,7 +172,7 @@ class PopulationFit(object):
             
             # failsafe
             except:
-                print('Fitting failed for voxel %s' %(self.voxel_index))
+                print('Fitting failed for voxel %s' %(str(self.voxel_index)))
     
     # the brute search
     @auto_attr
