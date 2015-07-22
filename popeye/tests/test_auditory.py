@@ -1,5 +1,9 @@
 import ctypes, multiprocessing
 
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib.pyplot import specgram
+
 import numpy as np
 import nose.tools as nt
 from scipy.signal import chirp
