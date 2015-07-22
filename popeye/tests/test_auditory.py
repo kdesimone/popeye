@@ -38,6 +38,8 @@ def test_auditory_fit():
     # instantiate an instance of the Stimulus class
     stimulus = AuditoryStimulus(signal, NFFT, Fs, noverlap, ctypes.c_double, tr_length)
     
+    np.unique(stimulus.spectrogram)
+    
     # initialize the gaussian model
     model = aud.AuditoryModel(stimulus, utils.double_gamma_hrf)
     
