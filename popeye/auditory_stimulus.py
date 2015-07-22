@@ -9,8 +9,11 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 from __future__ import division
 import ctypes
 
-import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib.pyplot import specgram
+
+import numpy as np
 from numpy.lib import stride_tricks
 from scipy.misc import imresize
 import nibabel
