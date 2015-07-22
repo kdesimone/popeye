@@ -29,7 +29,7 @@ before_install:
       pip install coveralls;
       fi
 install:
-  - python setup.py install
+  - python setup.py install build_ext
   - pip install python-coveralls
   - pip install coverage       # Add me to install coverage.py
   - pip install nose           # Add me to install nose
