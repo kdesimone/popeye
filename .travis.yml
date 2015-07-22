@@ -28,6 +28,8 @@ before_install:
       pip install coverage;
       pip install coveralls;
       fi
+    - "export DISPLAY=:99.0"
+    - "sh -e /etc/init.d/xvfb start"
 install:
   - python setup.py install build_ext
   - pip install python-coveralls
