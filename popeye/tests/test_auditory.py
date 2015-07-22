@@ -42,8 +42,8 @@ def test_auditory_fit():
     model = aud.AuditoryModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
-    center_freq = 8910
-    sigma = 567
+    center_freq = 8910.0
+    sigma = 567.0
     beta = 0.88
     hrf_delay = -0.25
     
