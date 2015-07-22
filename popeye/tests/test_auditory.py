@@ -63,7 +63,7 @@ def test_auditory_fit():
     bounds = (c_bound, s_bound, b_bound, h_bound,)
     
     # fit the response
-    fit = aud.AuditoryFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = aud.AuditoryFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 2)
     
     # assert equivalence
     nt.assert_equal(np.round(fit.center_freq), center_freq)
