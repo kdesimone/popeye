@@ -11,7 +11,7 @@ import ctypes
 
 import matplotlib
 matplotlib.use('Agg')
-from matplotlib.pyplot import specgram
+from matplotlib.mlab import specgram
 
 import numpy as np
 from numpy.lib import stride_tricks
