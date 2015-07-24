@@ -57,7 +57,7 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
     spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
     
-    print(signal)
+    print(spectrogram)
     
     return spectrogram, freqs, times
 
@@ -113,6 +113,7 @@ class AuditoryStimulus(StimulusModel):
         # share them
         self.spectrogram = utils.generate_shared_array(spectrogram, ctypes.c_double)
         self.freqs = utils.generate_shared_array(freqs, ctypes.c_double)
+        self.times = utils.generate_shared_array(times, ctypes.c_double)
         
         # # why don't the times returned from specgram start at 0? they are time bin centers?
         # self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)
