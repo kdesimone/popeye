@@ -10,7 +10,7 @@ from __future__ import division
 import ctypes
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('pdf')
 from matplotlib.mlab import specgram
 
 import numpy as np
@@ -50,7 +50,7 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
         is 128.
     
     
-    For more information, see help of `pylab.specgram`.
+    For more information, see help of `mlab.specgram`.
 
     """
     
