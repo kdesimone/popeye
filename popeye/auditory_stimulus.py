@@ -58,6 +58,7 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
     
     print(spectrogram)
+    print(matplotlib.__version__)
     
     return spectrogram, freqs, times
 
