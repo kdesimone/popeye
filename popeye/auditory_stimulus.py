@@ -55,11 +55,9 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     """
     
     
-    spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap);
+    spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
     
-    print(np.unique(signal))
-    print(spectrogram.shape)
-    print(np.unique(spectrogram))
+    print(signal)
     
     return spectrogram, freqs, times
 

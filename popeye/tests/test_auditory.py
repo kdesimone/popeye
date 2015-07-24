@@ -1,7 +1,6 @@
 import ctypes, multiprocessing
 
 import matplotlib
-matplotlib.use('Agg')
 from matplotlib.pyplot import specgram
 
 import numpy as np
