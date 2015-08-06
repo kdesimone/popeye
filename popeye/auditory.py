@@ -258,7 +258,7 @@ class AuditoryFit(PopulationFit):
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  CENTER=%.05d   SIGMA=%.02d" 
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  CENTER=%.05d   SIGMA=%.05d" 
             %(self.voxel_index[0],
               self.voxel_index[1],
               self.voxel_index[2],
