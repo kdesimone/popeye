@@ -57,15 +57,12 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
     spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
     
-    print(spectrogram)
-    print(matplotlib.__version__)
-    
     return spectrogram, freqs, times
 
 class AuditoryStimulus(StimulusModel):
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype,tr_length):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, resample_factor, dtype, tr_length):
         
         
         """
@@ -107,6 +104,7 @@ class AuditoryStimulus(StimulusModel):
         self.NFFT = NFFT
         self.Fs = Fs
         self.noverlap = noverlap
+        self.resample_factor = resample_factor
         
         # create the vars via matplotlib
         spectrogram, freqs, times = generate_spectrogram(self.stim_arr, self.NFFT, self.Fs, self.noverlap)
