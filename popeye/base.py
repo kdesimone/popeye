@@ -223,6 +223,17 @@ class PopulationFit(object):
     def rss(self):
         return np.sum((self.data - self.prediction)**2)
     
+    @auto_attr
+    def msg(self):
+        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+            %(self.voxel_index[0],
+              self.voxel_index[1],
+              self.voxel_index[2],
+              self.finish-self.start,
+              self.rsquared,
+              np.round(self.estimate,2)))
+        return txt
+    
 class StimulusModel(object):
 
     def __init__(self, stim_arr, dtype=ctypes.c_int16, tr_length=1.0):
