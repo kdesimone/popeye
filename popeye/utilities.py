@@ -51,14 +51,20 @@ def recast_estimation_results(output, grid_parent):
     
     return nifti_estimates
 
-def make_nifti(data, grid_parent):
+def make_nifti(data, grid_parent=None):
     
-    # get header information from the gridParent and update for the prf volume
-    aff = grid_parent.get_affine()
-    hdr = grid_parent.get_header()
+    if grid_parent:
     
-    # recast as nifti
-    nifti = nibabel.Nifti1Image(data,aff,header=hdr)
+        # get header information from the gridParent and update for the prf volume
+        aff = grid_parent.get_affine()
+        hdr = grid_parent.get_header()
+    
+        # recast as nifti
+        nifti = nibabel.Nifti1Image(data,aff,header=hdr)
+    
+    else:
+        aff = np.eye(4,4)
+        nifti = nibabel.Nifti1Image(data,aff)
     
     return nifti
 
@@ -393,79 +399,6 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     
     return hrf
 
-def multiprocessor(targetMethod,stimData,funcData,metaData):
-    """
-    Uses the multiprocessing toolbox to parallize the voxel-wise prf estimation
-    across a user-specified number of cpus.
-
-    Each voxel is treated as the atomic unit.  Collections of voxels are sent
-    to each of the user-specified allocated cpus for prf estimation.
-    Currently, the strategy is to use multiprocessing.Process to start each
-    batch of voxels on a given cpu.  The results of each are written to a
-    multiprocessing.Queue object, collected into a list of results, and
-    returned to the user. 
-
-
-    Parameters
-    ----------
-    stimData : dict
-        A dictionary containing the stimulus array and other stimulus-related
-        data.  For details, see config.py 
-
-    funcData : ndarray
-        A 4D numpy array containing the functional data to be used for the prf
-        estimation. For details, see config.py 
-
-    metaData : dict
-        A dictionary containing meta-data about the analysis being performed.
-        For details, see config.py.
-
-    Returns
-    -------
-    output : list
-        A list of multiprocessing.Queue objects that house the prf estimates
-        for all the voxels analyzed as specified in `metaData`.  The `output`
-        will be a list whose length is equal to the number of cpus specified in
-        `metaData`.
-    """
-
-    # figure out how many voxels are in the mask & the number of jobs we have
-    # allocated 
-    [xi,yi,zi] = metaData['voxels']
-    cpus = metaData['cpus']
-
-    # Set up the voxel lists for each job
-    voxelLists = []
-    cutOffs = [int(np.floor(i)) for i in np.linspace(0,len(xi),cpus+1)]
-    for i in range(len(cutOffs)-1):
-        l = range(cutOffs[i],cutOffs[i+1])
-        voxelLists.append(l)
-
-    # initialize Queues for managing the outputs of the jobs
-    results_q = Queue()
-
-    # start the jobs
-    procs = []
-    for j in range(cpus):
-        voxels = [xi[voxelLists[j]],yi[voxelLists[j]],zi[voxelLists[j]]]
-        metaData['core_voxels'] = voxels
-        p = Process(target=targetMethod,args=(stimData,funcData,metaData,
-                                              results_q))
-        procs.append(p)
-        p.start()
-
-    # gather the outputs from the queue
-    output = []
-    for i in range(len(procs)):
-        output.append(results_q.get())
-
-    # close the jobs
-    for p in procs:
-        p.join()
-
-    return output
-
-
 def percent_change(ts, ax=-1):
     """Returns the % signal change of each point of the times series
     along a given axis of the array time_series
@@ -536,83 +469,6 @@ def zscore(time_series, axis=-1):
         zt /= st[sl]
 
     return zt
-
-def randomize_voxels(voxels):
-    """Returns a set of 3D coordinates that are randomized.
-    
-    Since the brain is highly spatially correlated and because computational time increases with
-    increases in the prf size, we randomize the voxel order so that a particular core doesn't get
-    stuck with a disproportionately high number of voxels whose sigma values are large.
-    
-    Parameters
-    ----------
-    voxels : ndarray
-        an array of voxel coordinates
-    
-    
-    Returns
-    _______
-    randomized_voxels : ndarray
-        the shuffled voxel coordinates 
-    """
-    
-    
-    xi,yi,zi = voxels[:]
-    randVec = np.random.rand(len(xi))
-    randInd = np.argsort(randVec)
-    randomized_voxels = tuple((xi[randInd],yi[randInd],zi[randInd]))
-    
-    return randomized_voxels
-
-    
-def parallel_fit(args):
-
-    """
-    This is a convenience function for parallelizing the fitting
-    procedure.  Each call is handed a tuple or list containing
-    all the necessary inputs for instantiaing a `GaussianFit`
-    class object and estimating the model parameters.
-    
-    
-    Paramaters
-    ----------
-    args : list/tuple
-        A list or tuple containing all the necessary inputs for fitting
-        the Gaussian pRF model.
-        
-    Returns
-    -------
-        
-    fit : `GaussianFit` class object
-        A fit object that contains all the inputs and outputs of the 
-        Gaussian pRF model estimation for a single voxel.
-        
-    """
-        
-    
-    # unpackage the arguments
-    Fit = args[0]
-    model = args[1]
-    data = args[2]
-    grids = args[3]
-    bounds = args[4]
-    Ns = args[5]
-    voxel_index = args[6]
-    auto_fit = args[7]
-    verbose = args[8]
-    
-    # fit the data
-    fit = Fit(model,
-              data,
-              grids,
-              bounds,
-              Ns,
-              voxel_index,
-              auto_fit,
-              verbose)
-              
-    return fit
-
 
 def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, verbose):
     
