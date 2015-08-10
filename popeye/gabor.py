@@ -212,10 +212,8 @@ class GaborFit(object):
     @auto_attr
     def cpd(self):
         return self.estimate[6]
-        @auto_attr
-    
+        
+    @auto_attr
     def receptive_field(self):
-        return generate_og_receptive_field(self.x, self.y, self.sigma,
-                                           self.stimulus.deg_x,
-                                           self.stimulus.deg_y)
+        return generate_gabor_receptive_field(*self.estimate)
     
