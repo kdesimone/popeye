@@ -225,18 +225,4 @@ class GaussianFit(PopulationFit):
         return generate_og_receptive_field(self.x, self.y, self.sigma,
                                            self.stimulus.deg_x,
                                            self.stimulus.deg_y)
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   HRF=%.02f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.theta,
-              self.rho,
-              self.sigma,
-              self.beta,
-              self.hrf_delay))
-        return txt
+                                           
