@@ -30,7 +30,7 @@ def test_og_fit():
     Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
-    verbose = 0
+    verbose = 1
     
     # insert blanks
     thetas = list(thetas)
@@ -81,7 +81,7 @@ def test_og_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, verbose)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)
