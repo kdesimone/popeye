@@ -381,7 +381,6 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    # add delay to the peak and undershoot params (alpha 1 and 2)
     alpha_1 = 5.0/tr_length+delay/tr_length
     beta_1 = 1.0
     c = 0.1

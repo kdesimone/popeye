@@ -336,10 +336,6 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
     
     Parameters
     ----------
-    deg_x : 2D array
-            The coordinate matrix along the horizontal dimension of the display (degrees)
-    deg_y : 2D array
-            The coordinate matrix along the vertical dimension of the display (degrees)
     x : float
        The x coordinate of the center of the Gaussian (degrees)
     y : float
@@ -348,6 +344,11 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
        The dispersion of the Gaussian (degrees)
     beta : float
         The amplitude of the Gaussian
+    deg_x : 2D array
+            The coordinate matrix along the horizontal dimension of the display (degrees)
+    deg_y : 2D array
+            The coordinate matrix along the vertical dimension of the display (degrees)
+       
        
     Returns
     
