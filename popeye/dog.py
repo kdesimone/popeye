@@ -55,7 +55,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
         
         
-    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, baseline):
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
@@ -76,14 +76,16 @@ class DifferenceOfGaussiansModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
         # generate the hrf
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(0, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        
+        model += baseline
         
         return model
 
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, baseline):
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
@@ -104,10 +106,12 @@ class DifferenceOfGaussiansModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # generate the hrf
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(0, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        
+        model += baseline
         
         return model
     
@@ -204,7 +208,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.ballpark[4]
                 
     @auto_attr
-    def h0(self):
+    def baseline0(self):
         return self.ballpark[5]
         
     @auto_attr
@@ -228,7 +232,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.estimate[4]
         
     @auto_attr
-    def hrf_delay(self):
+    def baseline(self):
         return self.estimate[5]
     
     @auto_attr
@@ -240,35 +244,15 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
-    def prediction(self):
-        return self.model.generate_prediction(self.x, self.y, self.sigma, self.sigma_ratio, self.volume_ratio, self.hrf_delay)
-    
-    @auto_attr
     def receptive_field(self):
-            rf_center = generate_og_receptive_field(self.model.stimulus.deg_x, 
-                                                    self.model.stimulus.deg_y, 
-                                                    self.x, self.y, self.sigma)
+            rf_center = generate_og_receptive_field(self.x, self.y, self.sigma,
+                                                    self.model.stimulus.deg_x, 
+                                                    self.model.stimulus.deg_y)
                                                     
-            rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x, 
-                                                      self.model.stimulus.deg_y, 
-                                                      self.x, self.y, self.sigma*self.sigma_ratio) * 1.0/self.sigma_ratio**2
+            rf_surround = generate_og_receptive_field(self.x, self.y, self.sigma*self.sigma_ratio,
+                                                      self.model.stimulus.deg_x, 
+                                                      self.model.stimulus.deg_y) * 1.0/self.sigma_ratio**2
             
             rf = rf_center - np.sqrt(self.volume_ratio)*rf_surround
             
             return rf
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   VOLUME_2=%.02f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.theta,
-              self.rho,
-              self.sigma,
-              self.sigma*self.sigma_ratio,
-              self.volume_ratio))
-        return txt
-

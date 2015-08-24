@@ -55,27 +55,22 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,
-                                         self.stimulus.deg_x_coarse,
-                                         self.stimulus.deg_y_coarse)
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
-        
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+                
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
-        # convolve with the HRF
+        # generate HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
         
         # scale it by beta
         model *= beta
@@ -88,18 +83,14 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        # create mask for speed
+        # create mask of central 5 sigmas for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,
-                                         self.stimulus.deg_x,
-                                         self.stimulus.deg_y)
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
@@ -108,7 +99,7 @@ class GaussianModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
         
         # scale it by beta
         model *= beta
@@ -251,7 +242,11 @@ class GaussianFit(PopulationFit):
        
     @auto_attr
     def receptive_field(self):
-        return generate_og_receptive_field(self.x, self.y, self.sigma, self.beta, self.baseline,
+        return generate_og_receptive_field(self.x, self.y, self.sigma,
                                            self.model.stimulus.deg_x,
-                                           self.model.stimulus.deg_y) 
+                                           self.model.stimulus.deg_y)
+    
+    @auto_attr
+    def hemodynamic_response(self):
+        return self.model.hrf_model(self.hrf_delay, self.model.stimulus.tr_length)
                                            

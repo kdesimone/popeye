@@ -151,31 +151,22 @@ class PopulationFit(object):
         # automatic fitting
         if self.auto_fit:
             
-            try:
-                
-                # start
-                self.start = time.clock()
-                
-                # the business
-                self.ballpark
-                self.estimate
-                self.OLS
-                self.rss
-                self.rsquared
-                
-                # finish
-                self.finish = time.clock()
-                
-                # print
-                if self.verbose:
-                    print(self.msg)
+            # start
+            self.start = time.clock()
             
-            # failsafe
-            except:
-                if self.verbose:
-                    print('Fitting failed for voxel %s' %(str(self.voxel_index)))
-                else:
-                    pass
+            # the business
+            self.ballpark
+            self.estimate
+            self.OLS
+            self.rss
+            self.rsquared
+            
+            # finish
+            self.finish = time.clock()
+            
+            # print
+            if self.verbose:
+                print(self.msg)
     
     # the brute search
     @auto_attr
