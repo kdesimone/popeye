@@ -114,7 +114,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
 class DifferenceOfGaussiansFit(PopulationFit):
     
     """
-    A Gaussian population receptive field fit class
+    A Difference of Gaussians population receptive field fit class
     
     """
     
@@ -124,9 +124,9 @@ class DifferenceOfGaussiansFit(PopulationFit):
         """
         A class containing tools for fitting the Difference of Gaussians pRF model.
         
-        The `CompressiveSpatialSummationFit` class houses all the fitting tool that 
+        The `DifferenceOfGaussiansFit` class houses all the fitting tool that 
         are associated with estimating a pRF model. The `GaussianFit` takes a 
-        `CompressiveSpatialSummationModel` instance  `model` and a time-series `data`. 
+        `DifferenceOfGaussiansModel` instance  `model` and a time-series `data`. 
         In addition, extent and sampling-rate of a  brute-force grid-search is set 
         with `grids` and `Ns`.  Use `bounds` to set limits on the search space for 
         each parameter.  
@@ -135,7 +135,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         ----------
         
                 
-        model : `CompressiveSpatialSummationModel` class instance
+        model : `DifferenceOfGaussiansModel` class instance
             An object representing the CSS model. 
         
         data : ndarray
@@ -238,37 +238,17 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
-    
-    @auto_attr
-    def prediction(self):
-        return self.model.generate_prediction(self.x, self.y, self.sigma, self.sigma_ratio, self.volume_ratio, self.hrf_delay)
-    
+        
     @auto_attr
     def receptive_field(self):
-            rf_center = generate_og_receptive_field(self.model.stimulus.deg_x, 
-                                                    self.model.stimulus.deg_y, 
-                                                    self.x, self.y, self.sigma)
+            rf_center = generate_og_receptive_field(self.x, self.y, self.sigma,
+                                                    self.model.stimulus.deg_x, 
+                                                    self.model.stimulus.deg_y)
                                                     
-            rf_surround = generate_og_receptive_field(self.model.stimulus.deg_x, 
-                                                      self.model.stimulus.deg_y, 
-                                                      self.x, self.y, self.sigma*self.sigma_ratio) * 1.0/self.sigma_ratio**2
+            rf_surround = generate_og_receptive_field(self.x, self.y, self.sigma*self.sigma_ratio,
+                                                      self.model.stimulus.deg_x, 
+                                                      self.model.stimulus.deg_y) * 1.0/self.sigma_ratio**2
             
             rf = rf_center - np.sqrt(self.volume_ratio)*rf_surround
             
             return rf
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RVAL=%.02f  THETA=%.02f   RHO=%.02d   SIGMA_1=%.02f   SIGMA_2=%.02f   VOLUME_2=%.02f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.theta,
-              self.rho,
-              self.sigma,
-              self.sigma*self.sigma_ratio,
-              self.volume_ratio))
-        return txt
-
