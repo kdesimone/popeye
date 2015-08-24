@@ -55,7 +55,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
         
         
-    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, baseline):
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
@@ -76,16 +76,14 @@ class DifferenceOfGaussiansModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
         # generate the hrf
-        hrf = self.hrf_model(0, self.stimulus.tr_length)
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
-        
-        model += baseline
+        model = fftconvolve(response, hrf, 'same')
         
         return model
 
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, baseline):
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
@@ -106,19 +104,17 @@ class DifferenceOfGaussiansModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # generate the hrf
-        hrf = self.hrf_model(0, self.stimulus.tr_length)
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
-        
-        model += baseline
+        model = fftconvolve(response, hrf, 'same')
         
         return model
     
 class DifferenceOfGaussiansFit(PopulationFit):
     
     """
-    A Gaussian population receptive field fit class
+    A Difference of Gaussians population receptive field fit class
     
     """
     
@@ -128,9 +124,9 @@ class DifferenceOfGaussiansFit(PopulationFit):
         """
         A class containing tools for fitting the Difference of Gaussians pRF model.
         
-        The `CompressiveSpatialSummationFit` class houses all the fitting tool that 
+        The `DifferenceOfGaussiansFit` class houses all the fitting tool that 
         are associated with estimating a pRF model. The `GaussianFit` takes a 
-        `CompressiveSpatialSummationModel` instance  `model` and a time-series `data`. 
+        `DifferenceOfGaussiansModel` instance  `model` and a time-series `data`. 
         In addition, extent and sampling-rate of a  brute-force grid-search is set 
         with `grids` and `Ns`.  Use `bounds` to set limits on the search space for 
         each parameter.  
@@ -139,7 +135,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         ----------
         
                 
-        model : `CompressiveSpatialSummationModel` class instance
+        model : `DifferenceOfGaussiansModel` class instance
             An object representing the CSS model. 
         
         data : ndarray
@@ -208,7 +204,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.ballpark[4]
                 
     @auto_attr
-    def baseline0(self):
+    def h0(self):
         return self.ballpark[5]
         
     @auto_attr
@@ -232,7 +228,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
         return self.estimate[4]
         
     @auto_attr
-    def baseline(self):
+    def hrf_delay(self):
         return self.estimate[5]
     
     @auto_attr
@@ -242,7 +238,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
-    
+        
     @auto_attr
     def receptive_field(self):
             rf_center = generate_og_receptive_field(self.x, self.y, self.sigma,

@@ -177,7 +177,7 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
     # flicker
     t = np.linspace(0,total_secs,total_secs*projector_hz)
     full_run = np.sin(2 * np.pi * flicker_hz * t)
-    np.round(utils.normalize(full_run,-127,127)).astype('short')
+    full_run = np.round(utils.normalize(full_run,-127,127)).astype('short')
     
     # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
