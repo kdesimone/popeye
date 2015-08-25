@@ -177,17 +177,17 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
     # flicker
     t = np.linspace(0,total_secs,total_secs*projector_hz)
     full_run = np.sin(2 * np.pi * flicker_hz * t)
-    full_run = np.round(utils.normalize(full_run,-127,127)).astype('short')
+    full_run = np.round(utils.normalize(full_run,0,255)).astype('uint8')
     
     # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
     deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
     
-    # create the unmasked stimulus
-    full_field = np.ones((pixels_down,pixels_across)).astype('short')
-    
     # initialize the bar array
-    bar_stimulus = np.zeros((pixels_down, pixels_across, total_frames)).astype('short')
+    bar_stimulus = np.ones((pixels_down, pixels_across, total_frames)).astype('uint8')
+    
+    # make it mean lum
+    bar_stimulus *= 128
     
     # counter
     tr_num = 0
@@ -229,8 +229,14 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                     # get the frame number
                     f_num = tr_num * frames_per_vol + fr
                     
-                    # set the frame
-                    bar_stimulus[:,:,f_num] = full_field * full_run[f_num] * Z_mask
+                    # set the frame to mean lum
+                    bar_stimulus[:,:,f_num] = 128
+                    
+                    # get the bar pixels
+                    xx,yy = np.nonzero(Z_mask)
+                    
+                    # set the amp modulation
+                    bar_stimulus[xx,yy,f_num] = full_run[f_num]
                     
                 # iterate TR
                 tr_num += 1
@@ -247,7 +253,7 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                     f_num = tr_num * frames_per_vol + f
                     
                     # set the frame to mean luminance
-                    bar_stimulus[:,:,f_num] = 0
+                    bar_stimulus[:,:,f_num] = 128
                     
                 # iterate
                 tr_num += 1
