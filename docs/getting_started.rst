@@ -1,7 +1,36 @@
 Getting started
-=================
+================
 
-To run the analysis::
+Welcome to **popeye**!  This section of the documentation will help you install **popeye** and its dependencies
+and then walks you through a small demonstration of how to use **popeye** for fitting some simulated
+timeseries data.
+
+
+Installation
+-------------
+
+Download the popeye source code from the GitHub repository `here <https://github.com/kdesimone/popeye>`_.
+Using popeye requires that you have installed `NumPy <http://www.numpy.org>`_, `SciPy <http://www.scipy.org>`_,
+`statsmodel <https://pypi.python.org/pypi/statsmodels>`_, `Cython <http://www.cython.org>`_, and 
+`matplotlib <http://www.matplotlib.org>`_.
+
+Once you've downloaded the popeye source code and installed the dependencies, install 
+popeye and build the Cython extensions I've written for speeding up the analyses. ::
+
+    $ cd popeye
+    $ sudo python setup.py install build_ext
+    $ python 
+    >>> import popeye
+    >>> popeye.__version__
+    '0.1.0.dev'
+
+Demo
+-----
+
+Below is a small demonstration of how to interact with the popeye API.  Here, 
+we'll generate our stimulus and simulate the BOLD response of a Gaussian pRF 
+model estimate we'll just invent.  Normally, we'd be analyzing the BOLD time-series 
+that we collect while we present a participant with a visual stimulus. ::
     
     import ctypes
     import numpy as np
@@ -11,7 +40,7 @@ To run the analysis::
     
     ### STIMULUS
     ## create sweeping bar stimulus
-    sweeps = np.array([-1,0,-1,90,-1,180,-1,270,-1]) # in degrees, -1 is blank
+    sweeps = np.array([-1,0,-1,90,-1,180,-1,270,-1]) # in degrees, -1 is a blank block
     bar = simulate_bar_stimulus(500, 500, 40, 20, sweeps, 30, 30, 10)
                             
     ## create an instance of the Stimulus class
@@ -61,7 +90,14 @@ To run the analysis::
     # verbose = 1 is a single print
     # verbose = 2 is very verbose
     fit = og.GaussianFit(model, data, grids, bounds, Ns=3, 
-                         voxel_index=(1,2,3), auto_fit=True,verbose=2)
+                         voxel_index=(1,2,3), auto_fit=True, verbose=2)
+
+Inspecting the results
+----------------------
+
+Below is the output of the model fit we invoked in the code block above. We also include some
+matplotlib code for plotting the simulated data and the predicted timeseries.  Explore the 
+attributes of the **fit** object to get a sense of thekinds of measures gleaned from the pRF model. ::
 
     ## plot the results
     import matplotlib.pyplot as plt
@@ -73,3 +109,9 @@ To run the analysis::
     plt.ylabel('Amplitude',fontsize=18)
     plt.xlim(0,len(fit.data))
     plt.legend(loc=0)
+
+.. image:: ../images/model_fit.png
+    :width: 800px
+    :align: center
+    :height: 600px
+    :alt: alternate text
