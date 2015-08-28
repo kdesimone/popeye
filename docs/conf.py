@@ -191,7 +191,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Popeye.tex', u'Popeye Documentation',
+  ('index', 'popeye.tex', u'popeye documentation',
    u'Kevin DeSimone', 'manual'),
 ]
 
@@ -235,9 +235,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Popeye', u'Popeye Documentation',
-   u'Kevin DeSimone', 'Popeye', 'One line description of project.',
-   'Miscellaneous'),
+  ('index', 'popeye', u'opeye pocumentation',
+   u'Kevin DeSimone', 'popeye', 'population receptive field estimation'),
 ]
 
 # Documents to append as an appendix to all manuals.
