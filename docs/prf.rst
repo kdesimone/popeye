@@ -12,7 +12,7 @@ recently, we have used the pRF model to map the retinotopic organization of mult
 nuclei [5]_.
 
 
-.. image:: ../images/prf_lgn.png
+.. image:: ./images/prf_lgn.png
     :width: 500px
     :align: center
     :height: 300px

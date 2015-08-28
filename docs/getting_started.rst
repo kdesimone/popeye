@@ -110,7 +110,7 @@ attributes of the **fit** object to get a sense of thekinds of measures gleaned 
     plt.xlim(0,len(fit.data))
     plt.legend(loc=0)
 
-.. image:: ../images/model_fit.png
+.. image:: ./images/model_fit.png
     :width: 800px
     :align: center
     :height: 600px
