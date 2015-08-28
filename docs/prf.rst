@@ -11,6 +11,12 @@ Such models can be designed to describe various sensory [3]_ and cognitive [4]_ 
 recently, we have used the pRF model to map the retinotopic organization of multiple subcortical 
 nuclei [5]_.
 
+.. image:: ../images/prf_lgn.png
+    :width: 500px
+    :align: center
+    :height: 300px
+    :alt: alternate text
+
 References
 -----------
 
