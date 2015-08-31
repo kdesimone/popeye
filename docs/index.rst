@@ -12,5 +12,6 @@ Contents:
    :maxdepth: 3
 
    prf
+   popeye
    getting_started
    reference/index
