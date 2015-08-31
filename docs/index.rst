@@ -13,4 +13,3 @@ Contents:
 
    prf
    getting_started
-   reference/index.rst
