@@ -3,6 +3,8 @@
 *.c
 *.pyc
 .coverage
-build/
-docs/_build
-docs/reference
+
+_build
+_static
+_templates
+
