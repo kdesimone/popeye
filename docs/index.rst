@@ -9,7 +9,7 @@ popeye documentation
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    prf
    getting_started
