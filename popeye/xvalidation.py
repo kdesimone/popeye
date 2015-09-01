@@ -39,10 +39,11 @@ def recast_xval_results(output, grid_parent, folds):
     return nif
 
 def coeff_of_determination(data, model, axis=-1):
-    """
+    
+    r"""
     Calculate the coefficient of determination for a model prediction, relative
     to data.
-
+    
     Parameters
     ----------
     data : ndarray
@@ -51,44 +52,29 @@ def coeff_of_determination(data, model, axis=-1):
         The predictions of a model for this data. Same shape as the data.
     axis: int, optional
         The axis along which different samples are laid out (default: -1).
-
+        
     Returns
     -------
     COD : ndarray
-       The coefficient of determination. This has shape `data.shape[:-1]`
-
-
-    Notes
-    -----
-
-    See: http://en.wikipedia.org/wiki/Coefficient_of_determination
-
-    The coefficient of determination is calculated as:
-
-    .. math::
-
-        R^2 = 100 * (1 - \frac{SSE}{SSD})
-
-    where SSE is the sum of the squared error between the model and the data
-    (sum of the squared residuals) and SSD is the sum of the squares of the
-    deviations of the data from the mean of the data (variance * N).
+       The coefficient of determination.
+    
     """
-
+    
     residuals = data - model
     ss_err = np.sum(residuals ** 2, axis=axis)
-
+    
     demeaned_data = data - np.mean(data, axis=axis)[..., np.newaxis]
     ss_tot = np.sum(demeaned_data **2, axis=axis)
-
+    
     # Don't divide by 0:
     if np.all(ss_tot==0.0):
         return np.nan
-
+        
     return 100 * (1 - (ss_err/ss_tot))
 
 def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     
-    """
+    r"""
     Perform k-fold cross-validation to generate out-of-sample predictions for
     each measurement.
     
@@ -209,7 +195,7 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
 
 def parallel_xval(args):
     
-    """
+    r"""
     This is a convenience function for parallelizing the fitting
     procedure.  Each call is handed a tuple or list containing
     all the necessary inputs for instantiaing a `GaussianFit`
