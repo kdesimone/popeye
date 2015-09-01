@@ -199,7 +199,7 @@ def gradient_descent_search(parameters, bounds, data,
     
     return estimate
 
-def brute_force_search(grids, bounds, Ns, da
+def brute_force_search(grids, bounds, Ns, data,
                        error_function, objective_function, verbose):
                        
     r"""A generic brute-force grid-search error minimization function.
@@ -224,21 +224,26 @@ def brute_force_search(grids, bounds, Ns, da
     args : tuple
         Arguments to `objective_function` that yield a model prediction.
         
-    search_bounds : tuple
+    grids : tuple
         A tuple indicating the search space for the brute-force grid-search.
         The tuple contains pairs of upper and lower bounds for exploring a
-        given dimension.  For example `fit_bounds=((-10,10),(0,5),)` will
-        search the first dimension from -10 to 10 and the second from 0 to 5.  
-        These values cannot be None. 
+        given dimension.  For example `grids=((-10,10),(0,5),)` will
+        search the first dimension from -10 to 10 and the second from 0 to 5.
+        These values cannot be `None`. 
         
         For more information, see `scipy.optimize.brute`.
-        
-    fit_bounds : tuple
+    
+    bounds : tuple
         A tuple containing the upper and lower bounds for each parameter
         in `parameters`.  If a parameter is not bounded, simply use
         `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
         bound the first parameter to be any positive number while the
         second parameter would be bounded between -10 and 10.
+    
+    Ns : int
+        Number of samples per stimulus dimension to sample during the ballpark search.
+        
+        For more information, see `scipy.optimize.brute`.
         
     data : ndarray
        The actual, measured time-series against which the model is fit.
