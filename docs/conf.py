@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+sys.path.append(os.path.abspath('sphinxext'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -28,8 +29,14 @@ import sys, os
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.intersphinx',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
               'sphinx.ext.pngmath',
-              ]
+              'sphinx.ext.ifconfig',
+              'sphinx.ext.autosummary',
+              'math_dollar', # has to go before numpydoc
+              'numpydoc',
+              'github']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
