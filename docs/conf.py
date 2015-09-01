@@ -250,7 +250,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'popeye', u'opeye pocumentation',
+  ('index', 'popeye', u'popeye documentation',
    u'Kevin DeSimone', 'popeye', 'population receptive field estimation'),
 ]
 

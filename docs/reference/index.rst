@@ -25,5 +25,6 @@ API Reference
    popeye.strf_pa_nots.rst
    popeye.strf_pa_nots_beta_baseline.rst
    popeye.utilities.rst
+   popeye.version.rst
    popeye.visual_stimulus.rst
    popeye.xvalidation.rst
