@@ -15,6 +15,7 @@
 
 
 .. currentmodule:: popeye.xvalidation
+
 coeff_of_determination
 ~~~~~~~~~~~~~~~~~~~~~~
 

@@ -33,6 +33,7 @@
 
 .. currentmodule:: popeye.spectrotemporal
 
+
 :class:`PopulationFit`
 ~~~~~~~~~~~~~~~~~~~~~~
 

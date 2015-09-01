@@ -19,6 +19,7 @@
 
 .. currentmodule:: popeye.css
 
+
 :class:`CompressiveSpatialSummationFit`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

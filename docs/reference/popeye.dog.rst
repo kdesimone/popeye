@@ -21,6 +21,7 @@
 
 .. currentmodule:: popeye.dog
 
+
 :class:`DifferenceOfGaussiansFit`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

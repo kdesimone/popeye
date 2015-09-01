@@ -19,6 +19,7 @@
 
 .. currentmodule:: popeye.ogb
 
+
 :class:`GaussianFit`
 ~~~~~~~~~~~~~~~~~~~~
 

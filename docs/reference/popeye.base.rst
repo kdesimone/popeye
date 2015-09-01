@@ -16,6 +16,7 @@
 
 .. currentmodule:: popeye.base
 
+
 :class:`PopulationFit`
 ~~~~~~~~~~~~~~~~~~~~~~
 

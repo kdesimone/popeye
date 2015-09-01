@@ -21,6 +21,7 @@
 
 .. currentmodule:: popeye.gabor
 
+
 :class:`GaborFit`
 ~~~~~~~~~~~~~~~~~
 

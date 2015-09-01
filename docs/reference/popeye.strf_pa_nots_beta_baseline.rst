@@ -22,6 +22,7 @@
 
 .. currentmodule:: popeye.strf_pa_nots_beta_baseline
 
+
 :class:`PopulationFit`
 ~~~~~~~~~~~~~~~~~~~~~~
 

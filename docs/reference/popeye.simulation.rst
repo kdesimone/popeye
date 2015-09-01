@@ -25,6 +25,7 @@
 
 .. currentmodule:: popeye.simulation
 
+
 :class:`VisualStimulus`
 ~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -17,6 +17,7 @@
 
 .. currentmodule:: popeye.auditory_stimulus
 
+
 :class:`AuditoryStimulus`
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

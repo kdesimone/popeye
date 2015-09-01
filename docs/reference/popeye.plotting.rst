@@ -33,6 +33,7 @@
 
 .. currentmodule:: popeye.plotting
 
+
 :class:`Circle`
 ~~~~~~~~~~~~~~~
 

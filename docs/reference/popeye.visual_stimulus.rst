@@ -25,6 +25,7 @@
 
 .. currentmodule:: popeye.visual_stimulus
 
+
 :class:`StimulusModel`
 ~~~~~~~~~~~~~~~~~~~~~~
 

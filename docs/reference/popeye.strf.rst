@@ -25,6 +25,7 @@
 
 .. currentmodule:: popeye.strf
 
+
 :class:`PopulationFit`
 ~~~~~~~~~~~~~~~~~~~~~~
 
