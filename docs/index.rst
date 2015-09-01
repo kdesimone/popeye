@@ -14,4 +14,4 @@ Contents:
    prf
    popeye
    getting_started
-   reference/index
+   reference/apiindex
