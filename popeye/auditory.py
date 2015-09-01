@@ -19,14 +19,9 @@ from popeye.spinach import generate_rf_timeseries_1D
 
 class AuditoryModel(PopulationModel):
     
-    """
-    1D Gaussian population receptive field model.
-    """
-    
     def __init__(self, stimulus, hrf_model):
         
-        """
-        A 1D Gaussian population receptive field model [1]_.
+        r"""A 1D Gaussian population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -45,7 +40,7 @@ class AuditoryModel(PopulationModel):
         
         .. [1] Thomas JM, Huber E, Stecker GC, Boynton GM, Saenz M, Fine I. (2015) 
         Population receptive field estimates in human auditory cortex. 
-        NeuroImage 105:428-439.
+        NeuroImage 105, 428-439.
         
         """
         
@@ -54,7 +49,7 @@ class AuditoryModel(PopulationModel):
     
     def generate_prediction(self, center_freq, sigma, beta, baseline):
         
-        """
+        r"""
         Generate a prediction for the 1D Gaussian model.
         
         This function generates a prediction of the 1D Gaussian model, 
@@ -121,7 +116,7 @@ class AuditoryModel(PopulationModel):
     
     def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline):
         
-        """
+        r"""
         Generate a prediction for the 1D Gaussian model.
         
         This function generates a prediction of the 1D Gaussian model, 
@@ -154,7 +149,7 @@ class AuditoryFit(PopulationFit):
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        """
+        r"""
         A class containing tools for fitting the 1D Gaussian pRF model.
         
         The `AuditoryFit` class houses all the fitting tool that are associated with 

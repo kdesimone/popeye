@@ -13,8 +13,7 @@ import statsmodels.api as sm
 
 def set_verbose(verbose):
     
-    """
-    A convenience function for setting the verbosity of a popeye model+fit.
+    r"""A convenience function for setting the verbosity of a popeye model+fit.
     
     Paramaters
     ----------
@@ -41,12 +40,11 @@ def set_verbose(verbose):
 
 class PopulationModel(object):
     
-    """ Base class for all pRF models."""
+    r""" Base class for all pRF models."""
     
     def __init__(self, stimulus, hrf_model):
         
-        """
-        Base class for all pRF models.
+        r"""Base class for all pRF models.
         
         Paramaters
         ----------
@@ -74,14 +72,12 @@ class PopulationModel(object):
 class PopulationFit(object):
     
     
-    """ Base class for all pRF model fits."""
+    r""" Base class for all pRF model fits."""
     
     
     def __init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose):
         
-        """
-        
-        A class containing tools for fitting pRF models.
+        r"""A class containing tools for fitting pRF models.
         
         The `PopulationFit` class houses all the fitting tool that are associated with 
         estimatinga pRF model.  The `PopulationFit` takes a `PoulationModel` instance 
@@ -229,8 +225,7 @@ class StimulusModel(object):
 
     def __init__(self, stim_arr, dtype=ctypes.c_int16, tr_length=1.0):
         
-        """
-        A base class for all encoding stimuli.
+        r"""A base class for all encoding stimuli.
         
         This class houses the basic and common features of the encoding stimulus, which
         along with a `PopulationModel` constitutes what is commonly referred to as the 

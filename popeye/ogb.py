@@ -19,14 +19,14 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    """
+    r"""
     A 2D Gaussian population receptive field model class.
     
     """
     
     def __init__(self, stimulus, hrf_model):
         
-        """
+        r"""
         A 2D Gaussian population receptive field model [1]_.
         
         Paramaters
@@ -45,7 +45,7 @@ class GaussianModel(PopulationModel):
         ----------
         
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
-        estimates in human visual cortex. NeuroImage 39:647-660
+        estimates in human visual cortex. NeuroImage 39, 647-660
         
         """
         
@@ -111,7 +111,7 @@ class GaussianModel(PopulationModel):
     
 class GaussianFit(PopulationFit):
     
-    """
+    r"""
     A class containing tools for fitting the 2D Gaussian pRF model.
     
     """
@@ -119,8 +119,7 @@ class GaussianFit(PopulationFit):
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        """
-        A class containing tools for fitting the 2D Gaussian pRF model.
+        r""" A class containing tools for fitting the 2D Gaussian pRF model.
         
         The `GaussianFit` class houses all the fitting tool that are associated with 
         estimatinga pRF model.  The `GaussianFit` takes a `GaussianModel` instance 
@@ -236,10 +235,6 @@ class GaussianFit(PopulationFit):
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
-    @auto_attr
-    def prediction(self):
-        return self.model.generate_prediction(self.x, self.y, self.sigma, self.beta, self.baseline, self.hrf_delay)
-       
     @auto_attr
     def receptive_field(self):
         return generate_og_receptive_field(self.x, self.y, self.sigma,

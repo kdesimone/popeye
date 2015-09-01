@@ -24,8 +24,7 @@ import popeye.utilities as utils
 
 def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
-    """
-    A Gaussian population receptive field model [1]_.
+    r""" Generation of spectrogram from a 1D audio signal.
     
     Paramaters
     ----------
@@ -51,7 +50,7 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
     
     For more information, see help of `mlab.specgram`.
-
+    
     """
     
     
@@ -64,9 +63,7 @@ class AuditoryStimulus(StimulusModel):
     
     def __init__(self, stim_arr, NFFT, Fs, noverlap, resample_factor, dtype, tr_length):
         
-        
-        """
-        A child of the StimulusModel class for auditory stimuli.
+        r"""A child of the StimulusModel class for auditory stimuli.
         
         Paramaters
         ----------

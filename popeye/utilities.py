@@ -68,18 +68,16 @@ def make_nifti(data, grid_parent=None):
     
     return nifti
 
-
 def generate_shared_array(unshared_arr,dtype):
     
-    """
-    Creates synchronized shared arrays from numpy arrays.
+    r"""Creates synchronized shared arrays from numpy arrays.
     
     The function takes a numpy array `unshared_arr` and returns a shared
     memory object, `shared_arr`.  The user also specifies the data-type of
     the values in the array with the `dataType` argument.  See
     multiprocessing.Array and ctypes for details on shared memory arrays and
     the data-types.
-
+    
     Parameters
     ----------
     unshared_arr : ndarray
@@ -103,21 +101,20 @@ def generate_shared_array(unshared_arr,dtype):
 # normalize to a specific range
 def normalize(array, imin=-1, imax=1):
     
-    """
-    A short-hand function for normalizing an array to a desired range.
-
+    r"""A short-hand function for normalizing an array to a desired range.
+    
     Parameters
     ----------
     array : ndarray
         An array to be normalized.
-
+    
     imin : float
         The desired minimum value in the output array.  Default: -1
         
     imax : float
         The desired maximum value in the output array.  Default: 1
     
-
+    
     Returns
     -------
     array : ndarray
@@ -138,9 +135,8 @@ def normalize(array, imin=-1, imax=1):
 # generic gradient descent
 def gradient_descent_search(parameters, bounds, data,
                             error_function, objective_function, verbose):
-                            
-    """
-    A generic gradient-descent error minimization function.
+    
+    r"""A generic gradient-descent error minimization function.
     
     The values inside `parameters` are used as a seed-point for a 
     gradient-descent error minimization procedure [1]_.  The user must 
@@ -192,25 +188,21 @@ def gradient_descent_search(parameters, bounds, data,
     References
     ----------
     
-    .. [1] Fletcher, R., Powell, M.J.D. (1963) A rapidly convergent descent 
-    method for minimization. Compututation Journal 6: 163-168.
+    .. [1] Fletcher, R, Powell, MJD (1963) A rapidly convergent descent 
+    method for minimization, Compututation Journal 6, 163-168.
     
     """
     
-    estimate, err,  _, _, _, warnflag =\
-        fmin_powell(error_function, 
-                    parameters,
-                    args=(bounds, data, objective_function, verbose),
-                    full_output=True,
-                    disp=False)
+    estimate, err,  _, _, _, warnflag = fmin_powell(error_function, parameters,
+                                                    args=(bounds, data, objective_function, verbose),
+                                                    full_output=True, disp=False)
     
     return estimate
 
-def brute_force_search(grids, bounds, Ns, data,
+def brute_force_search(grids, bounds, Ns, da
                        error_function, objective_function, verbose):
                        
-    """
-    A generic brute-force grid-search error minimization function.
+    r"""A generic brute-force grid-search error minimization function.
     
     The user specifies an `objective_function` and the corresponding
     `args` for generating a model prediction.  The `brute_force_search`
@@ -265,27 +257,24 @@ def brute_force_search(grids, bounds, Ns, data,
     -------
     estimate : tuple
        The model solution given `parameters` and `objective_function`.
-   
+    
     """
                        
-    estimate, err,  _, _ =\
-        brute(error_function,
-              args=(bounds, data, objective_function, verbose),
-              ranges=grids,
-              Ns=Ns,
-              finish=None,
-              full_output=True,
-              disp=False)
+    estimate, err,  _, _ = brute(error_function,
+                           args=(bounds, data, objective_function, verbose),
+                           ranges=grids,
+                           Ns=Ns,
+                           finish=None,
+                           full_output=True,
+                           disp=False)
               
     return estimate
 
 # generic error function
 def error_function(parameters, bounds, data, objective_function, verbose):
     
-    """
-    A generic error function with bounding.
+    r"""A generic error function with bounding.
     
-
     Parameters
     ----------
     parameters : tuple
@@ -342,8 +331,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
 
 def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     
-    """
-    The double-gamma hemodynamic reponse function (HRF) used to convolve with
+    r""" The double-gamma hemodynamic reponse function (HRF) used to convolve with
     the stimulus time-series.
     
     The user specifies only the delay of the peak and under-shoot.  
@@ -375,7 +363,7 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
         
     Reference
     ----------
-    Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
+    .. [1] Glover, G.H. (1999) Deconvolution of impulse response in event-related BOLD.
     fMRI. NeuroImage 9: 416-429.
     
     """
@@ -399,24 +387,23 @@ def double_gamma_hrf(delay, tr_length, frames_per_tr=1.0, integrator=trapz):
     return hrf
 
 def percent_change(ts, ax=-1):
-    """Returns the % signal change of each point of the times series
+    
+    r"""Returns the % signal change of each point of the times series
     along a given axis of the array time_series
-
+    
     Parameters
     ----------
-
     ts : ndarray
         an array of time series
-
+        
     ax : int, optional (default to -1)
         the axis of time_series along which to compute means and stdevs
-
+    
     Returns
     -------
-
     ndarray
         the renormalized time series array (in units of %)
-
+    
     Examples
     --------
     >>> np.set_printoptions(precision=4)  # for doctesting
@@ -433,23 +420,24 @@ def percent_change(ts, ax=-1):
            [ -28.5714,  -14.2857,    0.    ,   14.2857,   28.5714],
            [ -16.6667,   -8.3333,    0.    ,    8.3333,   16.6667],
            [ -11.7647,   -5.8824,    0.    ,    5.8824,   11.7647]])
-"""
+    """
     ts = np.asarray(ts)
-
+    
     return (ts / np.expand_dims(np.mean(ts, ax), ax) - 1) * 100
 
 
 def zscore(time_series, axis=-1):
-    """Returns the z-score of each point of the time series
+    
+    r"""Returns the z-score of each point of the time series
     along a given axis of the array time_series.
-
+    
     Parameters
     ----------
     time_series : ndarray
         an array of time series
     axis : int, optional
         the axis of time_series along which to compute means and stdevs
-
+        
     Returns
     _______
     zt : ndarray
@@ -506,7 +494,7 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
 
 def parallel_fit(args):
     
-    """
+    r"""
     This is a convenience function for parallelizing the fitting
     procedure.  Each call is handed a tuple or list containing
     all the necessary inputs for instantiaing a `GaussianFit`

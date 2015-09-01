@@ -75,7 +75,7 @@ def generate_ballpark_prediction(x, y, sigma, theta, phi, cpd):
 
 class GaborModel(PopulationModel):
     
-    """
+    r"""
     Gabor population receptive field model.
     
     """
@@ -87,7 +87,7 @@ class GaborModel(PopulationModel):
         
 class GaborFit(object):
     
-    """
+    r"""
     A class containing tools for fitting the 1D Gaussian pRF model.
     
     """
@@ -95,7 +95,7 @@ class GaborFit(object):
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
                  
-        """
+        r"""
         A class containing tools for fitting the Difference of Gaussians pRF model.
         
         The `CompressiveSpatialSummationFit` class houses all the fitting tool that 

@@ -23,14 +23,14 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class DifferenceOfGaussiansModel(PopulationModel):
     
-    """
+    r"""
     A Difference of Gaussian population receptive field model class
     
     """
     
     def __init__(self, stimulus, hrf_model):
         
-        """
+        r"""
         A Difference of Gaussian population receptive field model [1]_.
         
         Paramaters
@@ -113,15 +113,15 @@ class DifferenceOfGaussiansModel(PopulationModel):
     
 class DifferenceOfGaussiansFit(PopulationFit):
     
-    """
+    r"""
     A Difference of Gaussians population receptive field fit class
     
     """
     
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
-                 
-        """
+        
+        r"""
         A class containing tools for fitting the Difference of Gaussians pRF model.
         
         The `DifferenceOfGaussiansFit` class houses all the fitting tool that 
