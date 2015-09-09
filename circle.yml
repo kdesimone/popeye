@@ -7,6 +7,7 @@ machine:
             2.7.6
     environment:
         CIRCLE_ENV: test
+        COVERAGE: 1
     
 ## Customize dependencies
 dependencies:
@@ -19,20 +20,17 @@ dependencies:
         - pip install scipy
         - sudo apt-get install python-matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
-        - pip install coverage
-        - pip install coveralls
+        - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
-        - sudo cp .coveragerc tests_dir
-        
+        - sudo cp .coveragerc tests_dir/.coveragerc
+        - sudo cp .coveragerc tests_dir/.coverage
+
 ## Customize the tests
 test:
     pre:
-        - python setup.py install build_ext
-        # this is a hack! i can't figure out how to cd in the circleci environment (see old commits for my various attempts)
-        # as a result, staying in the build directory will try to import spinach from ./ where we want it from the site-package
-        # - python -c "import os;import shutil;exec('def find(name, path):\n\tfor root, dirs, files in os.walk(path):\n\t\tif name in files:\n\t\t\treturn os.path.join(root, name)');srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"        
+        - if [ "${COVERAGE}" == "1" ];then COVER_ARGS="--with-coverage --cover-package popeye";fi
     override:
-        - nosetests --with-doctest --verbose --with-coverage --cover-package popeye:
+        - nosetests --with-doctest --verbose $COVER_ARGS popeye
             pwd:
                 tests_dir
     post:
