@@ -24,7 +24,7 @@ dependencies:
         - sudo mkdir ./tests_dir/
     override:
         - bundle install
-        pwd: ./tests_dir/
+            pwd: ./tests_dir/
         
 ## Customize the tests
 test:
