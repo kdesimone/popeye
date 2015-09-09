@@ -12,9 +12,6 @@ machine:
 ## Customize dependencies
 dependencies:
     pre:
-        - virtualenv --python=python venv
-        - source venv/bin/activate
-        - python --version # just to check
         - pip install nose # always
         - pip install pillow
         - pip install git+git://github.com/rainwoodman/sharedmem
