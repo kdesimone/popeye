@@ -14,6 +14,7 @@ dependencies:
     pre:
         - pip install nose # always
         - pip install pillow
+        - pip install numpy
         - pip install git+git://github.com/rainwoodman/sharedmem
         - pip install statsmodels
         - if [ "${COVERAGE}" == "1" ]; then
