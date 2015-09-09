@@ -1,18 +1,17 @@
 ## Customize the test machine on circleci
 machine: 
     timezone:
-        America/New_York
+        Canada/Toronto
     python:
         version:
             2.7.6
     environment:
         CIRCLE_ENV: test
-        COVERAGE: 1
     
 ## Customize dependencies
 dependencies:
     pre:
-        - pip install nose # always
+        - pip install nose
         - pip install pillow
         - pip install numpy
         - pip install nibabel
@@ -20,25 +19,26 @@ dependencies:
         - pip install scipy
         - sudo apt-get install python-matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
-        - if [ "${COVERAGE}" == "1" ]; then
-          pip install coverage;
-          pip install coveralls;
-          fi
-    post:
-        - sudo python setup.py install build_ext
+        - pip install coverage;
+        - pip install coveralls;
+
+## Customize build
+build:
+    pre:
+       - sudo mkdir ./run_tests/
+    override:
+        - python setup.py install build_ext
 
 ## Customize the tests
 test:
+    pwd:
+        ./run_tests/
     pre:
-         # this is a hack! i can't figure out how to cd in the circleci environment (see old commits for my various attempts)
-         # as a result, staying in the build directory will try to import spinach from ./ where we want it from the site-package
-        - python -c "import os;import shutil;exec('def find(name, path):\n\tfor root, dirs, files in os.walk(path):\n\t\tif name in files:\n\t\t\treturn os.path.join(root, name)');srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"        
+        # this is a hack! i can't figure out how to cd in the circleci environment (see old commits for my various attempts)
+        # as a result, staying in the build directory will try to import spinach from ./ where we want it from the site-package
+        # - python -c "import os;import shutil;exec('def find(name, path):\n\tfor root, dirs, files in os.walk(path):\n\t\tif name in files:\n\t\t\treturn os.path.join(root, name)');srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"        
     override:
-        - if [ "${COVERAGE}" == "1" ]; then
-          cp ../.coveragerc .;
-          COVER_ARGS="--with-coverage --cover-package popeye";
-          fi
-        - nosetests --with-doctest --verbose $COVER_ARGS popeye
+        - nosetests --with-doctest --verbose --with-coverage --cover-package popeye
     post:
         - coveralls
         
