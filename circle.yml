@@ -24,7 +24,7 @@ dependencies:
           pip install coveralls;
           fi
     post:
-        - python setup.py install build_ext
+        - sudo python setup.py install build_ext
         - mkdir for_testing
         - cd for_testing
         - python -c "import os;x=os.path.abspath('.');print(x)"
