@@ -1,7 +1,7 @@
 ## Customize the test machine on circleci
 machine: 
     timezone:
-        Canada/Toronto
+        America/New_York
     python:
         version:
             2.7.6
