@@ -22,12 +22,10 @@ dependencies:
         - pip install coverage;
         - pip install coveralls;
     post:
-        - sudo mkdir ./run_tests/
+        - sudo mkdir ./tests_dir/
         
 ## Customize the tests
 test:
-    pwd:
-        ./run_tests/
     pre:
         - python setup.py install build_ext
         # this is a hack! i can't figure out how to cd in the circleci environment (see old commits for my various attempts)
@@ -35,6 +33,8 @@ test:
         # - python -c "import os;import shutil;exec('def find(name, path):\n\tfor root, dirs, files in os.walk(path):\n\t\tif name in files:\n\t\t\treturn os.path.join(root, name)');srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"        
     override:
         - nosetests --with-doctest --verbose --with-coverage --cover-package popeye
+            pwd:
+                ./tests_dir/
     post:
         - coveralls
         
