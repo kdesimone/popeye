@@ -21,6 +21,7 @@ dependencies:
           pip install coverage;
           pip install coveralls;
           fi
+        - python setup.py install build_ext
 
 ## Customize the tests
 test:
