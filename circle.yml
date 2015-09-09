@@ -31,7 +31,7 @@ test:
     pre:
          # this is a hack! i can't figure out how to cd in the circleci environment (see old commits for my various attempts)
          # as a result, staying in the build directory will try to import spinach from ./ where we want it from the site-package
-         - python -c "import os;import shutil;srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"
+         - python -c "import os;import shutil;import popeye.utilities as utils;srcfile = utils.find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"
         
     override:
         - if [ "${COVERAGE}" == "1" ]; then

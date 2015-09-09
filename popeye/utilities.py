@@ -549,6 +549,11 @@ def parallel_fit(args):
               verbose)
     return fit
 
+def find(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
 class ols:
     """
     Author: Vincent Nijs (+ ?)
