@@ -57,14 +57,14 @@ def recast_estimation_results(output, grid_parent):
 def make_nifti(data, grid_parent=None):
     
     if grid_parent:
-    
+        
         # get header information from the gridParent and update for the prf volume
         aff = grid_parent.get_affine()
         hdr = grid_parent.get_header()
-    
+        
         # recast as nifti
         nifti = nibabel.Nifti1Image(data,aff,header=hdr)
-    
+        
     else:
         aff = np.eye(4,4)
         nifti = nibabel.Nifti1Image(data,aff)
@@ -552,46 +552,12 @@ def parallel_fit(args):
 class ols:
     """
     Author: Vincent Nijs (+ ?)
-    
     Email: v-nijs at kellogg.northwestern.edu
-    
     Last Modified: Mon Jan 15 17:56:17 CST 2007
-    
-    Dependencies: See import statement at the top of this file
-    
-    Doc: Class for multi-variate regression using OLS
-    
-    For usage examples of other class methods see the class tests at the bottom of this file. To see the class in action
-    simply run this file using 'python ols.py'. This will generate some simulated data and run various analyses. If you have rpy installed
-    the same model will also be estimated by R for confirmation.
-    
-    Input:
-        y = dependent variable
-        y_varnm = string with the variable label for y
-        x = independent variables, note that a constant is added by default
-        x_varnm = string or list of variable labels for the independent variables
-    
-    Output:
-        There are no values returned by the class. Summary provides printed output.
-        All other measures can be accessed as follows:
-        
-        Step 1: Create an OLS instance by passing data to the class
-        
-            m = ols(y,x,y_varnm = 'y',x_varnm = ['x1','x2','x3','x4'])
-            
-        Step 2: Get specific metrics
-        
-            To print the coefficients: 
-                >>> print m.b
-            To print the coefficients p-values: 
-                >>> print m.p
-    
     """
     
     def __init__(self,y,x,y_varnm = 'y',x_varnm = ''):
-        """
-        Initializing the ols class. 
-        """
+        
         self.y = y
         self.x = c_[ones(x.shape[0]),x]
         self.y_varnm = y_varnm  
