@@ -5,7 +5,7 @@ import shutil
 from multiprocessing import Process, Queue, Array
 
 import numpy as np
-from pylab import find
+from matplotlib.pylab import find
 from scipy.interpolate import interp1d
 
 import nibabel

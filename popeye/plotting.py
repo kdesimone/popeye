@@ -1,6 +1,6 @@
 from __future__ import division
 import numpy as np
-from pylab import find
+from matplotlib.pylab import find
 from scipy.stats import gaussian_kde, linregress
 from matplotlib import cm
 import matplotlib.pyplot as plt
