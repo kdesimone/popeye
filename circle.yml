@@ -18,8 +18,7 @@ dependencies:
         - pip install nibabel
         - pip install cython
         - pip install scipy
-        - pip install setuptools
-        - pip install matplotlib
+        - apt-get install python-matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
         - if [ "${COVERAGE}" == "1" ]; then
           pip install coverage;
