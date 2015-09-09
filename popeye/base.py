@@ -9,7 +9,6 @@ import ctypes
 import numpy as np
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
-import statsmodels.api as sm
 
 def set_verbose(verbose):
     

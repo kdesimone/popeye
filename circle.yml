@@ -15,7 +15,6 @@ dependencies:
         - pip install nose # always
         - pip install pillow
         - pip install numpy
-        - pip install scipy
         - pip install nibabel
         - pip install cython
         - pip install git+git://github.com/rainwoodman/sharedmem
