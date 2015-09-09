@@ -25,9 +25,10 @@ dependencies:
           fi
     post:
         - sudo python setup.py install build_ext
-        - mkdir for_testing
-        - cd for_testing
+        - sudo mkdir /usr/local/for_testing
+        - cd /usr/local/for_testing
         - python -c "import os;x=os.path.abspath('.');print(x)"
+        - python -c 'import popeye;x=popeye.__str__();print(x)'
         - python -c 'from popeye import spinach;x=spinach.__str__();print(x)'
 
 ## Customize the tests
