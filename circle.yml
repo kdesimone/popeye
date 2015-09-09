@@ -26,6 +26,8 @@ dependencies:
         - python setup.py install build_ext
         - mkdir for_testing
         - cd for_testing
+        - python -c 'from popeye import spinach;x=spinach.__str__();print(x)'
+        - pwd
 
 ## Customize the tests
 test:
