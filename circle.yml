@@ -15,8 +15,8 @@ dependencies:
         - pip install nose # always
         - pip install pillow
         - pip install numpy
+        - pip install nibabel
         - pip install git+git://github.com/rainwoodman/sharedmem
-        - pip install statsmodels
         - if [ "${COVERAGE}" == "1" ]; then
           pip install coverage;
           pip install coveralls;
@@ -32,6 +32,5 @@ test:
           COVER_ARGS="--with-coverage --cover-package popeye";
           fi
         - nosetests --with-doctest --verbose $COVER_ARGS popeye
-        - phpunit test/unit-tests # use PHPunit for testing
     post:
         - coveralls

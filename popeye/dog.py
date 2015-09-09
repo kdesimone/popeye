@@ -12,7 +12,6 @@ np.set_printoptions(suppress=True)
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
 from scipy.integrate import trapz
-import statsmodels.api as sm
 
 import nibabel
 

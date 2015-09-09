@@ -9,7 +9,6 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.signal import fftconvolve
 from scipy.interpolate import interp1d
-import statsmodels.api as sm
 import nibabel
 
 from popeye.onetime import auto_attr

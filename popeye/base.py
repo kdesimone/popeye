@@ -192,19 +192,19 @@ class PopulationFit(object):
     
     @auto_attr
     def OLS(self):
-        return sm.OLS(self.data,self.prediction).fit()
+        return utils.ols(self.data,self.prediction)
     
     @auto_attr
     def coefficient(self):
-        return self.OLS.params[0]
+        return self.OLS.b[1]
     
     @auto_attr
     def rsquared(self):
-        return self.OLS.rsquared
+        return self.OLS.R2adj
     
     @auto_attr
     def stderr(self):
-        return np.sqrt(self.OLS.mse_resid)
+        return self.OLS.se[1]
     
     @auto_attr
     def rss(self):

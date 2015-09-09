@@ -13,7 +13,6 @@ from scipy.stats import linregress
 from scipy.signal import fftconvolve
 from scipy.integrate import trapz, simps
 import nibabel
-import statsmodels.api as sm
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
