@@ -1,8 +1,8 @@
 from __future__ import division
 import numpy as np
 from scipy.stats import gaussian_kde, linregress
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib import pyplot as plt
+from matplotlib import animation
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext
 from matplotlib.patches import Circle
