@@ -1,6 +1,5 @@
 from __future__ import division
 import numpy as np
-from matplotlib.pylab import find
 from scipy.stats import gaussian_kde, linregress
 from matplotlib import cm
 import matplotlib.pyplot as plt
@@ -223,8 +222,8 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
     for e in np.arange(xlim[0]+0.5,xlim[1]+0.5,1):
         b0 = e-0.5
         b1 = e+0.5
-        idx0 = find(ecc>=b0)
-        idx1 = find(ecc<=b1)
+        idx0 = np.nonzero(ecc>=b0)
+        idx1 = np.nonzero(ecc<=b1)
         idx = np.intersect1d(idx0,idx1)
         if len(idx) > min_n:
             mu = np.mean(diameter[idx])
@@ -278,8 +277,8 @@ def sigma_hrf_delay_scatter(sigma, hrf_delay, xlim, ylim,
     for e in np.arange(xlim[0]+0.25,xlim[1]+0.25,1):
         b0 = e-0.25
         b1 = e+0.25
-        idx0 = find(sigma>=b0)
-        idx1 = find(sigma<=b1)
+        idx0 = np.nonzero(sigma>=b0)
+        idx1 = np.nonzero(sigma<=b1)
         idx = np.intersect1d(idx0,idx1)
         if len(idx) > min_vox:
             
@@ -336,8 +335,8 @@ def eccentricity_sigma_fill(ecc,sigma,plot_color,label_name,fig=None,ax=None):
     for e in np.arange(0.5,14.5,1):
         b0 = e-0.5
         b1 = e+0.5
-        idx0 = find(ecc>=b0)
-        idx1 = find(ecc<=b1)
+        idx0 = np.nonzero(ecc>=b0)
+        idx1 = np.nonzero(ecc<=b1)
         idx = np.intersect1d(idx0,idx1)
         mu = np.mean(sigma[idx])
         err = np.std(sigma[idx])/np.sqrt(len(idx))
