@@ -1,12 +1,12 @@
 from __future__ import division
 import numpy as np
 from scipy.stats import gaussian_kde, linregress
-from matplotlib import cm
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import LogFormatterMathtext
 from matplotlib.patches import Circle
+from matplotlib import cm
 
 from popeye.spinach import generate_og_receptive_field
 
