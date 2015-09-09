@@ -1,0 +1,39 @@
+## Customize the test machine on circleci
+machine: 
+    timezone:
+        America/New_York
+    python:
+        version:
+            2.7
+    environment:
+        CIRCLE_ENV: test
+        COVERAGE: 1
+    
+## Customize dependencies
+dependencies:
+    pre:
+        - virtualenv --python=python venv
+        - source venv/bin/activate
+        - python --version # just to check
+        - pip install nose # always
+        - pip install pillow
+        - pip install git+git://github.com/rainwoodman/sharedmem
+        - pip install statsmodels
+        - if [ "${COVERAGE}" == "1" ]; then
+          pip install coverage;
+          pip install coveralls;
+          fi
+
+## Customize the tests
+test:
+    override:
+        - mkdir for_testing
+        - cd for_testing
+        - if [ "${COVERAGE}" == "1" ]; then
+          cp ../.coveragerc .;
+          COVER_ARGS="--with-coverage --cover-package popeye";
+          fi
+        - nosetests --with-doctest --verbose $COVER_ARGS popeye
+        - phpunit test/unit-tests # use PHPunit for testing
+    post:
+        - coveralls
