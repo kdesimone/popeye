@@ -17,6 +17,7 @@ dependencies:
         - pip install numpy
         - pip install nibabel
         - pip install cython
+        - pip install scipy
         - pip install git+git://github.com/rainwoodman/sharedmem
         - if [ "${COVERAGE}" == "1" ]; then
           pip install coverage;
@@ -26,8 +27,8 @@ dependencies:
         - python setup.py install build_ext
         - mkdir for_testing
         - cd for_testing
-        - python -c 'from popeye import spinach;x=spinach.__str__();print(x)'
         - pwd
+        - python -c 'from popeye import spinach;x=spinach.__str__();print(x)'
 
 ## Customize the tests
 test:
