@@ -24,12 +24,12 @@ dependencies:
           fi
     post:
         - python setup.py install build_ext
+        - mkdir for_testing
+        - cd for_testing
 
 ## Customize the tests
 test:
     override:
-        - mkdir for_testing
-        - cd for_testing
         - if [ "${COVERAGE}" == "1" ]; then
           cp ../.coveragerc .;
           COVER_ARGS="--with-coverage --cover-package popeye";
