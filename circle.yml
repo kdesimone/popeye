@@ -16,6 +16,7 @@ dependencies:
         - pip install pillow
         - pip install numpy
         - pip install nibabel
+        - pip install cython
         - pip install git+git://github.com/rainwoodman/sharedmem
         - if [ "${COVERAGE}" == "1" ]; then
           pip install coverage;
