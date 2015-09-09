@@ -27,7 +27,7 @@ dependencies:
         - python setup.py install build_ext
         - mkdir for_testing
         - cd for_testing
-        - python -c 'import os;x=os.path.abspath('.');print(x)'
+        - python -c "import os;x=os.path.abspath('.');print(x)"
         - python -c 'from popeye import spinach;x=spinach.__str__();print(x)'
 
 ## Customize the tests
