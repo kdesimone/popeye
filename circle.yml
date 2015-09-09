@@ -21,7 +21,7 @@ dependencies:
         - pip install git+git://github.com/rainwoodman/sharedmem
         - pip install coverage
         - pip install coveralls
-        - sudo mkdir ./tests_dir/
+        - sudo mkdir tests_dir
         
 ## Customize the tests
 test:
@@ -31,10 +31,9 @@ test:
         # as a result, staying in the build directory will try to import spinach from ./ where we want it from the site-package
         # - python -c "import os;import shutil;exec('def find(name, path):\n\tfor root, dirs, files in os.walk(path):\n\t\tif name in files:\n\t\t\treturn os.path.join(root, name)');srcfile = find('spinach.so','.');dstfile = './popeye/spinach.so';shutil.copy(srcfile, dstfile)"        
     override:
-        - nosetests --with-doctest --verbose --with-coverage --cover-package popeye
+        - nosetests --with-doctest --verbose --with-coverage --cover-package popeye:
             pwd:
-                ./tests_dir/
+                tests_dir
     post:
         - coveralls
-        
         
