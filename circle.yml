@@ -30,7 +30,7 @@ dependencies:
 test:
     pre:
         - sudo mkdir /usr/local/for_testing
-        - sudo cd /usr/local/for_testing
+        - cd /usr/local/for_testing
         - pwd
         - python -c "import os;x=os.path.abspath('.');print(x)"
         - python -c 'import popeye;x=popeye.__str__();print(x)'
