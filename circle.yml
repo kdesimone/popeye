@@ -20,7 +20,8 @@ dependencies:
         - pip install scipy
         - sudo apt-get install python-matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
-        - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
+        - pip install coverage
+        - pip install coveralls
         - sudo mkdir tests_dir
         - sudo cp .coveragerc tests_dir/.coveragerc
         - sudo cp .coveragerc tests_dir/.coverage
@@ -28,7 +29,7 @@ dependencies:
 ## Customize the tests
 test:
     pre:
-        - if [ "${COVERAGE}" == "1" ];then COVER_ARGS="--with-coverage --cover-package popeye";fi
+        - COVER_ARGS="--with-coverage --cover-package popeye"
     override:
         - nosetests --with-doctest --verbose $COVER_ARGS popeye
             pwd:
