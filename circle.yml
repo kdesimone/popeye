@@ -25,8 +25,7 @@ dependencies:
         - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
         - sudo cp .coveragerc tests_dir/.coveragerc
-        - sudo cp .coveragerc tests_dir/.coverage
-
+        
 ## Customize the tests
 test:
     pre:
