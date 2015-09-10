@@ -12,13 +12,15 @@ machine:
 ## Customize dependencies
 dependencies:
     pre:
+        - pip install --update
         - pip install nose
         - pip install pillow
         - pip install numpy
         - pip install nibabel
         - pip install cython
         - pip install scipy
-        - conda install matplotlib
+        - pip install sphinx
+        - pip install matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
         - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
