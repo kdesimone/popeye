@@ -18,7 +18,7 @@ dependencies:
         - pip install nibabel
         - pip install cython
         - pip install scipy
-        - sudo apt-get install python-matplotlib
+        - conda install matplotlib
         - pip install git+git://github.com/rainwoodman/sharedmem
         - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
