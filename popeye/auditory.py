@@ -47,7 +47,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_prediction(self, center_freq, sigma, beta, baseline):
+    def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -101,7 +101,7 @@ class AuditoryModel(PopulationModel):
         resampled_response = f(target_times)
         
         # generate the HRF
-        hrf = utils.double_gamma_hrf(0, self.stimulus.tr_length)
+        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
         
         # pad and convolve
         model = fftconvolve(resampled_response, hrf, 'same')
@@ -114,7 +114,7 @@ class AuditoryModel(PopulationModel):
         
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline):
+    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -142,7 +142,7 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, baseline)
+        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
 
 class AuditoryFit(PopulationFit):
     
@@ -226,9 +226,9 @@ class AuditoryFit(PopulationFit):
     def baseline0(self):
         return self.ballpark[3]
     
-    # @auto_attr
-    # def hrf0(self):
-    #     return self.ballpark[3]
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark[4]
     
     @auto_attr
     def center_freq(self):
@@ -246,7 +246,7 @@ class AuditoryFit(PopulationFit):
     def baseline(self):
         return self.estimate[3]
     
-    # @auto_attr
-    # def hrf_delay(self):
-    #     return self.estimate[3]
+    @auto_attr
+    def hrf_delay(self):
+        return self.estimate[4]
     
