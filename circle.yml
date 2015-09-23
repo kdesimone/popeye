@@ -1,0 +1,40 @@
+## Customize the test machine on circleci
+machine: 
+    timezone:
+        America/New_York
+    python:
+        version:
+            2.7.9
+    environment:
+        CIRCLE_ENV: test
+        COVERAGE: 1
+        COVERALLS_REPO_TOKEN: DoqUKyhEKXo6d8DS0y2Bs3klwdzhnz51y
+    
+## Customize dependencies
+dependencies:
+    pre:
+        - pip install --upgrade pip
+        - pip install nose
+        - pip install pillow
+        - pip install numpy
+        - pip install nibabel
+        - pip install cython
+        - pip install scipy
+        - pip install sphinx
+        - pip install matplotlib
+        - pip install git+git://github.com/rainwoodman/sharedmem
+        - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
+        - sudo mkdir tests_dir
+        - sudo cp .coveragerc tests_dir/.coveragerc
+        
+## Customize the tests
+test:
+    pre:
+        - if [ "${COVERAGE}" == "1" ];then COVER_ARGS="--with-coverage --cover-package popeye";fi
+    override:
+        - nosetests --with-doctest --verbose $COVER_ARGS popeye:
+            pwd:
+                tests_dir
+    post:
+        - coveralls
+        

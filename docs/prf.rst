@@ -11,6 +11,10 @@ Such models can be designed to describe various sensory [3]_ and cognitive [4]_ 
 recently, we have used the pRF model to map the retinotopic organization of multiple subcortical 
 nuclei [5]_.
 
+Below are parameter maps detailing the response properties of the human lateral geniculate nucleus (LGN).
+The model parameter estimates are overlaid on the PD image for the left and right LGN. Separate subjects are 
+shown in A and B. Columns illustrate the polar angle, eccentricity, pRF size, and HRF delay estimates. A, anterior; P, posterior.
+
 
 .. image:: ./images/prf_lgn.png
     :width: 500px

@@ -137,8 +137,6 @@ def test_parallel_og_fit():
     sigma = 1.24
     beta = 2.5
     hrf_delay = -0.25
-    # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
     # create the "data"
     data = model.generate_prediction(x, y, sigma, beta, hrf_delay)

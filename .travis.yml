@@ -23,7 +23,6 @@ before_install:
     - pip install pillow
     - pip install --timeout=60 --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
     - pip install git+git://github.com/rainwoodman/sharedmem
-    - pip install statsmodels
     - if [ "${COVERAGE}" == "1" ]; then
       pip install coverage;
       pip install coveralls;
