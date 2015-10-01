@@ -82,8 +82,6 @@ class AuditoryModel(PopulationModel):
         if np.round(rf[-1],3) != 0:
             return np.inf
         
-        # normalize by the integral
-        
         # create mask for speed
         distance = self.stimulus.freqs - center_freq
         mask = np.zeros_like(distance, dtype='uint8')
@@ -97,13 +95,13 @@ class AuditoryModel(PopulationModel):
         f = interp1d(source_times, response, kind='linear')
         num_volumes = self.stimulus.stim_arr.shape[0]/self.stimulus.Fs/self.stimulus.tr_length
         target_times = np.linspace(0, 1, num_volumes*self.stimulus.resample_factor, endpoint=True)
-        resampled_response = f(target_times)
+        response = f(target_times)
         
         # generate the HRF
-        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
+        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length, fptr=self.stimulus.resample_factor*self.stimulus.tr_length)
         
         # pad and convolve
-        model = fftconvolve(resampled_response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # scale by beta
         model *= beta
