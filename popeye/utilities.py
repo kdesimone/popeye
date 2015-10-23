@@ -35,15 +35,17 @@ def recast_estimation_results(output, grid_parent):
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        # gather the estimate + stats
-        voxel_dat = list(fit.estimate)
-        voxel_dat.append(fit.rsquared)
-        voxel_dat.append(fit.coefficient)
-        voxel_dat.append(fit.stderr)
-        voxel_dat = np.array(voxel_dat)
+        if not np.isnan(fit.rsquared):
         
-        # assign to 
-        estimates[fit.voxel_index] = voxel_dat
+            # gather the estimate + stats
+            voxel_dat = list(fit.estimate)
+            voxel_dat.append(fit.rsquared)
+            voxel_dat.append(fit.coefficient)
+            voxel_dat.append(fit.stderr)
+            voxel_dat = np.array(voxel_dat)
+        
+            # assign to 
+            estimates[fit.voxel_index] = voxel_dat
         
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
