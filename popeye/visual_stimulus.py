@@ -177,17 +177,14 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
     # flicker
     t = np.linspace(0,total_secs,total_secs*projector_hz)
     full_run = np.sin(2 * np.pi * flicker_hz * t)
-    full_run = np.round(utils.normalize(full_run,0,255)).astype('uint8')
+    full_run = np.uint8((full_run + 1) * 128)
     
     # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
     deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
     
     # initialize the bar array
-    bar_stimulus = np.ones((pixels_down, pixels_across, total_frames)).astype('uint8')
-    
-    # make it mean lum
-    bar_stimulus *= 128
+    bar_stimulus = np.uint8(np.ones((pixels_down, pixels_across, total_frames)))
     
     # counter
     tr_num = 0
@@ -662,8 +659,10 @@ class VisualStimulus(StimulusModel):
         # share coordinate matrices
         self.deg_x = utils.generate_shared_array(deg_x, ctypes.c_double)
         self.deg_y = utils.generate_shared_array(deg_y, ctypes.c_double)
+        self.stim_arr = utils.generate_shared_array(stim_arr, dtype)
         
         if self.scale_factor == 1.0:
+            
             
             self.stim_arr_coarse = self.stim_arr
             self.deg_x_coarse = self.deg_x
