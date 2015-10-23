@@ -9,6 +9,7 @@ import ctypes
 import numpy as np
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
+import numpy as np
 
 def set_verbose(verbose):
     
@@ -146,33 +147,59 @@ class PopulationFit(object):
         # automatic fitting
         if self.auto_fit:
             
-            # start
-            self.start = time.clock()
+            try:
+                # start
+                self.start = time.clock()
+                
+                # init
+                self.ballpark
+                
+                # final
+                self.estimate
+                
+                # performance
+                self.OLS
+                self.rss
+                self.rsquared
             
-            # the business
-            self.ballpark
-            self.estimate
-            self.OLS
-            self.rss
-            self.rsquared
+                # finish
+                self.finish = time.clock()
             
-            # finish
-            self.finish = time.clock()
+                # print
+                if self.verbose:
+                    print(self.msg)
             
-            # print
-            if self.verbose:
-                print(self.msg)
+            except:
+                self.finish = time.clock()
+                self.rsquared = np.nan
+                self.rss = np.nan
+                self.rsquared = np.nan
+                self.ballpark = np.nan
+                self.estimate = np.nan
+                print('Voxel %s failed.' %(str(self.voxel_index)))
+            
     
     # the brute search
     @auto_attr
     def ballpark(self):
-        return utils.brute_force_search(self.grids,
-                                        self.bounds,
-                                        self.Ns,
-                                        self.data,
-                                        utils.error_function,
-                                        self.model.generate_ballpark_prediction,
-                                        self.very_verbose)
+        
+        
+        bp = utils.brute_force_search(self.grids,
+                                      self.bounds,
+                                      self.Ns,
+                                      self.data,
+                                      utils.error_function,
+                                      self.model.generate_ballpark_prediction,
+                                      self.very_verbose)
+        
+        # if we want to add more parameters
+        # for the final estimation ...
+        if hasattr(self,'add_ballpark'):
+            bp = np.concatenate((bp,self.add_ballpark))
+            
+        return bp 
+        
+        
      
     # the gradient search                                  
     @auto_attr
@@ -211,13 +238,21 @@ class PopulationFit(object):
     
     @auto_attr
     def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              np.round(self.estimate,2)))
+        if self.auto_fit:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.finish-self.start,
+                  self.rsquared,
+                  np.round(self.estimate,2)))
+        else:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.rsquared,
+                  np.round(self.estimate,2)))            
         return txt
     
 class StimulusModel(object):
