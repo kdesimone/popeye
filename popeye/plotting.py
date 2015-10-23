@@ -224,8 +224,8 @@ def eccentricity_sigma_scatter(x, y, sigma, xlim, ylim, min_n, dof,
         b1 = e+0.5
         idx0 = np.nonzero(ecc>=b0)
         idx1 = np.nonzero(ecc<=b1)
-        idx = np.intersect1d(idx0,idx1)
-        if len(idx) > min_n:
+        if len(idx0[0]) > min_n and len(idx1[0]) > min_n:
+            idx = np.intersect1d(idx0[0],idx1[0])
             mu = np.mean(diameter[idx])
             err = np.std(diameter[idx])/np.sqrt(dof)
             ax.errorbar(e,mu,yerr=err,color='%s' %(plot_color), mec='%s' %(plot_color),capsize=0,lw=4,alpha=plot_alpha)
