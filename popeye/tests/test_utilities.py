@@ -140,8 +140,8 @@ def test_normalize():
     arr = np.arange(0,100)
     
     # create new bounds
-    lo = -50
-    hi = 50
+    lo = 0
+    hi = 200
     
     # rescale the array
     arr_new = utils.normalize(arr, lo, hi)
