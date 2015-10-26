@@ -165,13 +165,13 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-# upload:
-#   git checkout -b temp-branch
-#   make html
-#   git add _build/html
-#   git commit -a -m "New version of the docs"
-#   git checkout gh-pages
-#   git merge -X theirs temp-branch -m"Merging temp-branch"
-#   git push origin gh-pages
-#   git branch -d temp-branch
-#   git checkout master
+upload:
+  git checkout -b temp-branch
+  make html
+  git add _build/html
+  git commit -a -m "New version of the docs"
+  git checkout gh-pages
+  git merge -X theirs temp-branch -m"Merging temp-branch"
+  git push origin gh-pages
+  git branch -d temp-branch
+  git checkout master
