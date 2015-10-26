@@ -1,9 +1,12 @@
 .. -*- mode: rst -*-
 
-|Travis|_
+.. image:: https://api.travis-ci.org/kdesimone/popeye.svg?branch=master
+   :target: https://travis-ci.org/kdesimone/popeye/
+   :alt: Build Status
 
-.. |Travis| image:: https://api.travis-ci.org/kdesimone/popeye.png?branch=master
-.. _Travis: https://travis-ci.org/kdesimone/popeye/
+.. image:: https://coveralls.io/repos/kdesimone/popeye/badge.svg?branch=master
+   :target: https://coveralls.io/r/kdesimone/popeye
+   
 
 popeye
 ============
