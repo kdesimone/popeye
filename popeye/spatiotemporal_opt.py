@@ -44,9 +44,64 @@ class SpatioTemporalModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
     
     
-    def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight): 
+    # for the final solution, we use spatiotemporal
+    def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
         
-        return self.generate_prediction(x, y, sigma, beta, baseline, hrf_delay, weight)
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        
+        # if the spatial RF is running off the screen ...
+        x_rf = np.sum(spatial_rf,axis=1)
+        y_rf = np.sum(spatial_rf,axis=0)
+        if ( np.round(x_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 or 
+             np.round(y_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 ):
+            return np.inf
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma)**2] = 1
+        
+        if ( np.round(self.p[0],3) != 0 or np.round(self.p[-1],3) != 0 or 
+             np.round(self.m[0],3) != 0 or np.round(self.m[-1],3) != 0 ):
+            return np.inf
+        
+        stim_ts = np.zeros(self.stimulus.stim_arr_coarse.shape[-1])
+        
+        for tr in xrange(stim_ts.shape[-1]):
+            
+            if self.stimulus.flicker_vec[tr]:
+                
+                # figure out how much of the stimulus is covering the spatial RF
+                masked_rf = spatial_rf*self.stimulus.stim_arr_coarse[:,:,tr]
+                amp = np.mean(masked_rf[mask==1])
+                
+                # extract the appropriate flicker wave, 10hz or 20hz?
+                flicker = self.flickers[:,self.stimulus.flicker_vec[tr]-1]
+                
+                # get the p response
+                p_resp = self.p_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
+                p_resp *= weight
+                
+                # get the m response
+                m_resp = self.m_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
+                m_resp *= (1-weight)
+                
+                # mix them
+                stim_ts[tr] = np.sum(m_resp+p_resp)
+                
+        # convolve with HRF
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        model = fftconvolve(stim_ts, hrf)[0:len(stim_ts)]
+        
+        # scale
+        model *= beta
+         
+        # offset
+        model += baseline
+        
+        return model
     
     # for the final solution, we use spatiotemporal
     def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
@@ -134,27 +189,27 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def flickers(self):
         ts = self.t.shape[-1]
-        fs = np.max(self.stimulus.flicker_vec)
+        fs = int(np.max(self.stimulus.flicker_vec))
         flickers = np.zeros((ts,fs))
-        for f in np.arange(1,fs+1):
+        for f in xrange(1,fs+1):
             flickers[:,f-1] = np.sin(2 * np.pi * self.stimulus.flicker_hz[f-1] * self.t)
         return flickers
     
     @auto_attr
     def p_resp(self):
         ts = self.t.shape[-1]
-        fs = np.max(self.stimulus.flicker_vec)
+        fs = int(np.max(self.stimulus.flicker_vec))
         p_resp = np.zeros((ts,fs))
-        for f in np.arange(1,fs+1):
+        for f in xrange(1,fs+1):
             p_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.p))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
         return p_resp
     
     @auto_attr
     def m_resp(self):
         ts = self.t.shape[-1]
-        fs = np.max(self.stimulus.flicker_vec)
+        fs = int(np.max(self.stimulus.flicker_vec))
         m_resp = np.zeros((ts,fs))
-        for f in np.arange(1,fs+1):
+        for f in xrange(1,fs+1):
             m_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.m))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
         return m_resp
         
