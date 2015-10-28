@@ -4,4 +4,4 @@ source = popeye
 include = */popeye/*
 omit =
     */setup.py
-
+    popeye/plotting.py
