@@ -75,7 +75,7 @@ class SpatioTemporalModel(PopulationModel):
                 
                 # figure out how much of the stimulus is covering the spatial RF
                 masked_rf = spatial_rf*self.stimulus.stim_arr_coarse[:,:,tr]
-                amp = np.mean(masked_rf[mask==1])
+                amp = np.sum(masked_rf[mask==1])
                 
                 # extract the appropriate flicker wave, 10hz or 20hz?
                 flicker = self.flickers[:,self.stimulus.flicker_vec[tr]-1]
@@ -134,7 +134,7 @@ class SpatioTemporalModel(PopulationModel):
                 
                 # figure out how much of the stimulus is covering the spatial RF
                 masked_rf = spatial_rf*self.stimulus.stim_arr[:,:,tr]
-                amp = np.mean(masked_rf[mask==1])
+                amp = np.sum(masked_rf[mask==1])
                 
                 # extract the appropriate flicker wave, 10hz or 20hz?
                 flicker = self.flickers[:,self.stimulus.flicker_vec[tr]-1]
