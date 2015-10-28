@@ -2,6 +2,8 @@
 branch = True
 source = popeye
 include = */popeye/*
+
+[report]
 omit =
     */setup.py
     popeye/plotting.py
