@@ -69,7 +69,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest'):
+def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'):
     
     """Resamples the visual stimulus
     
@@ -104,7 +104,7 @@ def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest'):
     
     dims = np.shape(stim_arr)
     
-    resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]))
+    resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]),dtype=dtype)
     
     # loop
     for tr in np.arange(dims[-1]):
