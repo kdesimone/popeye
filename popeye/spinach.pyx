@@ -66,6 +66,54 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_strf_betas_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                                    np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                                    np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                                    np.ndarray[DTYPE_t, ndim=1] flicker_vec,
+                                    DTYPE2_t m_beta, DTYPE2_t p_beta):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+        
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(slim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] buff = np.zeros(slim,dtype=DTYPE2)
+
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):   
+                stim[s] += m_resp[t,flicker_vec[s]-1] * m_beta * amp + p_resp[t,flicker_vec[s]-1] * p_beta * amp
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_strf_weight_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                                    np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                                    np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                                    np.ndarray[DTYPE_t, ndim=1] flicker_vec,
+                                    DTYPE2_t weight):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+        
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(slim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] buff = np.zeros(slim,dtype=DTYPE2)
+
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):   
+                stim[s] += m_resp[t,flicker_vec[s]-1] * (1-weight) * amp + p_resp[t,flicker_vec[s]-1] * weight * amp
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_rf_timeseries(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
                            np.ndarray[DTYPE_t, ndim=2] mask):
@@ -268,9 +316,9 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
-                                 np.ndarray[DTYPE2_t, ndim=2] spectrogram,
-                                 DTYPE2_t center_freq, DTYPE2_t sd):
+def generate_spectrotemporal_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
+                                        np.ndarray[DTYPE2_t, ndim=2] spectrogram,
+                                        DTYPE2_t center_freq, DTYPE2_t sd):
                                  
     """
     Generate a time-series given a stimulus array and Gaussian parameters.

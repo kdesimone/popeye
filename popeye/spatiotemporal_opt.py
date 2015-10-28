@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_strf_weight_timeseries, generate_rf_timeseries
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -63,37 +63,18 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
+        # if the temporal RF is running off the TR ...
         if ( np.round(self.p[0],3) != 0 or np.round(self.p[-1],3) != 0 or 
              np.round(self.m[0],3) != 0 or np.round(self.m[-1],3) != 0 ):
             return np.inf
-        
-        stim_ts = np.zeros(self.stimulus.stim_arr_coarse.shape[-1])
-        
-        for tr in xrange(stim_ts.shape[-1]):
             
-            if self.stimulus.flicker_vec[tr]:
-                
-                # figure out how much of the stimulus is covering the spatial RF
-                masked_rf = spatial_rf*self.stimulus.stim_arr_coarse[:,:,tr]
-                amp = np.sum(masked_rf[mask==1])
-                
-                # extract the appropriate flicker wave, 10hz or 20hz?
-                flicker = self.flickers[:,self.stimulus.flicker_vec[tr]-1]
-                
-                # get the p response
-                p_resp = self.p_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                p_resp *= weight
-                
-                # get the m response
-                m_resp = self.m_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                m_resp *= (1-weight)
-                
-                # mix them
-                stim_ts[tr] = np.sum(m_resp+p_resp)
-                
+        # mix the m and p responses 
+        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
+        mp_ts = generate_strf_weight_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, weight)
+        
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(stim_ts, hrf)[0:len(stim_ts)]
+        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
         
         # scale
         model *= beta
@@ -122,37 +103,18 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
+        # if the temporal RF is running off the TR ...
         if ( np.round(self.p[0],3) != 0 or np.round(self.p[-1],3) != 0 or 
              np.round(self.m[0],3) != 0 or np.round(self.m[-1],3) != 0 ):
             return np.inf
         
-        stim_ts = np.zeros(self.stimulus.stim_arr.shape[-1])
-        
-        for tr in xrange(stim_ts.shape[-1]):
-            
-            if self.stimulus.flicker_vec[tr]:
-                
-                # figure out how much of the stimulus is covering the spatial RF
-                masked_rf = spatial_rf*self.stimulus.stim_arr[:,:,tr]
-                amp = np.sum(masked_rf[mask==1])
-                
-                # extract the appropriate flicker wave, 10hz or 20hz?
-                flicker = self.flickers[:,self.stimulus.flicker_vec[tr]-1]
-                
-                # get the p response
-                p_resp = self.p_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                p_resp *= weight
-                
-                # get the m response
-                m_resp = self.m_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                m_resp *= (1-weight)
-                
-                # mix them
-                stim_ts[tr] = np.sum(m_resp+p_resp)
-                
+        # mix the m and p responses 
+        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
+        mp_ts = generate_strf_weight_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, weight)
+             
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(stim_ts, hrf)[0:len(stim_ts)]
+        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
         
         # scale
         model *= beta
