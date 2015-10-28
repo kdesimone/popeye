@@ -45,7 +45,7 @@ class SpatioTemporalModel(PopulationModel):
     
     
     # for the final solution, we use spatiotemporal
-    def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
+    def generate_ballpark_prediction(self, x, y, sigma, m_beta, p_beta, baseline, hrf_delay):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
@@ -82,11 +82,11 @@ class SpatioTemporalModel(PopulationModel):
                 
                 # get the p response
                 p_resp = self.p_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                p_resp *= weight
+                p_resp *= p_beta
                 
                 # get the m response
                 m_resp = self.m_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                m_resp *= (1-weight)
+                m_resp *= m_beta
                 
                 # mix them
                 stim_ts[tr] = np.sum(m_resp+p_resp)
@@ -94,9 +94,6 @@ class SpatioTemporalModel(PopulationModel):
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(stim_ts, hrf)[0:len(stim_ts)]
-        
-        # scale
-        model *= beta
          
         # offset
         model += baseline
@@ -104,7 +101,7 @@ class SpatioTemporalModel(PopulationModel):
         return model
     
     # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
+    def generate_prediction(self, x, y, sigma, m_beta, p_beta, baseline, hrf_delay):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -141,11 +138,11 @@ class SpatioTemporalModel(PopulationModel):
                 
                 # get the p response
                 p_resp = self.p_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                p_resp *= weight
+                p_resp *= p_beta
                 
                 # get the m response
                 m_resp = self.m_resp[:,self.stimulus.flicker_vec[tr]-1] * amp
-                m_resp *= (1-weight)
+                m_resp *= m_beta
                 
                 # mix them
                 stim_ts[tr] = np.sum(m_resp+p_resp)
@@ -153,9 +150,6 @@ class SpatioTemporalModel(PopulationModel):
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(stim_ts, hrf)[0:len(stim_ts)]
-        
-        # scale
-        model *= beta
          
         # offset
         model += baseline
@@ -239,19 +233,19 @@ class SpatioTemporalFit(PopulationFit):
         return self.ballpark[2]
         
     @auto_attr
-    def beta0(self):
+    def mbeta0(self):
         return self.ballpark[3]
     
     @auto_attr
-    def baseline0(self):
+    def pbeta0(self):
         return self.ballpark[4]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[5]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark[5]
-    
-    @auto_attr
-    def weight0(self):
         return self.ballpark[6]
         
     @auto_attr
@@ -267,23 +261,27 @@ class SpatioTemporalFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def beta(self):
+    def mbeta(self):
         return self.estimate[3]
     
-    def baseline(self):
+    @auto_attr
+    def pbeta(self):
         return self.estimate[4]
+    
+    def baseline(self):
+        return self.estimate[5]
         
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[5]
-    
-    @auto_attr
-    def weight(self):
         return self.estimate[6]
     
     @auto_attr
     def prediction(self):
         return self.model.generate_prediction(*self.estimate)
+    
+    @auto_attr
+    def weight(self):
+        return self.pbeta / (self.mbeta+self.pbeta)
         
     @auto_attr
     def rho(self):
