@@ -137,11 +137,11 @@ def test_make_nifti():
 def test_normalize():
     
     # create an array
-    arr = np.arange(0,100)
+    arr = np.linspace(0,1,100)
     
     # create new bounds
-    lo = 0
-    hi = 200
+    lo = 0.0
+    hi = 200.0
     
     # rescale the array
     arr_new = utils.normalize(arr, lo, hi)

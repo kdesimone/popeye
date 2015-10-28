@@ -128,14 +128,15 @@ def normalize(array, imin=-1, imax=1):
         maximum values.
     """
     
+    new_arr = array.copy()
     
-    dmin = array.min()
-    dmax = array.max()
-    array -= dmin
-    array *= imax - imin
-    array /= dmax - dmin
-    array += imin
-    return array
+    dmin = new_arr.min()
+    dmax = new_arr.max()
+    new_arr -= dmin
+    new_arr *= imax - imin
+    new_arr /= dmax - dmin
+    new_arr += imin
+    return new_arr
     
 
 # generic gradient descent
