@@ -93,7 +93,12 @@ class GaussianModel(PopulationModel):
         # scale it by beta
         model *= beta
         
-        return model 
+        return model
+    
+    def generate_receptive_field(self, x, y, sigma):
+        return generate_og_receptive_field(x, y, sigma,
+                                           self.stimulus.deg_x,
+                                           self.stimulus.deg_y)
         
 class GaussianFit(PopulationFit):
     
@@ -217,6 +222,6 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def receptive_field(self):
         return generate_og_receptive_field(self.x, self.y, self.sigma,
-                                           self.stimulus.deg_x,
-                                           self.stimulus.deg_y)
+                                           self.model.stimulus.deg_x,
+                                           self.model.stimulus.deg_y)
                                            
