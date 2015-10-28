@@ -22,7 +22,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_rf_timeseries_1D, generate_strf_timeseries
+from popeye.spinach import generate_rf_timeseries_1D
 
 def recast_estimation_results(output, grid_parent, write=True):
     
