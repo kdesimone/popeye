@@ -69,7 +69,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05):
+def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest'):
     
     """Resamples the visual stimulus
     
@@ -89,6 +89,12 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     scale_factor : float
         The scale factor by which the stimulus is resampled.  The scale factor
         must be a float, and must be greater than 0.
+    
+    mode : str, optional
+        Points outside the boundaries of the input are filled according
+        to the given mode ('constant', 'nearest', 'reflect' or 'wrap').
+        Default is 'nearest'.
+        
         
     Returns
     -------
@@ -104,7 +110,7 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     for tr in np.arange(dims[-1]):
         
         # resize it
-        f = zoom(stim_arr[:,:,tr], scale_factor)
+        f = zoom(stim_arr[:,:,tr], scale_factor, mode=mode)
         
         # insert it
         resampled_arr[:,:,tr] = f
