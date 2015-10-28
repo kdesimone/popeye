@@ -232,6 +232,7 @@ class SpatioTemporalFit(PopulationFit):
     def beta(self):
         return self.estimate[3]
     
+    @auto_attr
     def baseline(self):
         return self.estimate[4]
         
