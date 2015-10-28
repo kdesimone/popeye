@@ -5,3 +5,9 @@ include = */popeye/*
 omit =
     */setup.py
     popeye/plotting.py
+    popeye/reconstruction.py
+    popeye/simulation.py
+    popeye/spectrotemporal.py
+    popeye/spatiotemporal*py
+    popeye/xvalidation.py
+    popeye/strf.py
