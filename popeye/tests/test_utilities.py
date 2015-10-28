@@ -195,7 +195,7 @@ def test_gradient_descent_search():
     phat = utils.gradient_descent_search((8,8), bounds, response, utils.error_function, func, verbose)
     
     # assert that the estimate is equal to the parameter
-    npt.assert_almost_equal(params, phat)
+    npt.assert_almost_equal(params, phat[0])
 
 def test_brute_force_search():
     
@@ -224,7 +224,7 @@ def test_brute_force_search():
     p0 = utils.brute_force_search(grids, bounds, Ns, response, utils.error_function, func, verbose)
                                         
     # assert that the estimate is equal to the parameter
-    npt.assert_equal(params, p0)
+    npt.assert_equal(params, p0[0])
     
 
 def test_double_gamma_hrf():
