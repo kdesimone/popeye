@@ -161,10 +161,10 @@ class PopulationFit(object):
                 self.OLS
                 self.rss
                 self.rsquared
-            
+                
                 # finish
                 self.finish = time.clock()
-            
+                
                 # print
                 if self.verbose:
                     print(self.msg)
@@ -181,36 +181,69 @@ class PopulationFit(object):
     
     # the brute search
     @auto_attr
-    def ballpark(self):
-        
-        
-        bp = utils.brute_force_search(self.grids,
-                                      self.bounds,
-                                      self.Ns,
-                                      self.data,
-                                      utils.error_function,
-                                      self.model.generate_ballpark_prediction,
-                                      self.very_verbose)
-        
-        # if we want to add more parameters
-        # for the final estimation ...
-        if hasattr(self,'add_ballpark'):
-            bp = np.concatenate((bp,self.add_ballpark))
-            
-        return bp 
-        
-        
+    def brute_force(self):
+        return utils.brute_force_search(self.grids,
+                                        self.bounds,
+                                        self.Ns,
+                                        self.data,
+                                        utils.error_function,
+                                        self.model.generate_ballpark_prediction,
+                                        self.very_verbose)
      
+     
+    @auto_attr
+    def ballpark(self):
+        return self.brute_force[0]
+        
+    @auto_attr
+    def hrf0(self):
+        return self.brute_force[4]
+    
+    @auto_attr
+    def fval(self):
+        return self.brute_force[1]
+    
+    @auto_attr
+    def grid(self):
+        return self.brute_force[2]
+    
+    @auto_attr
+    def Jout(self):
+        return self.brute_force[3]
+    
     # the gradient search                                  
     @auto_attr
-    def estimate(self):
+    def gradient_descent(self):
         return utils.gradient_descent_search(self.ballpark,
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
                                              self.model.generate_prediction,
                                              self.very_verbose)
+                                             
+    @auto_attr
+    def estimate(self):
+        return self.gradient_descent[0]
     
+    @auto_attr
+    def fopt(self):
+        return self.gradient_descent[1]
+    
+    @auto_attr
+    def direc(self):
+        return self.gradient_descent[2]
+    
+    @auto_attr
+    def iter(self):
+        return self.gradient_descent[3]
+    
+    @auto_attr
+    def funcalls(self):
+        return self.gradient_descent[4]
+    
+    @auto_attr
+    def allvecs(self):
+        return self.gradient_descent[6]
     
     @auto_attr
     def prediction(self):
