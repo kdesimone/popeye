@@ -200,11 +200,11 @@ def gradient_descent_search(parameters, bounds, data,
     
     """
     
-    estimate, err,  _, _, _, warnflag = fmin_powell(error_function, parameters,
-                                                    args=(bounds, data, objective_function, verbose),
-                                                    full_output=True, disp=False)
+    output = fmin_powell(error_function, parameters,
+                         args=(bounds, data, objective_function, verbose),
+                         full_output=True, disp=False, retall=True)
     
-    return estimate
+    return output
 
 def brute_force_search(grids, bounds, Ns, data,
                        error_function, objective_function, verbose):
@@ -271,16 +271,16 @@ def brute_force_search(grids, bounds, Ns, data,
        The model solution given `parameters` and `objective_function`.
     
     """
-                       
-    estimate, err,  _, _ = brute(error_function,
-                           args=(bounds, data, objective_function, verbose),
-                           ranges=grids,
-                           Ns=Ns,
-                           finish=None,
-                           full_output=True,
-                           disp=False)
-              
-    return estimate
+    
+    output = brute(error_function,
+                   args=(bounds, data, objective_function, verbose),
+                   ranges=grids,
+                   Ns=Ns,
+                   finish=None,
+                   full_output=True,
+                   disp=False)
+                   
+    return output
 
 # generic error function
 def error_function(parameters, bounds, data, objective_function, verbose):
