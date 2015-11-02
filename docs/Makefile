@@ -168,7 +168,8 @@ doctest:
 upload:
 	git checkout -b temp-branch
 	make html
-	git add _build/html
+	git add _build
+	git add reference
 	git commit -a -m"New version of the docs"
 	git checkout gh-pages
 	git merge -X theirs temp-branch -m"Merging temp-branch"

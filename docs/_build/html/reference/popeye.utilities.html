@@ -1,0 +1,1772 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>utilities &mdash; popeye 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="popeye 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="index.html"/>
+        <link rel="next" title="visual_stimulus" href="popeye.visual_stimulus.html"/>
+        <link rel="prev" title="strf" href="popeye.strf.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> popeye
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../prf.html">What is a population receptive field?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../prf.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#demo">Demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#inspecting-the-results">Inspecting the results</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="popeye.html"><code class="docutils literal"><span class="pre">popeye</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.auditory.html"><code class="docutils literal"><span class="pre">auditory</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auditoryfit"><code class="docutils literal"><span class="pre">AuditoryFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auditorymodel"><code class="docutils literal"><span class="pre">AuditoryModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#generate-rf-timeseries-1d">generate_rf_timeseries_1D</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.auditory_stimulus.html"><code class="docutils literal"><span class="pre">auditory_stimulus</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#auditorystimulus"><code class="docutils literal"><span class="pre">AuditoryStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#generate-spectrogram">generate_spectrogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#specgram">specgram</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.base.html"><code class="docutils literal"><span class="pre">base</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#set-verbose">set_verbose</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.css.html"><code class="docutils literal"><span class="pre">css</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#compressivespatialsummationfit"><code class="docutils literal"><span class="pre">CompressiveSpatialSummationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#compressivespatialsummationmodel"><code class="docutils literal"><span class="pre">CompressiveSpatialSummationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.dog.html"><code class="docutils literal"><span class="pre">dog</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#differenceofgaussiansfit"><code class="docutils literal"><span class="pre">DifferenceOfGaussiansFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#differenceofgaussiansmodel"><code class="docutils literal"><span class="pre">DifferenceOfGaussiansModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.gabor.html"><code class="docutils literal"><span class="pre">gabor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#gaborfit"><code class="docutils literal"><span class="pre">GaborFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#gabormodel"><code class="docutils literal"><span class="pre">GaborModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#generate-ballpark-prediction">generate_ballpark_prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#linregress">linregress</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.info.html"><code class="docutils literal"><span class="pre">info</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.og.html"><code class="docutils literal"><span class="pre">og</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#gaussianfit"><code class="docutils literal"><span class="pre">GaussianFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#gaussianmodel"><code class="docutils literal"><span class="pre">GaussianModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.ogb.html"><code class="docutils literal"><span class="pre">ogb</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#gaussianfit"><code class="docutils literal"><span class="pre">GaussianFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#gaussianmodel"><code class="docutils literal"><span class="pre">GaussianModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.onetime.html"><code class="docutils literal"><span class="pre">onetime</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#references">References</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#onetimeproperty"><code class="docutils literal"><span class="pre">OneTimeProperty</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#resetmixin"><code class="docutils literal"><span class="pre">ResetMixin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#setattr-on-read">setattr_on_read</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.plotting.html"><code class="docutils literal"><span class="pre">plotting</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#circle"><code class="docutils literal"><span class="pre">Circle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#logformattermathtext"><code class="docutils literal"><span class="pre">LogFormatterMathtext</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#lognorm"><code class="docutils literal"><span class="pre">LogNorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#gaussian-kde"><code class="docutils literal"><span class="pre">gaussian_kde</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#beta-hist">beta_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#eccentricity-hist">eccentricity_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#eccentricity-sigma-fill">eccentricity_sigma_fill</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#eccentricity-sigma-scatter">eccentricity_sigma_scatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#field-coverage">field_coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#hexbin-location-map">hexbin_location_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#hrf-delay-hist">hrf_delay_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#hrf-delay-kde">hrf_delay_kde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#lazy-field-coverage">lazy_field_coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#location-and-size-map">location_and_size_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#location-estimate-jointdist">location_estimate_jointdist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#make-movie-calleable">make_movie_calleable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#make-movie-static">make_movie_static</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#polar-angle-plot">polar_angle_plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.plotting.html#sigma-hrf-delay-scatter">sigma_hrf_delay_scatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.reconstruction.html"><code class="docutils literal"><span class="pre">reconstruction</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#process"><code class="docutils literal"><span class="pre">Process</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#queue">Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#multiprocess-stimulus-reconstruction">multiprocess_stimulus_reconstruction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#multiprocess-stimulus-reconstruction-realtime">multiprocess_stimulus_reconstruction_realtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus">reconstruct_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus-realtime">reconstruct_stimulus_realtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus-realtime-smoothing">reconstruct_stimulus_realtime_smoothing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.simulation.html"><code class="docutils literal"><span class="pre">simulation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#visualstimulus"><code class="docutils literal"><span class="pre">VisualStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#repeat"><code class="docutils literal"><span class="pre">repeat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#error-function">error_function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#fmin">fmin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-og-receptive-fields">generate_og_receptive_fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-scatter-volume">generate_scatter_volume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#parallel-simulate-neural-sigma">parallel_simulate_neural_sigma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#recast-simulation-results">recast_simulation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#resample-stimulus">resample_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#shuffle">shuffle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#simulate-bar-stimulus">simulate_bar_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#simulate-neural-sigma">simulate_neural_sigma</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporal.html"><code class="docutils literal"><span class="pre">spatiotemporal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporal_opt.html"><code class="docutils literal"><span class="pre">spatiotemporal_opt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-strf-weight-timeseries">generate_strf_weight_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporalmp.html"><code class="docutils literal"><span class="pre">spatiotemporalmp</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html"><code class="docutils literal"><span class="pre">spatiotemporalmp_opt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-strf-betas-timeseries">generate_strf_betas_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spectrotemporal.html"><code class="docutils literal"><span class="pre">spectrotemporal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#spectrotemporalfit"><code class="docutils literal"><span class="pre">SpectroTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#spectrotemporalmodel"><code class="docutils literal"><span class="pre">SpectroTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#compute-model-ts">compute_model_ts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#decimate">decimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#gaussian-1d">gaussian_1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#generate-rf-timeseries-1d">generate_rf_timeseries_1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#median-filter">median_filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#romb">romb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.strf.html"><code class="docutils literal"><span class="pre">strf</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#compute-model-ts">compute_model_ts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">utilities</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ols"><code class="docutils literal"><span class="pre">ols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#repeat"><code class="docutils literal"><span class="pre">repeat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#brute-force-search">brute_force_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#det">det</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diagonal">diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diff">diff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dot">dot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#double-gamma-hrf">double_gamma_hrf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-function">error_function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#find">find</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fmin">fmin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate-shared-array">generate_shared_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gradient-descent-search">gradient_descent_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inv">inv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#make-nifti">make_nifti</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiprocess-bundle">multiprocess_bundle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalize">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ones">ones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#percent-change">percent_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#randn">randn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#romb">romb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seed">seed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shuffle">shuffle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#solve">solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trapz">trapz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zscore">zscore</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.visual_stimulus.html"><code class="docutils literal"><span class="pre">visual_stimulus</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#visualstimulus"><code class="docutils literal"><span class="pre">VisualStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#generate-coordinate-matrices">generate_coordinate_matrices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#imread">imread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#loadmat">loadmat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#resample-stimulus">resample_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-bar-stimulus">simulate_bar_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-checkerboard-bar">simulate_checkerboard_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-movie-bar">simulate_movie_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-sinflicker-bar">simulate_sinflicker_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#square">square</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#zoom">zoom</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.xvalidation.html"><code class="docutils literal"><span class="pre">xvalidation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#coeff-of-determination">coeff_of_determination</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#deepcopy">deepcopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#kfold-xval">kfold_xval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#parallel-xval">parallel_xval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#recast-xval-results">recast_xval_results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">popeye</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">utilities</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/popeye.utilities.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="module-popeye.utilities">
+<span id="utilities"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">utilities</span></code><a class="headerlink" href="#module-popeye.utilities" title="Permalink to this headline">¶</a></h1>
+<p>This module contains various utility methods that support functionality in
+other modules.  The multiprocessing functionality also exists in this module,
+though that might change with time.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.ols" title="popeye.utilities.ols"><code class="xref py py-obj docutils literal"><span class="pre">ols</span></code></a>(y,&nbsp;x[,&nbsp;y_varnm,&nbsp;x_varnm])</td>
+<td>Author: Vincent Nijs (+ ?)</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.brute_force_search" title="popeye.utilities.brute_force_search"><code class="xref py py-obj docutils literal"><span class="pre">brute_force_search</span></code></a>(grids,&nbsp;bounds,&nbsp;Ns,&nbsp;data,&nbsp;...)</td>
+<td>A generic brute-force grid-search error minimization function.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.double_gamma_hrf" title="popeye.utilities.double_gamma_hrf"><code class="xref py py-obj docutils literal"><span class="pre">double_gamma_hrf</span></code></a>(delay,&nbsp;tr[,&nbsp;fptr,&nbsp;integrator])</td>
+<td>The double gamma hemodynamic reponse function (HRF).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.error_function" title="popeye.utilities.error_function"><code class="xref py py-obj docutils literal"><span class="pre">error_function</span></code></a>(parameters,&nbsp;bounds,&nbsp;data,&nbsp;...)</td>
+<td>A generic error function with bounding.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.find" title="popeye.utilities.find"><code class="xref py py-obj docutils literal"><span class="pre">find</span></code></a>(name,&nbsp;path)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.gaussian_2D" title="popeye.utilities.gaussian_2D"><code class="xref py py-obj docutils literal"><span class="pre">gaussian_2D</span></code></a>(X,&nbsp;Y,&nbsp;x0,&nbsp;y0,&nbsp;sigma_x,&nbsp;sigma_y,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.generate_shared_array" title="popeye.utilities.generate_shared_array"><code class="xref py py-obj docutils literal"><span class="pre">generate_shared_array</span></code></a>(unshared_arr,&nbsp;dtype)</td>
+<td>Creates synchronized shared arrays from numpy arrays.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.gradient_descent_search" title="popeye.utilities.gradient_descent_search"><code class="xref py py-obj docutils literal"><span class="pre">gradient_descent_search</span></code></a>(parameters,&nbsp;bounds,&nbsp;...)</td>
+<td>A generic gradient-descent error minimization function.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.make_nifti" title="popeye.utilities.make_nifti"><code class="xref py py-obj docutils literal"><span class="pre">make_nifti</span></code></a>(data[,&nbsp;grid_parent])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.multiprocess_bundle" title="popeye.utilities.multiprocess_bundle"><code class="xref py py-obj docutils literal"><span class="pre">multiprocess_bundle</span></code></a>(Fit,&nbsp;model,&nbsp;data,&nbsp;grids,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.normalize" title="popeye.utilities.normalize"><code class="xref py py-obj docutils literal"><span class="pre">normalize</span></code></a>(array[,&nbsp;imin,&nbsp;imax])</td>
+<td>A short-hand function for normalizing an array to a desired range.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.parallel_fit" title="popeye.utilities.parallel_fit"><code class="xref py py-obj docutils literal"><span class="pre">parallel_fit</span></code></a>(args)</td>
+<td>This is a convenience function for parallelizing the fitting procedure.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.percent_change" title="popeye.utilities.percent_change"><code class="xref py py-obj docutils literal"><span class="pre">percent_change</span></code></a>(ts[,&nbsp;ax])</td>
+<td>Returns the % signal change of each point of the times series</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.randn" title="popeye.utilities.randn"><code class="xref py py-obj docutils literal"><span class="pre">randn</span></code></a>(d0,&nbsp;d1,&nbsp;...,&nbsp;dn)</td>
+<td>Return a sample (or samples) from the &#8220;standard normal&#8221; distribution.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.recast_estimation_results" title="popeye.utilities.recast_estimation_results"><code class="xref py py-obj docutils literal"><span class="pre">recast_estimation_results</span></code></a>(output,&nbsp;grid_parent)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.utilities.seed" title="popeye.utilities.seed"><code class="xref py py-obj docutils literal"><span class="pre">seed</span></code></a>([seed])</td>
+<td>Seed the generator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.utilities.zscore" title="popeye.utilities.zscore"><code class="xref py py-obj docutils literal"><span class="pre">zscore</span></code></a>(time_series[,&nbsp;axis])</td>
+<td>Returns the z-score of each point of the time series along a given axis of the array time_series.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="ols">
+<h2><a class="reference internal" href="#popeye.utilities.ols" title="popeye.utilities.ols"><code class="xref py py-class docutils literal"><span class="pre">ols</span></code></a><a class="headerlink" href="#ols" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.utilities.ols">
+<em class="property">class </em><code class="descclassname">popeye.utilities.</code><code class="descname">ols</code><span class="sig-paren">(</span><em>y</em>, <em>x</em>, <em>y_varnm='y'</em>, <em>x_varnm=''</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Author: Vincent Nijs (+ ?)
+Email: v-nijs at kellogg.northwestern.edu
+Last Modified: Mon Jan 15 17:56:17 CST 2007</p>
+<dl class="method">
+<dt id="popeye.utilities.ols.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>y</em>, <em>x</em>, <em>y_varnm='y'</em>, <em>x_varnm=''</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.JB">
+<code class="descname">JB</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.JB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate residual skewness, kurtosis, and do the JB test for normality</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.dw">
+<code class="descname">dw</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.dw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the Durbin-Waston statistic</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.estimate">
+<code class="descname">estimate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.estimate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.ll">
+<code class="descname">ll</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.ll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate model log-likelihood and two information criteria</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.omni">
+<code class="descname">omni</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.omni" title="Permalink to this definition">¶</a></dt>
+<dd><p>Omnibus test for normality</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.utilities.ols.summary">
+<code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ols.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Printing model output to screen</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="repeat">
+<h2><a class="reference internal" href="#popeye.utilities.repeat" title="popeye.utilities.repeat"><code class="xref py py-class docutils literal"><span class="pre">repeat</span></code></a><a class="headerlink" href="#repeat" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.utilities.repeat">
+<em class="property">class </em><code class="descclassname">popeye.utilities.</code><code class="descname">repeat</code><span class="sig-paren">(</span><em>object</em><span class="optional">[</span>, <em>times</em><span class="optional">]</span><span class="sig-paren">)</span> &rarr; create an iterator which returns the object<a class="headerlink" href="#popeye.utilities.repeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>for the specified number of times.  If not specified, returns the object
+endlessly.</p>
+<dl class="method">
+<dt id="popeye.utilities.repeat.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.repeat.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="popeye.utilities.repeat.next">
+<code class="descname">next</code><a class="headerlink" href="#popeye.utilities.repeat.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="array">
+<h2>Array<a class="headerlink" href="#array" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.Array">
+<code class="descclassname">popeye.utilities.</code><code class="descname">Array</code><span class="sig-paren">(</span><em>typecode_or_type</em>, <em>size_or_initializer</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.Array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a synchronized shared array</p>
+</dd></dl>
+
+</div>
+<div class="section" id="brute">
+<h2>brute<a class="headerlink" href="#brute" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.brute">
+<code class="descclassname">popeye.utilities.</code><code class="descname">brute</code><span class="sig-paren">(</span><em>func</em>, <em>ranges</em>, <em>args=()</em>, <em>Ns=20</em>, <em>full_output=0</em>, <em>finish=&lt;function fmin&gt;</em>, <em>disp=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.brute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimize a function over a given range by brute force.</p>
+<dl class="docutils">
+<dt>func <span class="classifier-delimiter">:</span> <span class="classifier">callable <code class="docutils literal"><span class="pre">f(x,*args)</span></code></span></dt>
+<dd>Objective function to be minimized.</dd>
+<dt>ranges <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Each element is a tuple of parameters or a slice object to
+be handed to <code class="docutils literal"><span class="pre">numpy.mgrid</span></code>.</dd>
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Extra arguments passed to function.</dd>
+<dt>Ns <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Default number of samples, if those are not provided.</dd>
+<dt>full_output <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>If True, return the evaluation grid.</dd>
+<dt>finish <span class="classifier-delimiter">:</span> <span class="classifier">callable, optional</span></dt>
+<dd>An optimization function that is called with the result of brute force
+minimization as initial guess.  <cite>finish</cite> should take the initial guess
+as positional argument, and take take <cite>args</cite>, <cite>full_output</cite> and <cite>disp</cite>
+as keyword arguments.  See Notes for more details.</dd>
+<dt>disp <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>Set to True to print convergence messages.</dd>
+</dl>
+<dl class="docutils">
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Value of arguments to <cite>func</cite>, giving minimum over the grid.</dd>
+<dt>fval <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Function value at minimum.</dd>
+<dt>grid <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Representation of the evaluation grid.  It has the same
+length as x0.</dd>
+<dt>Jout <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Function values over grid:  <code class="docutils literal"><span class="pre">Jout</span> <span class="pre">=</span> <span class="pre">func(*grid)</span></code>.</dd>
+</dl>
+<p>The range is respected by the brute force minimization, but if the <cite>finish</cite>
+keyword specifies another optimization function (including the default
+<cite>fmin</cite>), the returned value may still be (just) outside the range.  In
+order to ensure the range is specified, use <code class="docutils literal"><span class="pre">finish=None</span></code>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="brute-force-search">
+<h2>brute_force_search<a class="headerlink" href="#brute-force-search" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.brute_force_search">
+<code class="descclassname">popeye.utilities.</code><code class="descname">brute_force_search</code><span class="sig-paren">(</span><em>grids</em>, <em>bounds</em>, <em>Ns</em>, <em>data</em>, <em>error_function</em>, <em>objective_function</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.brute_force_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic brute-force grid-search error minimization function.</p>
+<p>The user specifies an <cite>objective_function</cite> and the corresponding
+<cite>args</cite> for generating a model prediction.  The <cite>brute_force_search</cite>
+uses <cite>search_bounds</cite> to dictate the bounds for evenly sample the 
+parameter space.</p>
+<p>In addition, the user must also supply  <cite>fit_bounds</cite>, containing pairs 
+of upper and lower bounds for each of the values in parameters. 
+If <cite>fit_bounds</cite> is specified, the error minimization procedure in 
+<cite>error_function</cite> will return an Inf whether the parameters exceed the 
+minimum or maxmimum values specified in <cite>fit_bounds</cite>.</p>
+<p>The output of <cite>brute_force_search</cite> can be used as a seed-point for
+the fine-tuned solutions from <cite>gradient_descent_search</cite>.</p>
+<dl class="docutils">
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Arguments to <cite>objective_function</cite> that yield a model prediction.</dd>
+<dt>grids <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd><p class="first">A tuple indicating the search space for the brute-force grid-search.
+The tuple contains pairs of upper and lower bounds for exploring a
+given dimension.  For example <cite>grids=((-10,10),(0,5),)</cite> will
+search the first dimension from -10 to 10 and the second from 0 to 5.
+These values cannot be <cite>None</cite>.</p>
+<p class="last">For more information, see <cite>scipy.optimize.brute</cite>.</p>
+</dd>
+<dt>bounds <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A tuple containing the upper and lower bounds for each parameter
+in <cite>parameters</cite>.  If a parameter is not bounded, simply use
+<cite>None</cite>.  For example, <cite>fit_bounds=((0,None),(-10,10),)</cite> would 
+bound the first parameter to be any positive number while the
+second parameter would be bounded between -10 and 10.</dd>
+<dt>Ns <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first">Number of samples per stimulus dimension to sample during the ballpark search.</p>
+<p class="last">For more information, see <cite>scipy.optimize.brute</cite>.</p>
+</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The actual, measured time-series against which the model is fit.</dd>
+<dt>error_function <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The error function that relates the model prediction to the 
+measure data.  The error function returns a float that represents
+the residual sum of squared errors between the prediction and the
+data.</dd>
+<dt>objective_function <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The objective function that takes <cite>parameters</cite> and <cite>args</cite> and 
+proceduces a model time-series.</dd>
+</dl>
+<dl class="docutils">
+<dt>estimate <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>The model solution given <cite>parameters</cite> and <cite>objective_function</cite>.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="det">
+<h2>det<a class="headerlink" href="#det" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.det">
+<code class="descclassname">popeye.utilities.</code><code class="descname">det</code><span class="sig-paren">(</span><em>a</em>, <em>overwrite_a=False</em>, <em>check_finite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.det" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the determinant of a matrix</p>
+<p>The determinant of a square matrix is a value derived arithmetically
+from the coefficients of the matrix.</p>
+<p>The determinant for a 3x3 matrix, for example, is computed as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>a    b    c
+d    e    f = A
+g    h    i
+
+det(A) = a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(M, M) array_like</span></dt>
+<dd>A square matrix.</dd>
+<dt>overwrite_a <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Allow overwriting data in a (may enhance performance).</dd>
+<dt>check_finite <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional</span></dt>
+<dd>Whether to check the input matrixes contain only finite numbers.
+Disabling may give a performance gain, but may result to problems
+(crashes, non-termination) if the inputs do contain infinities or NaNs.</dd>
+</dl>
+<dl class="docutils">
+<dt>det <span class="classifier-delimiter">:</span> <span class="classifier">float or complex</span></dt>
+<dd>Determinant of <cite>a</cite>.</dd>
+</dl>
+<p>The determinant is computed via LU factorization, LAPACK routine z/dgetrf.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="diagonal">
+<h2>diagonal<a class="headerlink" href="#diagonal" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.diagonal">
+<code class="descclassname">popeye.utilities.</code><code class="descname">diagonal</code><span class="sig-paren">(</span><em>a</em>, <em>offset=0</em>, <em>axis1=0</em>, <em>axis2=1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.diagonal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return specified diagonals.</p>
+<p>If <cite>a</cite> is 2-D, returns the diagonal of <cite>a</cite> with the given offset,
+i.e., the collection of elements of the form <code class="docutils literal"><span class="pre">a[i,</span> <span class="pre">i+offset]</span></code>.  If
+<cite>a</cite> has more than two dimensions, then the axes specified by <cite>axis1</cite>
+and <cite>axis2</cite> are used to determine the 2-D sub-array whose diagonal is
+returned.  The shape of the resulting array can be determined by
+removing <cite>axis1</cite> and <cite>axis2</cite> and appending an index to the right equal
+to the size of the resulting diagonals.</p>
+<p>In versions of NumPy prior to 1.7, this function always returned a new,
+independent array containing a copy of the values in the diagonal.</p>
+<p>In NumPy 1.7 and 1.8, it continues to return a copy of the diagonal,
+but depending on this fact is deprecated. Writing to the resulting
+array continues to work as it used to, but a FutureWarning is issued.</p>
+<p>In NumPy 1.9 it returns a read-only view on the original array.
+Attempting to write to the resulting array will produce an error.</p>
+<p>In NumPy 1.10, it will return a read/write view, Writing to the returned
+array will alter your original array.</p>
+<p>If you don&#8217;t write to the array returned by this function, then you can
+just ignore all of the above.</p>
+<p>If you depend on the current behavior, then we suggest copying the
+returned array explicitly, i.e., use <code class="docutils literal"><span class="pre">np.diagonal(a).copy()</span></code> instead of
+just <code class="docutils literal"><span class="pre">np.diagonal(a)</span></code>. This will work with both past and future versions
+of NumPy.</p>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Array from which the diagonals are taken.</dd>
+<dt>offset <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Offset of the diagonal from the main diagonal.  Can be positive or
+negative.  Defaults to main diagonal (0).</dd>
+<dt>axis1 <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Axis to be used as the first axis of the 2-D sub-arrays from which
+the diagonals should be taken.  Defaults to first axis (0).</dd>
+<dt>axis2 <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Axis to be used as the second axis of the 2-D sub-arrays from
+which the diagonals should be taken. Defaults to second axis (1).</dd>
+</dl>
+<dl class="docutils">
+<dt>array_of_diagonals <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>If <cite>a</cite> is 2-D, a 1-D array containing the diagonal is returned.
+If the dimension of <cite>a</cite> is larger, then an array of diagonals is
+returned, &#8220;packed&#8221; from left-most dimension to right-most (e.g.,
+if <cite>a</cite> is 3-D, then the diagonals are &#8220;packed&#8221; along rows).</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError</dt>
+<dd>If the dimension of <cite>a</cite> is less than 2.</dd>
+</dl>
+<p>diag : MATLAB work-a-like for 1-D and 2-D arrays.
+diagflat : Create diagonal arrays.
+trace : Sum along diagonals.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">array([[0, 1],</span>
+<span class="go">       [2, 3]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+<span class="go">array([0, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">array([1])</span>
+</pre></div>
+</div>
+<p>A 3-D example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span> <span class="n">a</span>
+<span class="go">array([[[0, 1],</span>
+<span class="go">        [2, 3]],</span>
+<span class="go">       [[4, 5],</span>
+<span class="go">        [6, 7]]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="c"># Main diagonals of two arrays created by skipping</span>
+<span class="gp">... </span>           <span class="mi">0</span><span class="p">,</span> <span class="c"># across the outer(left)-most axis last and</span>
+<span class="gp">... </span>           <span class="mi">1</span><span class="p">)</span> <span class="c"># the &quot;middle&quot; (row) axis first.</span>
+<span class="go">array([[0, 6],</span>
+<span class="go">       [1, 7]])</span>
+</pre></div>
+</div>
+<p>The sub-arrays whose main diagonals we just obtained; note that each
+corresponds to fixing the right-most (column) axis, and that the
+diagonals are &#8220;packed&#8221; in rows.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="c"># main diagonal is [0 6]</span>
+<span class="go">array([[0, 2],</span>
+<span class="go">       [4, 6]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="c"># main diagonal is [1 7]</span>
+<span class="go">array([[1, 3],</span>
+<span class="go">       [5, 7]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="diff">
+<h2>diff<a class="headerlink" href="#diff" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.diff">
+<code class="descclassname">popeye.utilities.</code><code class="descname">diff</code><span class="sig-paren">(</span><em>a</em>, <em>n=1</em>, <em>axis=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the n-th order discrete difference along given axis.</p>
+<p>The first order difference is given by <code class="docutils literal"><span class="pre">out[n]</span> <span class="pre">=</span> <span class="pre">a[n+1]</span> <span class="pre">-</span> <span class="pre">a[n]</span></code> along
+the given axis, higher order differences are calculated by using <cite>diff</cite>
+recursively.</p>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Input array</dd>
+<dt>n <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The number of times values are differenced.</dd>
+<dt>axis <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The axis along which the difference is taken, default is the last axis.</dd>
+</dl>
+<dl class="docutils">
+<dt>diff <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The <cite>n</cite> order differences. The shape of the output is the same as <cite>a</cite>
+except along <cite>axis</cite> where the dimension is smaller by <cite>n</cite>.</dd>
+</dl>
+<p>gradient, ediff1d, cumsum</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">array([ 1,  2,  3, -7])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([  1,   1, -10])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">array([[2, 3, 4],</span>
+<span class="go">       [5, 1, 2]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([[-1,  2,  0, -2]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="dot">
+<h2>dot<a class="headerlink" href="#dot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.dot">
+<code class="descclassname">popeye.utilities.</code><code class="descname">dot</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dot product of two arrays.</p>
+<p>For 2-D arrays it is equivalent to matrix multiplication, and for 1-D
+arrays to inner product of vectors (without complex conjugation). For
+N dimensions it is a sum product over the last axis of <cite>a</cite> and
+the second-to-last of <cite>b</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,:]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">,:,</span><span class="n">m</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>First argument.</dd>
+<dt>b <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Second argument.</dd>
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">ndarray, optional</span></dt>
+<dd>Output argument. This must have the exact kind that would be returned
+if it was not used. In particular, it must have the right type, must be
+C-contiguous, and its dtype must be the dtype that would be returned
+for <cite>dot(a,b)</cite>. This is a performance feature. Therefore, if these
+conditions are not met, an exception is raised, instead of attempting
+to be flexible.</dd>
+</dl>
+<dl class="docutils">
+<dt>output <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Returns the dot product of <cite>a</cite> and <cite>b</cite>.  If <cite>a</cite> and <cite>b</cite> are both
+scalars or both 1-D arrays then a scalar is returned; otherwise
+an array is returned.
+If <cite>out</cite> is given, then it is returned.</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError</dt>
+<dd>If the last dimension of <cite>a</cite> is not the same size as
+the second-to-last dimension of <cite>b</cite>.</dd>
+</dl>
+<p>vdot : Complex-conjugating dot product.
+tensordot : Sum products over arbitrary axes.
+einsum : Einstein summation convention.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">12</span>
+</pre></div>
+</div>
+<p>Neither argument is complex-conjugated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">([</span><span class="mi">2j</span><span class="p">,</span> <span class="mi">3j</span><span class="p">],</span> <span class="p">[</span><span class="mi">2j</span><span class="p">,</span> <span class="mi">3j</span><span class="p">])</span>
+<span class="go">(-13+0j)</span>
+</pre></div>
+</div>
+<p>For 2-D arrays it&#8217;s the matrix product:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">array([[4, 1],</span>
+<span class="go">       [2, 2]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="mi">4</span><span class="o">*</span><span class="mi">5</span><span class="o">*</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="mi">4</span><span class="o">*</span><span class="mi">5</span><span class="o">*</span><span class="mi">6</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">499128</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,:,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">499128</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="double-gamma-hrf">
+<h2>double_gamma_hrf<a class="headerlink" href="#double-gamma-hrf" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.double_gamma_hrf">
+<code class="descclassname">popeye.utilities.</code><code class="descname">double_gamma_hrf</code><span class="sig-paren">(</span><em>delay</em>, <em>tr</em>, <em>fptr=1.0</em>, <em>integrator=&lt;function trapz&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.double_gamma_hrf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The double gamma hemodynamic reponse function (HRF). 
+The user specifies only the delay of the peak and undershoot.  
+The delay shifts the peak and undershoot by a variable number of 
+seconds. The other parameters are hardcoded. The HRF delay is 
+modeled for each voxel independently. The form of the HRF and the
+hardcoded values are based on previous work <a href="#id10"><span class="problematic" id="id11"><span id="id1"></span>[1]_</span></a>.</p>
+<dl class="docutils">
+<dt>delay <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The delay of the HRF peak and undershoot.</dd>
+<dt>tr <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The length of the repetition time in seconds.</dd>
+<dt>fptr <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The number of stimulus frames per reptition time.  For a 
+60 Hz projector and with a 1 s repetition time, the fptr 
+would be equal to 60.  It is possible that you will bin all 
+the frames in a single TR, in which case fptr equals 1.</dd>
+<dt>integrator <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The integration function for normalizing the units of the HRF 
+so that the area under the curve is the same for differently
+delayed HRFs.  Set integrator to None to turn off normalization.</dd>
+</dl>
+<dl class="docutils">
+<dt>hrf <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The hemodynamic response function to convolve with the stimulus
+timeseries.</dd>
+</dl>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Glover, GH (1999) Deconvolution of impulse response in event related</td></tr>
+</tbody>
+</table>
+<p>BOLD fMRI. NeuroImage 9, 416-429.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="error-function">
+<h2>error_function<a class="headerlink" href="#error-function" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.error_function">
+<code class="descclassname">popeye.utilities.</code><code class="descname">error_function</code><span class="sig-paren">(</span><em>parameters</em>, <em>bounds</em>, <em>data</em>, <em>objective_function</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.error_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic error function with bounding.</p>
+<dl class="docutils">
+<dt>parameters <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A tuple of values representing a model setting.</dd>
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Extra arguments to <cite>objective_function</cite> beyond those in <cite>parameters</cite>.</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The actual, measured time-series against which the model is fit.</dd>
+<dt>objective_function <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The objective function that takes <cite>parameters</cite> and <cite>args</cite> and 
+proceduces a model time-series.</dd>
+<dt>debug <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Useful for debugging a model, will print the parameters and error.</dd>
+</dl>
+<dl class="docutils">
+<dt>error <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The residual sum of squared errors between the prediction and data.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="find">
+<h2>find<a class="headerlink" href="#find" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.find">
+<code class="descclassname">popeye.utilities.</code><code class="descname">find</code><span class="sig-paren">(</span><em>name</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="fmin">
+<h2>fmin<a class="headerlink" href="#fmin" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.fmin">
+<code class="descclassname">popeye.utilities.</code><code class="descname">fmin</code><span class="sig-paren">(</span><em>func</em>, <em>x0</em>, <em>args=()</em>, <em>xtol=0.0001</em>, <em>ftol=0.0001</em>, <em>maxiter=None</em>, <em>maxfun=None</em>, <em>full_output=0</em>, <em>disp=1</em>, <em>retall=0</em>, <em>callback=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.fmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimize a function using the downhill simplex algorithm.</p>
+<p>This algorithm only uses function values, not derivatives or second
+derivatives.</p>
+<dl class="docutils">
+<dt>func <span class="classifier-delimiter">:</span> <span class="classifier">callable func(x,*args)</span></dt>
+<dd>The objective function to be minimized.</dd>
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Initial guess.</dd>
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd>Extra arguments passed to func, i.e. <code class="docutils literal"><span class="pre">f(x,*args)</span></code>.</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">callable, optional</span></dt>
+<dd>Called after each iteration, as callback(xk), where xk is the
+current parameter vector.</dd>
+<dt>xtol <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd>Relative error in xopt acceptable for convergence.</dd>
+<dt>ftol <span class="classifier-delimiter">:</span> <span class="classifier">number, optional</span></dt>
+<dd>Relative error in func(xopt) acceptable for convergence.</dd>
+<dt>maxiter <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Maximum number of iterations to perform.</dd>
+<dt>maxfun <span class="classifier-delimiter">:</span> <span class="classifier">number, optional</span></dt>
+<dd>Maximum number of function evaluations to make.</dd>
+<dt>full_output <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>Set to True if fopt and warnflag outputs are desired.</dd>
+<dt>disp <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>Set to True to print convergence messages.</dd>
+<dt>retall <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>Set to True to return list of solutions at each iteration.</dd>
+</dl>
+<dl class="docutils">
+<dt>xopt <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Parameter that minimizes function.</dd>
+<dt>fopt <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Value of function at minimum: <code class="docutils literal"><span class="pre">fopt</span> <span class="pre">=</span> <span class="pre">func(xopt)</span></code>.</dd>
+<dt>iter <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of iterations performed.</dd>
+<dt>funcalls <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of function calls made.</dd>
+<dt>warnflag <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>1 : Maximum number of function evaluations made.
+2 : Maximum number of iterations reached.</dd>
+<dt>allvecs <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>Solution at each iteration.</dd>
+</dl>
+<dl class="docutils">
+<dt>minimize: Interface to minimization algorithms for multivariate</dt>
+<dd>functions. See the &#8216;Nelder-Mead&#8217; <cite>method</cite> in particular.</dd>
+</dl>
+<p>Uses a Nelder-Mead simplex algorithm to find the minimum of function of
+one or more variables.</p>
+<p>This algorithm has a long history of successful use in applications.
+But it will usually be slower than an algorithm that uses first or
+second derivative information. In practice it can have poor
+performance in high-dimensional problems and is not robust to
+minimizing complicated functions. Additionally, there currently is no
+complete theory describing when the algorithm will successfully
+converge to the minimum, or how fast it will if it does.</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Nelder, J.A. and Mead, R. (1965), &#8220;A simplex method for function
+minimization&#8221;, The Computer Journal, 7, pp. 308-313</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Wright, M.H. (1996), &#8220;Direct Search Methods: Once Scorned, Now
+Respectable&#8221;, in Numerical Analysis 1995, Proceedings of the
+1995 Dundee Biennial Conference in Numerical Analysis, D.F.
+Griffiths and G.A. Watson (Eds.), Addison Wesley Longman,
+Harlow, UK, pp. 191-208.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="fmin-powell">
+<h2>fmin_powell<a class="headerlink" href="#fmin-powell" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.fmin_powell">
+<code class="descclassname">popeye.utilities.</code><code class="descname">fmin_powell</code><span class="sig-paren">(</span><em>func</em>, <em>x0</em>, <em>args=()</em>, <em>xtol=0.0001</em>, <em>ftol=0.0001</em>, <em>maxiter=None</em>, <em>maxfun=None</em>, <em>full_output=0</em>, <em>disp=1</em>, <em>retall=0</em>, <em>callback=None</em>, <em>direc=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.fmin_powell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimize a function using modified Powell&#8217;s method. This method
+only uses function values, not derivatives.</p>
+<dl class="docutils">
+<dt>func <span class="classifier-delimiter">:</span> <span class="classifier">callable f(x,*args)</span></dt>
+<dd>Objective function to be minimized.</dd>
+<dt>x0 <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Initial guess.</dd>
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple, optional</span></dt>
+<dd>Extra arguments passed to func.</dd>
+<dt>callback <span class="classifier-delimiter">:</span> <span class="classifier">callable, optional</span></dt>
+<dd>An optional user-supplied function, called after each
+iteration.  Called as <code class="docutils literal"><span class="pre">callback(xk)</span></code>, where <code class="docutils literal"><span class="pre">xk</span></code> is the
+current parameter vector.</dd>
+<dt>direc <span class="classifier-delimiter">:</span> <span class="classifier">ndarray, optional</span></dt>
+<dd>Initial direction set.</dd>
+<dt>xtol <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd>Line-search error tolerance.</dd>
+<dt>ftol <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd>Relative error in <code class="docutils literal"><span class="pre">func(xopt)</span></code> acceptable for convergence.</dd>
+<dt>maxiter <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Maximum number of iterations to perform.</dd>
+<dt>maxfun <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Maximum number of function evaluations to make.</dd>
+<dt>full_output <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>If True, fopt, xi, direc, iter, funcalls, and
+warnflag are returned.</dd>
+<dt>disp <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>If True, print convergence messages.</dd>
+<dt>retall <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>If True, return a list of the solution at each iteration.</dd>
+</dl>
+<dl class="docutils">
+<dt>xopt <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Parameter which minimizes <cite>func</cite>.</dd>
+<dt>fopt <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
+<dd>Value of function at minimum: <code class="docutils literal"><span class="pre">fopt</span> <span class="pre">=</span> <span class="pre">func(xopt)</span></code>.</dd>
+<dt>direc <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Current direction set.</dd>
+<dt>iter <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of iterations.</dd>
+<dt>funcalls <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of function calls made.</dd>
+<dt>warnflag <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><dl class="first last docutils">
+<dt>Integer warning flag:</dt>
+<dd>1 : Maximum number of function evaluations.
+2 : Maximum number of iterations.</dd>
+</dl>
+</dd>
+<dt>allvecs <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>List of solutions at each iteration.</dd>
+</dl>
+<dl class="docutils">
+<dt>minimize: Interface to unconstrained minimization algorithms for</dt>
+<dd>multivariate functions. See the &#8216;Powell&#8217; <cite>method</cite> in particular.</dd>
+</dl>
+<p>Uses a modification of Powell&#8217;s method to find the minimum of
+a function of N variables. Powell&#8217;s method is a conjugate
+direction method.</p>
+<p>The algorithm has two loops. The outer loop
+merely iterates over the inner loop. The inner loop minimizes
+over each current direction in the direction set. At the end
+of the inner loop, if certain conditions are met, the direction
+that gave the largest decrease is dropped and replaced with
+the difference between the current estiamted x and the estimated
+x from the beginning of the inner-loop.</p>
+<p>The technical conditions for replacing the direction of greatest
+increase amount to checking that</p>
+<ol class="arabic simple">
+<li>No further gain can be made along the direction of greatest increase
+from that iteration.</li>
+<li>The direction of greatest increase accounted for a large sufficient
+fraction of the decrease in the function value from that iteration of
+the inner loop.</li>
+</ol>
+<p>Powell M.J.D. (1964) An efficient method for finding the minimum of a
+function of several variables without calculating derivatives,
+Computer Journal, 7 (2):155-162.</p>
+<p>Press W., Teukolsky S.A., Vetterling W.T., and Flannery B.P.:
+Numerical Recipes (any edition), Cambridge University Press</p>
+</dd></dl>
+
+</div>
+<div class="section" id="gaussian-2d">
+<h2>gaussian_2D<a class="headerlink" href="#gaussian-2d" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.gaussian_2D">
+<code class="descclassname">popeye.utilities.</code><code class="descname">gaussian_2D</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>x0</em>, <em>y0</em>, <em>sigma_x</em>, <em>sigma_y</em>, <em>degrees</em>, <em>amplitude=1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.gaussian_2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="generate-shared-array">
+<h2>generate_shared_array<a class="headerlink" href="#generate-shared-array" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.generate_shared_array">
+<code class="descclassname">popeye.utilities.</code><code class="descname">generate_shared_array</code><span class="sig-paren">(</span><em>unshared_arr</em>, <em>dtype</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.generate_shared_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates synchronized shared arrays from numpy arrays.</p>
+<p>The function takes a numpy array <cite>unshared_arr</cite> and returns a shared
+memory object, <cite>shared_arr</cite>.  The user also specifies the data-type of
+the values in the array with the <cite>dataType</cite> argument.  See
+multiprocessing.Array and ctypes for details on shared memory arrays and
+the data-types.</p>
+<dl class="docutils">
+<dt>unshared_arr <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Array_like means all those objects &#8211; lists, nested lists, etc. &#8211;
+that can be converted to an array.  We can also refer to
+variables like <cite>var1</cite>.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">ctypes instance</span></dt>
+<dd>The data-type specificed has to be an instance of the ctypes library.
+See ctypes for details.</dd>
+</dl>
+<dl class="docutils">
+<dt>shared_arr <span class="classifier-delimiter">:</span> <span class="classifier">synchronized shared array</span></dt>
+<dd>An array that is read accessible from multiple processes/threads.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="gradient-descent-search">
+<h2>gradient_descent_search<a class="headerlink" href="#gradient-descent-search" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.gradient_descent_search">
+<code class="descclassname">popeye.utilities.</code><code class="descname">gradient_descent_search</code><span class="sig-paren">(</span><em>parameters</em>, <em>bounds</em>, <em>data</em>, <em>error_function</em>, <em>objective_function</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.gradient_descent_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic gradient-descent error minimization function.</p>
+<p>The values inside <cite>parameters</cite> are used as a seed-point for a 
+gradient-descent error minimization procedure <a href="#id12"><span class="problematic" id="id13"><span id="id5"></span>[1]_</span></a>.  The user must 
+also supply an <cite>objective_function</cite> for producing a model prediction
+and an <cite>error_function</cite> for relating that prediction to the actual,
+measured <cite>data</cite>.</p>
+<p>In addition, the user may also supply  <cite>fit_bounds</cite>, containing pairs 
+of upper and lower bounds for each of the values in parameters. 
+If <cite>fit_bounds</cite> is specified, the error minimization procedure in 
+<cite>error_function</cite> will return an Inf whether the parameters exceed the 
+minimum or maxmimum values specified in <cite>fit_bounds</cite>.</p>
+<dl class="docutils">
+<dt>parameters <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A tuple of values representing a model setting.</dd>
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Extra arguments to <cite>objective_function</cite> beyond those in <cite>parameters</cite>.</dd>
+<dt>fit_bounds <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>A tuple containing the upper and lower bounds for each parameter
+in <cite>parameters</cite>.  If a parameter is not bounded, simply use
+<cite>None</cite>.  For example, <cite>fit_bounds=((0,None),(-10,10),)</cite> would 
+bound the first parameter to be any positive number while the
+second parameter would be bounded between -10 and 10.</dd>
+<dt>data <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The actual, measured time-series against which the model is fit.</dd>
+<dt>error_function <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The error function that relates the model prediction to the 
+measure data.  The error function returns a float that represents
+the residual sum of squared errors between the prediction and the
+data.</dd>
+<dt>objective_function <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>The objective function that takes <cite>parameters</cite> and <cite>args</cite> and 
+proceduces a model time-series.</dd>
+</dl>
+<dl class="docutils">
+<dt>estimate <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>The model solution given <cite>parameters</cite> and <cite>objective_function</cite>.</dd>
+</dl>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Fletcher, R, Powell, MJD (1963) A rapidly convergent descent</td></tr>
+</tbody>
+</table>
+<p>method for minimization, Compututation Journal 6, 163-168.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="imresize">
+<h2>imresize<a class="headerlink" href="#imresize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.imresize">
+<code class="descclassname">popeye.utilities.</code><code class="descname">imresize</code><span class="sig-paren">(</span><em>arr</em>, <em>size</em>, <em>interp='bilinear'</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.imresize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize an image.</p>
+<dl class="docutils">
+<dt>arr <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The array of image to be resized.</dd>
+<dt>size <span class="classifier-delimiter">:</span> <span class="classifier">int, float or tuple</span></dt>
+<dd><ul class="first last simple">
+<li>int   - Percentage of current size.</li>
+<li>float - Fraction of current size.</li>
+<li>tuple - Size of the output image.</li>
+</ul>
+</dd>
+<dt>interp <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Interpolation to use for re-sizing (&#8216;nearest&#8217;, &#8216;bilinear&#8217;, &#8216;bicubic&#8217;
+or &#8216;cubic&#8217;).</dd>
+<dt>mode <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>The PIL image mode (&#8216;P&#8217;, &#8216;L&#8217;, etc.).</dd>
+</dl>
+<dl class="docutils">
+<dt>imresize <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The resized array of image.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="inv">
+<h2>inv<a class="headerlink" href="#inv" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.inv">
+<code class="descclassname">popeye.utilities.</code><code class="descname">inv</code><span class="sig-paren">(</span><em>a</em>, <em>overwrite_a=False</em>, <em>check_finite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse of a matrix.</p>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Square matrix to be inverted.</dd>
+<dt>overwrite_a <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>Discard data in <cite>a</cite> (may improve performance). Default is False.</dd>
+<dt>check_finite <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional</span></dt>
+<dd>Whether to check the input matrixes contain only finite numbers.
+Disabling may give a performance gain, but may result to problems
+(crashes, non-termination) if the inputs do contain infinities or NaNs.</dd>
+</dl>
+<dl class="docutils">
+<dt>ainv <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Inverse of the matrix <cite>a</cite>.</dd>
+</dl>
+<dl class="docutils">
+<dt>LinAlgError :</dt>
+<dd>If <cite>a</cite> is singular.</dd>
+<dt>ValueError :</dt>
+<dd>If <cite>a</cite> is not square, or not 2-dimensional.</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">array([[-2. ,  1. ],</span>
+<span class="go">       [ 1.5, -0.5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+<span class="go">array([[ 1.,  0.],</span>
+<span class="go">       [ 0.,  1.]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="make-nifti">
+<h2>make_nifti<a class="headerlink" href="#make-nifti" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.make_nifti">
+<code class="descclassname">popeye.utilities.</code><code class="descname">make_nifti</code><span class="sig-paren">(</span><em>data</em>, <em>grid_parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.make_nifti" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="multiprocess-bundle">
+<h2>multiprocess_bundle<a class="headerlink" href="#multiprocess-bundle" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.multiprocess_bundle">
+<code class="descclassname">popeye.utilities.</code><code class="descname">multiprocess_bundle</code><span class="sig-paren">(</span><em>Fit</em>, <em>model</em>, <em>data</em>, <em>grids</em>, <em>bounds</em>, <em>Ns</em>, <em>indices</em>, <em>auto_fit</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.multiprocess_bundle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="normalize">
+<h2>normalize<a class="headerlink" href="#normalize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.normalize">
+<code class="descclassname">popeye.utilities.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>array</em>, <em>imin=-1</em>, <em>imax=1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short-hand function for normalizing an array to a desired range.</p>
+<dl class="docutils">
+<dt>array <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>An array to be normalized.</dd>
+<dt>imin <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The desired minimum value in the output array.  Default: -1</dd>
+<dt>imax <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The desired maximum value in the output array.  Default: 1</dd>
+</dl>
+<dl class="docutils">
+<dt>array <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The normalized array with imin and imax as the minimum and 
+maximum values.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="ones">
+<h2>ones<a class="headerlink" href="#ones" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.ones">
+<code class="descclassname">popeye.utilities.</code><code class="descname">ones</code><span class="sig-paren">(</span><em>shape</em>, <em>dtype=None</em>, <em>order='C'</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.ones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new array of given shape and type, filled with ones.</p>
+<dl class="docutils">
+<dt>shape <span class="classifier-delimiter">:</span> <span class="classifier">int or sequence of ints</span></dt>
+<dd>Shape of the new array, e.g., <code class="docutils literal"><span class="pre">(2,</span> <span class="pre">3)</span></code> or <code class="docutils literal"><span class="pre">2</span></code>.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">data-type, optional</span></dt>
+<dd>The desired data-type for the array, e.g., <cite>numpy.int8</cite>.  Default is
+<cite>numpy.float64</cite>.</dd>
+<dt>order <span class="classifier-delimiter">:</span> <span class="classifier">{&#8216;C&#8217;, &#8216;F&#8217;}, optional</span></dt>
+<dd>Whether to store multidimensional data in C- or Fortran-contiguous
+(row- or column-wise) order in memory.</dd>
+</dl>
+<dl class="docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Array of ones with the given shape, dtype, and order.</dd>
+</dl>
+<p>zeros, ones_like</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">array([ 1.,  1.,  1.,  1.,  1.])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+<span class="go">array([1, 1, 1, 1, 1])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">array([[ 1.],</span>
+<span class="go">       [ 1.]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="go">array([[ 1.,  1.],</span>
+<span class="go">       [ 1.,  1.]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="parallel-fit">
+<h2>parallel_fit<a class="headerlink" href="#parallel-fit" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.parallel_fit">
+<code class="descclassname">popeye.utilities.</code><code class="descname">parallel_fit</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.parallel_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a convenience function for parallelizing the fitting
+procedure.  Each call is handed a tuple or list containing
+all the necessary inputs for instantiaing a <cite>GaussianFit</cite>
+class object and estimating the model parameters.</p>
+<dl class="docutils">
+<dt>args <span class="classifier-delimiter">:</span> <span class="classifier">list/tuple</span></dt>
+<dd>A list or tuple containing all the necessary inputs for fitting
+the Gaussian pRF model.</dd>
+</dl>
+<dl class="docutils">
+<dt>fit <span class="classifier-delimiter">:</span> <span class="classifier"><cite>Fit</cite> class object</span></dt>
+<dd>A fit object that contains all the inputs and outputs of the 
+pRF model estimation for a single voxel.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="percent-change">
+<h2>percent_change<a class="headerlink" href="#percent-change" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.percent_change">
+<code class="descclassname">popeye.utilities.</code><code class="descname">percent_change</code><span class="sig-paren">(</span><em>ts</em>, <em>ax=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.percent_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the % signal change of each point of the times series
+along a given axis of the array timeseries</p>
+<dl class="docutils">
+<dt>ts <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>an array of time series</dd>
+<dt>ax <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default to -1)</span></dt>
+<dd>the axis of time_series along which to compute means and stdevs</dd>
+</dl>
+<dl class="docutils">
+<dt>ndarray</dt>
+<dd>the renormalized time series array (in units of %)</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>  <span class="c"># for doctesting</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">percent_change</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span>
+<span class="go">array([[-100.    ,  -88.2353,  -78.9474,  -71.4286,  -65.2174],</span>
+<span class="go">       [ -33.3333,  -29.4118,  -26.3158,  -23.8095,  -21.7391],</span>
+<span class="go">       [  33.3333,   29.4118,   26.3158,   23.8095,   21.7391],</span>
+<span class="go">       [ 100.    ,   88.2353,   78.9474,   71.4286,   65.2174]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">percent_change</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span>
+<span class="go">array([[-100.    ,  -50.    ,    0.    ,   50.    ,  100.    ],</span>
+<span class="go">       [ -28.5714,  -14.2857,    0.    ,   14.2857,   28.5714],</span>
+<span class="go">       [ -16.6667,   -8.3333,    0.    ,    8.3333,   16.6667],</span>
+<span class="go">       [ -11.7647,   -5.8824,    0.    ,    5.8824,   11.7647]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="randn">
+<h2>randn<a class="headerlink" href="#randn" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.randn">
+<code class="descclassname">popeye.utilities.</code><code class="descname">randn</code><span class="sig-paren">(</span><em>d0</em>, <em>d1</em>, <em>...</em>, <em>dn</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.randn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a sample (or samples) from the &#8220;standard normal&#8221; distribution.</p>
+<p>If positive, int_like or int-convertible arguments are provided,
+<cite>randn</cite> generates an array of shape <code class="docutils literal"><span class="pre">(d0,</span> <span class="pre">d1,</span> <span class="pre">...,</span> <span class="pre">dn)</span></code>, filled
+with random floats sampled from a univariate &#8220;normal&#8221; (Gaussian)
+distribution of mean 0 and variance 1 (if any of the <img class="math" src="../_images/math/2103b4c0c596f5f943d001a8b55a44c2d73fd1c0.png" alt="d_i"/> are
+floats, they are first converted to integers by truncation). A single
+float randomly sampled from the distribution is returned if no
+argument is provided.</p>
+<p>This is a convenience function.  If you want an interface that takes a
+tuple as the first argument, use <cite>numpy.random.standard_normal</cite> instead.</p>
+<dl class="docutils">
+<dt>d0, d1, ..., dn <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The dimensions of the returned array, should be all positive.
+If no argument is given a single Python float is returned.</dd>
+</dl>
+<dl class="docutils">
+<dt>Z <span class="classifier-delimiter">:</span> <span class="classifier">ndarray or float</span></dt>
+<dd>A <code class="docutils literal"><span class="pre">(d0,</span> <span class="pre">d1,</span> <span class="pre">...,</span> <span class="pre">dn)</span></code>-shaped array of floating-point samples from
+the standard normal distribution, or a single such float if
+no parameters were supplied.</dd>
+</dl>
+<p>random.standard_normal : Similar, but takes a tuple as its argument.</p>
+<p>For random samples from <img class="math" src="../_images/math/d106a03e8b6cf8500c1da6536a9f8eb834258617.png" alt="N(\mu, \sigma^2)"/>, use:</p>
+<p><code class="docutils literal"><span class="pre">sigma</span> <span class="pre">*</span> <span class="pre">np.random.randn(...)</span> <span class="pre">+</span> <span class="pre">mu</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+<span class="go">2.1923875335537315 #random</span>
+</pre></div>
+</div>
+<p>Two-by-four array of samples from N(3, 6.25):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mf">2.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span>
+<span class="go">array([[-4.49401501,  4.00950034, -1.81814867,  7.29718677],  #random</span>
+<span class="go">       [ 0.39924804,  4.68456316,  4.99394529,  4.84057254]]) #random</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="recast-estimation-results">
+<h2>recast_estimation_results<a class="headerlink" href="#recast-estimation-results" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.recast_estimation_results">
+<code class="descclassname">popeye.utilities.</code><code class="descname">recast_estimation_results</code><span class="sig-paren">(</span><em>output</em>, <em>grid_parent</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.recast_estimation_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="romb">
+<h2>romb<a class="headerlink" href="#romb" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.romb">
+<code class="descclassname">popeye.utilities.</code><code class="descname">romb</code><span class="sig-paren">(</span><em>y</em>, <em>dx=1.0</em>, <em>axis=-1</em>, <em>show=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.romb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Romberg integration using samples of a function.</p>
+<dl class="docutils">
+<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>A vector of <code class="docutils literal"><span class="pre">2**k</span> <span class="pre">+</span> <span class="pre">1</span></code> equally-spaced samples of a function.</dd>
+<dt>dx <span class="classifier-delimiter">:</span> <span class="classifier">array_like, optional</span></dt>
+<dd>The sample spacing. Default is 1.</dd>
+<dt>axis <span class="classifier-delimiter">:</span> <span class="classifier">array_like?, optional</span></dt>
+<dd>The axis along which to integrate. Default is -1 (last axis).</dd>
+<dt>show <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd>When y is a single 1-D array, then if this argument is True
+print the table showing Richardson extrapolation from the
+samples. Default is False.</dd>
+</dl>
+<dl class="docutils">
+<dt>ret <span class="classifier-delimiter">:</span> <span class="classifier">array_like?</span></dt>
+<dd>The integrated result for each axis.</dd>
+</dl>
+<p>quad - adaptive quadrature using QUADPACK
+romberg - adaptive Romberg quadrature
+quadrature - adaptive Gaussian quadrature
+fixed_quad - fixed-order Gaussian quadrature
+dblquad, tplquad - double and triple integrals
+simps, trapz - integrators for sampled data
+cumtrapz - cumulative integration for sampled data
+ode, odeint - ODE integrators</p>
+</dd></dl>
+
+</div>
+<div class="section" id="seed">
+<h2>seed<a class="headerlink" href="#seed" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.seed">
+<code class="descclassname">popeye.utilities.</code><code class="descname">seed</code><span class="sig-paren">(</span><em>seed=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed the generator.</p>
+<p>This method is called when <cite>RandomState</cite> is initialized. It can be
+called again to re-seed the generator. For details, see <cite>RandomState</cite>.</p>
+<dl class="docutils">
+<dt>seed <span class="classifier-delimiter">:</span> <span class="classifier">int or array_like, optional</span></dt>
+<dd>Seed for <cite>RandomState</cite>.
+Must be convertable to 32 bit unsigned integers.</dd>
+</dl>
+<p>RandomState</p>
+</dd></dl>
+
+</div>
+<div class="section" id="shuffle">
+<h2>shuffle<a class="headerlink" href="#shuffle" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.shuffle">
+<code class="descclassname">popeye.utilities.</code><code class="descname">shuffle</code><span class="sig-paren">(</span><em>self</em>, <em>x</em>, <em>random=None</em>, <em>int=&lt;type 'int'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.shuffle" title="Permalink to this definition">¶</a></dt>
+<dd><p>x, random=random.random -&gt; shuffle list x in place; return None.</p>
+<p>Optional arg random is a 0-argument function returning a random
+float in [0.0, 1.0); by default, the standard random.random.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="solve">
+<h2>solve<a class="headerlink" href="#solve" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.solve">
+<code class="descclassname">popeye.utilities.</code><code class="descname">solve</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>sym_pos=False</em>, <em>lower=False</em>, <em>overwrite_a=False</em>, <em>overwrite_b=False</em>, <em>debug=False</em>, <em>check_finite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the equation <code class="docutils literal"><span class="pre">a</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code> for <code class="docutils literal"><span class="pre">x</span></code>.</p>
+<dl class="docutils">
+<dt>a <span class="classifier-delimiter">:</span> <span class="classifier">(M, M) array_like</span></dt>
+<dd>A square matrix.</dd>
+<dt>b <span class="classifier-delimiter">:</span> <span class="classifier">(M,) or (M, N) array_like</span></dt>
+<dd>Right-hand side matrix in <code class="docutils literal"><span class="pre">a</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code>.</dd>
+<dt>sym_pos <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Assume <cite>a</cite> is symmetric and positive definite.</dd>
+<dt>lower <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd>Use only data contained in the lower triangle of <cite>a</cite>, if <cite>sym_pos</cite> is
+true.  Default is to use upper triangle.</dd>
+<dt>overwrite_a <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Allow overwriting data in <cite>a</cite> (may enhance performance).
+Default is False.</dd>
+<dt>overwrite_b <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Allow overwriting data in <cite>b</cite> (may enhance performance).
+Default is False.</dd>
+<dt>check_finite <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional</span></dt>
+<dd>Whether to check the input matrixes contain only finite numbers.
+Disabling may give a performance gain, but may result to problems
+(crashes, non-termination) if the inputs do contain infinities or NaNs.</dd>
+</dl>
+<dl class="docutils">
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">(M,) or (M, N) ndarray</span></dt>
+<dd>Solution to the system <code class="docutils literal"><span class="pre">a</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">b</span></code>.  Shape of the return matches the
+shape of <cite>b</cite>.</dd>
+</dl>
+<dl class="docutils">
+<dt>LinAlgError</dt>
+<dd>If <cite>a</cite> is singular.</dd>
+</dl>
+<p>Given <cite>a</cite> and <cite>b</cite>, solve for <cite>x</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">array([ 2., -2.,  9.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">b</span>
+<span class="go">array([ True,  True,  True], dtype=bool)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="trapz">
+<h2>trapz<a class="headerlink" href="#trapz" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.trapz">
+<code class="descclassname">popeye.utilities.</code><code class="descname">trapz</code><span class="sig-paren">(</span><em>y</em>, <em>x=None</em>, <em>dx=1.0</em>, <em>axis=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.trapz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrate along the given axis using the composite trapezoidal rule.</p>
+<p>Integrate <cite>y</cite> (<cite>x</cite>) along given axis.</p>
+<dl class="docutils">
+<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Input array to integrate.</dd>
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">array_like, optional</span></dt>
+<dd>If <cite>x</cite> is None, then spacing between all <cite>y</cite> elements is <cite>dx</cite>.</dd>
+<dt>dx <span class="classifier-delimiter">:</span> <span class="classifier">scalar, optional</span></dt>
+<dd>If <cite>x</cite> is None, spacing given by <cite>dx</cite> is assumed. Default is 1.</dd>
+<dt>axis <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Specify the axis.</dd>
+</dl>
+<dl class="docutils">
+<dt>trapz <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Definite integral as approximated by trapezoidal rule.</dd>
+</dl>
+<p>sum, cumsum</p>
+<p>Image <a href="#id14"><span class="problematic" id="id15"><span id="id7"></span>[2]_</span></a> illustrates trapezoidal rule &#8211; y-axis locations of points
+will be taken from <cite>y</cite> array, by default x-axis distances between
+points will be 1.0, alternatively they can be provided with <cite>x</cite> array
+or with <cite>dx</cite> scalar.  Return value will be equal to combined area under
+the red lines.</p>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Wikipedia page: <a class="reference external" href="http://en.wikipedia.org/wiki/Trapezoidal_rule">http://en.wikipedia.org/wiki/Trapezoidal_rule</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Illustration image:
+<a class="reference external" href="http://en.wikipedia.org/wiki/File:Composite_trapezoidal_rule_illustration.png">http://en.wikipedia.org/wiki/File:Composite_trapezoidal_rule_illustration.png</a></td></tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+<span class="go">8.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">8.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">array([[0, 1, 2],</span>
+<span class="go">       [3, 4, 5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">array([ 1.5,  2.5,  3.5])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">array([ 2.,  8.])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="zscore">
+<h2>zscore<a class="headerlink" href="#zscore" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.utilities.zscore">
+<code class="descclassname">popeye.utilities.</code><code class="descname">zscore</code><span class="sig-paren">(</span><em>time_series</em>, <em>axis=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.utilities.zscore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the z-score of each point of the time series
+along a given axis of the array time_series.</p>
+<dl class="docutils">
+<dt>time_series <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>an array of time series</dd>
+<dt>axis <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>the axis of time_series along which to compute means and stdevs</dd>
+</dl>
+<dl class="docutils">
+<dt>zt <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>the renormalized time series array</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="popeye.visual_stimulus.html" class="btn btn-neutral float-right" title="visual_stimulus" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="popeye.strf.html" class="btn btn-neutral" title="strf" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Kevin DeSimone.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,1214 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plotting &mdash; popeye 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="popeye 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="index.html"/>
+        <link rel="next" title="reconstruction" href="popeye.reconstruction.html"/>
+        <link rel="prev" title="onetime" href="popeye.onetime.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> popeye
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../prf.html">What is a population receptive field?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../prf.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#demo">Demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#inspecting-the-results">Inspecting the results</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="popeye.html"><code class="docutils literal"><span class="pre">popeye</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.auditory.html"><code class="docutils literal"><span class="pre">auditory</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auditoryfit"><code class="docutils literal"><span class="pre">AuditoryFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auditorymodel"><code class="docutils literal"><span class="pre">AuditoryModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory.html#generate-rf-timeseries-1d">generate_rf_timeseries_1D</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.auditory_stimulus.html"><code class="docutils literal"><span class="pre">auditory_stimulus</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#auditorystimulus"><code class="docutils literal"><span class="pre">AuditoryStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#generate-spectrogram">generate_spectrogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.auditory_stimulus.html#specgram">specgram</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.base.html"><code class="docutils literal"><span class="pre">base</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.base.html#set-verbose">set_verbose</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.css.html"><code class="docutils literal"><span class="pre">css</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#compressivespatialsummationfit"><code class="docutils literal"><span class="pre">CompressiveSpatialSummationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#compressivespatialsummationmodel"><code class="docutils literal"><span class="pre">CompressiveSpatialSummationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.css.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.dog.html"><code class="docutils literal"><span class="pre">dog</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#differenceofgaussiansfit"><code class="docutils literal"><span class="pre">DifferenceOfGaussiansFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#differenceofgaussiansmodel"><code class="docutils literal"><span class="pre">DifferenceOfGaussiansModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.dog.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.gabor.html"><code class="docutils literal"><span class="pre">gabor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#gaborfit"><code class="docutils literal"><span class="pre">GaborFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#gabormodel"><code class="docutils literal"><span class="pre">GaborModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#generate-ballpark-prediction">generate_ballpark_prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.gabor.html#linregress">linregress</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.info.html"><code class="docutils literal"><span class="pre">info</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.og.html"><code class="docutils literal"><span class="pre">og</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#gaussianfit"><code class="docutils literal"><span class="pre">GaussianFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#gaussianmodel"><code class="docutils literal"><span class="pre">GaussianModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.og.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.ogb.html"><code class="docutils literal"><span class="pre">ogb</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#gaussianfit"><code class="docutils literal"><span class="pre">GaussianFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#gaussianmodel"><code class="docutils literal"><span class="pre">GaussianModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.ogb.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.onetime.html"><code class="docutils literal"><span class="pre">onetime</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#references">References</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#onetimeproperty"><code class="docutils literal"><span class="pre">OneTimeProperty</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#resetmixin"><code class="docutils literal"><span class="pre">ResetMixin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.onetime.html#setattr-on-read">setattr_on_read</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">plotting</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#circle"><code class="docutils literal"><span class="pre">Circle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logformattermathtext"><code class="docutils literal"><span class="pre">LogFormatterMathtext</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lognorm"><code class="docutils literal"><span class="pre">LogNorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gaussian-kde"><code class="docutils literal"><span class="pre">gaussian_kde</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#beta-hist">beta_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eccentricity-hist">eccentricity_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eccentricity-sigma-fill">eccentricity_sigma_fill</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eccentricity-sigma-scatter">eccentricity_sigma_scatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#field-coverage">field_coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hexbin-location-map">hexbin_location_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hrf-delay-hist">hrf_delay_hist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hrf-delay-kde">hrf_delay_kde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lazy-field-coverage">lazy_field_coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#location-and-size-map">location_and_size_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#location-estimate-jointdist">location_estimate_jointdist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#make-movie-calleable">make_movie_calleable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#make-movie-static">make_movie_static</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar-angle-plot">polar_angle_plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sigma-hrf-delay-scatter">sigma_hrf_delay_scatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.reconstruction.html"><code class="docutils literal"><span class="pre">reconstruction</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#process"><code class="docutils literal"><span class="pre">Process</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#queue">Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#multiprocess-stimulus-reconstruction">multiprocess_stimulus_reconstruction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#multiprocess-stimulus-reconstruction-realtime">multiprocess_stimulus_reconstruction_realtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus">reconstruct_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus-realtime">reconstruct_stimulus_realtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.reconstruction.html#reconstruct-stimulus-realtime-smoothing">reconstruct_stimulus_realtime_smoothing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.simulation.html"><code class="docutils literal"><span class="pre">simulation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#visualstimulus"><code class="docutils literal"><span class="pre">VisualStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#repeat"><code class="docutils literal"><span class="pre">repeat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#error-function">error_function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#fmin">fmin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-og-receptive-fields">generate_og_receptive_fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#generate-scatter-volume">generate_scatter_volume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#parallel-simulate-neural-sigma">parallel_simulate_neural_sigma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#recast-simulation-results">recast_simulation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#resample-stimulus">resample_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#shuffle">shuffle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#simulate-bar-stimulus">simulate_bar_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.simulation.html#simulate-neural-sigma">simulate_neural_sigma</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporal.html"><code class="docutils literal"><span class="pre">spatiotemporal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporal_opt.html"><code class="docutils literal"><span class="pre">spatiotemporal_opt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#generate-strf-weight-timeseries">generate_strf_weight_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporal_opt.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporalmp.html"><code class="docutils literal"><span class="pre">spatiotemporalmp</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html"><code class="docutils literal"><span class="pre">spatiotemporalmp_opt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#generate-strf-betas-timeseries">generate_strf_betas_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spatiotemporalmp_opt.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.spectrotemporal.html"><code class="docutils literal"><span class="pre">spectrotemporal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#spectrotemporalfit"><code class="docutils literal"><span class="pre">SpectroTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#spectrotemporalmodel"><code class="docutils literal"><span class="pre">SpectroTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#interp1d"><code class="docutils literal"><span class="pre">interp1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#compute-model-ts">compute_model_ts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#decimate">decimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#gaussian-1d">gaussian_1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#generate-rf-timeseries-1d">generate_rf_timeseries_1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#median-filter">median_filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#romb">romb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.spectrotemporal.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.strf.html"><code class="docutils literal"><span class="pre">strf</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#populationfit"><code class="docutils literal"><span class="pre">PopulationFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#populationmodel"><code class="docutils literal"><span class="pre">PopulationModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#spatiotemporalfit"><code class="docutils literal"><span class="pre">SpatioTemporalFit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#spatiotemporalmodel"><code class="docutils literal"><span class="pre">SpatioTemporalModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#auto-attr">auto_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#compute-model-ts">compute_model_ts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#fftconvolve">fftconvolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#generate-og-receptive-field">generate_og_receptive_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#generate-rf-timeseries">generate_rf_timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#linregress">linregress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#simps">simps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.strf.html#trapz">trapz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.utilities.html"><code class="docutils literal"><span class="pre">utilities</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#ols"><code class="docutils literal"><span class="pre">ols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#repeat"><code class="docutils literal"><span class="pre">repeat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#array">Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#brute">brute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#brute-force-search">brute_force_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#det">det</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#diagonal">diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#diff">diff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#dot">dot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#double-gamma-hrf">double_gamma_hrf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#error-function">error_function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#find">find</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#fmin">fmin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#fmin-powell">fmin_powell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#generate-shared-array">generate_shared_array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#gradient-descent-search">gradient_descent_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#inv">inv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#make-nifti">make_nifti</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#multiprocess-bundle">multiprocess_bundle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#normalize">normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#ones">ones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#parallel-fit">parallel_fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#percent-change">percent_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#randn">randn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#recast-estimation-results">recast_estimation_results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#romb">romb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#seed">seed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#shuffle">shuffle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#solve">solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#trapz">trapz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.utilities.html#zscore">zscore</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.visual_stimulus.html"><code class="docutils literal"><span class="pre">visual_stimulus</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#stimulusmodel"><code class="docutils literal"><span class="pre">StimulusModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#visualstimulus"><code class="docutils literal"><span class="pre">VisualStimulus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#gaussian-2d">gaussian_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#generate-coordinate-matrices">generate_coordinate_matrices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#imread">imread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#imresize">imresize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#loadmat">loadmat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#resample-stimulus">resample_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-bar-stimulus">simulate_bar_stimulus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-checkerboard-bar">simulate_checkerboard_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-movie-bar">simulate_movie_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#simulate-sinflicker-bar">simulate_sinflicker_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#square">square</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.visual_stimulus.html#zoom">zoom</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="popeye.xvalidation.html"><code class="docutils literal"><span class="pre">xvalidation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#coeff-of-determination">coeff_of_determination</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#deepcopy">deepcopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#kfold-xval">kfold_xval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#parallel-xval">parallel_xval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="popeye.xvalidation.html#recast-xval-results">recast_xval_results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">popeye</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">plotting</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/reference/popeye.plotting.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="module-popeye.plotting">
+<span id="plotting"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">plotting</span></code><a class="headerlink" href="#module-popeye.plotting" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.beta_hist" title="popeye.plotting.beta_hist"><code class="xref py py-obj docutils literal"><span class="pre">beta_hist</span></code></a>(beta,&nbsp;xlim,&nbsp;voxel_dim,&nbsp;plot_color,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.eccentricity_hist" title="popeye.plotting.eccentricity_hist"><code class="xref py py-obj docutils literal"><span class="pre">eccentricity_hist</span></code></a>(x,&nbsp;y,&nbsp;xlim,&nbsp;voxel_dim,&nbsp;dof)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.eccentricity_sigma_fill" title="popeye.plotting.eccentricity_sigma_fill"><code class="xref py py-obj docutils literal"><span class="pre">eccentricity_sigma_fill</span></code></a>(ecc,&nbsp;sigma,&nbsp;...[,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.eccentricity_sigma_scatter" title="popeye.plotting.eccentricity_sigma_scatter"><code class="xref py py-obj docutils literal"><span class="pre">eccentricity_sigma_scatter</span></code></a>(x,&nbsp;y,&nbsp;sigma,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.field_coverage" title="popeye.plotting.field_coverage"><code class="xref py py-obj docutils literal"><span class="pre">field_coverage</span></code></a>(x,&nbsp;y,&nbsp;s,&nbsp;deg_x,&nbsp;deg_y[,&nbsp;log,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.hexbin_location_map" title="popeye.plotting.hexbin_location_map"><code class="xref py py-obj docutils literal"><span class="pre">hexbin_location_map</span></code></a>(x,&nbsp;y)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.hrf_delay_hist" title="popeye.plotting.hrf_delay_hist"><code class="xref py py-obj docutils literal"><span class="pre">hrf_delay_hist</span></code></a>(measure,&nbsp;bins,&nbsp;voxel_dim,&nbsp;dof)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.hrf_delay_kde" title="popeye.plotting.hrf_delay_kde"><code class="xref py py-obj docutils literal"><span class="pre">hrf_delay_kde</span></code></a>(delays,&nbsp;kernel_width,&nbsp;...[,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.lazy_field_coverage" title="popeye.plotting.lazy_field_coverage"><code class="xref py py-obj docutils literal"><span class="pre">lazy_field_coverage</span></code></a>(field[,&nbsp;log,&nbsp;polar])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.location_and_size_map" title="popeye.plotting.location_and_size_map"><code class="xref py py-obj docutils literal"><span class="pre">location_and_size_map</span></code></a>(x,&nbsp;y,&nbsp;s,&nbsp;plot_color)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.location_estimate_jointdist" title="popeye.plotting.location_estimate_jointdist"><code class="xref py py-obj docutils literal"><span class="pre">location_estimate_jointdist</span></code></a>(x,&nbsp;y,&nbsp;plot_color)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.make_movie_calleable" title="popeye.plotting.make_movie_calleable"><code class="xref py py-obj docutils literal"><span class="pre">make_movie_calleable</span></code></a>(stim_arr,&nbsp;dims,&nbsp;vmin,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.make_movie_static" title="popeye.plotting.make_movie_static"><code class="xref py py-obj docutils literal"><span class="pre">make_movie_static</span></code></a>(stim_arr,&nbsp;dims[,&nbsp;vmin,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#popeye.plotting.polar_angle_plot" title="popeye.plotting.polar_angle_plot"><code class="xref py py-obj docutils literal"><span class="pre">polar_angle_plot</span></code></a>(x,&nbsp;y,&nbsp;voxel_dim,&nbsp;...[,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#popeye.plotting.sigma_hrf_delay_scatter" title="popeye.plotting.sigma_hrf_delay_scatter"><code class="xref py py-obj docutils literal"><span class="pre">sigma_hrf_delay_scatter</span></code></a>(sigma,&nbsp;hrf_delay,&nbsp;...)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="circle">
+<h2><a class="reference internal" href="#popeye.plotting.Circle" title="popeye.plotting.Circle"><code class="xref py py-class docutils literal"><span class="pre">Circle</span></code></a><a class="headerlink" href="#circle" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.plotting.Circle">
+<em class="property">class </em><code class="descclassname">popeye.plotting.</code><code class="descname">Circle</code><span class="sig-paren">(</span><em>xy</em>, <em>radius=5</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.Circle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">matplotlib.patches.Ellipse</span></code></p>
+<p>A circle patch.</p>
+<dl class="method">
+<dt id="popeye.plotting.Circle.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>xy</em>, <em>radius=5</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.Circle.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create true circle at center <em>xy</em> = (<em>x</em>, <em>y</em>) with given
+<em>radius</em>.  Unlike <code class="xref py py-class docutils literal"><span class="pre">CirclePolygon</span></code>
+which is a polygonal approximation, this uses Bézier splines
+and is much closer to a scale-free circle.</p>
+<dl class="docutils">
+<dt>Valid kwargs are:</dt>
+<dd>agg_filter: unknown
+alpha: float or None         
+animated: [True | False]         
+antialiased or aa: [True | False]  or None for default         
+axes: an <code class="xref py py-class docutils literal"><span class="pre">Axes</span></code> instance         
+capstyle: [&#8216;butt&#8217; | &#8216;round&#8217; | &#8216;projecting&#8217;]         
+clip_box: a <code class="xref py py-class docutils literal"><span class="pre">matplotlib.transforms.Bbox</span></code> instance         
+clip_on: [True | False]         
+clip_path: [ (<code class="xref py py-class docutils literal"><span class="pre">Path</span></code>,         <code class="xref py py-class docutils literal"><span class="pre">Transform</span></code>) |         <code class="xref py py-class docutils literal"><span class="pre">Patch</span></code> | None ]         
+color: matplotlib color spec
+contains: a callable function         
+edgecolor or ec: mpl color spec, or None for default, or &#8216;none&#8217; for no color         
+facecolor or fc: mpl color spec, or None for default, or &#8216;none&#8217; for no color         
+figure: a <code class="xref py py-class docutils literal"><span class="pre">matplotlib.figure.Figure</span></code> instance         
+fill: [True | False]         
+gid: an id string         
+hatch: [&#8216;/&#8217; | &#8216;\&#8217; | &#8216;|&#8217; | &#8216;-&#8216; | &#8216;+&#8217; | &#8216;x&#8217; | &#8216;o&#8217; | &#8216;O&#8217; | &#8216;.&#8217; | &#8216;*&#8217;]         
+joinstyle: [&#8216;miter&#8217; | &#8216;round&#8217; | &#8216;bevel&#8217;]         
+label: string or anything printable with &#8216;%s&#8217; conversion.         
+linestyle or ls: [&#8216;solid&#8217; | &#8216;dashed&#8217; | &#8216;dashdot&#8217; | &#8216;dotted&#8217;]         
+linewidth or lw: float or None for default         
+lod: [True | False]         
+path_effects: unknown
+picker: [None|float|boolean|callable]         
+rasterized: [True | False | None]         
+sketch_params: unknown
+snap: unknown
+transform: <code class="xref py py-class docutils literal"><span class="pre">Transform</span></code> instance         
+url: a url string         
+visible: [True | False]         
+zorder: any number</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.Circle.get_radius">
+<code class="descname">get_radius</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.Circle.get_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the radius of the circle</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="popeye.plotting.Circle.radius">
+<code class="descname">radius</code><a class="headerlink" href="#popeye.plotting.Circle.radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the radius of the circle</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.Circle.set_radius">
+<code class="descname">set_radius</code><span class="sig-paren">(</span><em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.Circle.set_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the radius of the circle</p>
+<p>ACCEPTS: float</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="logformattermathtext">
+<h2><a class="reference internal" href="#popeye.plotting.LogFormatterMathtext" title="popeye.plotting.LogFormatterMathtext"><code class="xref py py-class docutils literal"><span class="pre">LogFormatterMathtext</span></code></a><a class="headerlink" href="#logformattermathtext" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.plotting.LogFormatterMathtext">
+<em class="property">class </em><code class="descclassname">popeye.plotting.</code><code class="descname">LogFormatterMathtext</code><span class="sig-paren">(</span><em>base=10.0</em>, <em>labelOnlyBase=True</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogFormatterMathtext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">matplotlib.ticker.LogFormatter</span></code></p>
+<p>Format values for log axis; using <code class="docutils literal"><span class="pre">exponent</span> <span class="pre">=</span> <span class="pre">log_base(value)</span></code></p>
+<dl class="method">
+<dt id="popeye.plotting.LogFormatterMathtext.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>base=10.0</em>, <em>labelOnlyBase=True</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogFormatterMathtext.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>base</em> is used to locate the decade tick,
+which will be the only one to be labeled if <em>labelOnlyBase</em>
+is <code class="docutils literal"><span class="pre">False</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lognorm">
+<h2><a class="reference internal" href="#popeye.plotting.LogNorm" title="popeye.plotting.LogNorm"><code class="xref py py-class docutils literal"><span class="pre">LogNorm</span></code></a><a class="headerlink" href="#lognorm" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.plotting.LogNorm">
+<em class="property">class </em><code class="descclassname">popeye.plotting.</code><code class="descname">LogNorm</code><span class="sig-paren">(</span><em>vmin=None</em>, <em>vmax=None</em>, <em>clip=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">matplotlib.colors.Normalize</span></code></p>
+<p>Normalize a given value to the 0-1 range on a log scale</p>
+<dl class="method">
+<dt id="popeye.plotting.LogNorm.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>vmin=None</em>, <em>vmax=None</em>, <em>clip=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogNorm.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>vmin</em> or <em>vmax</em> is not given, they are taken from the input&#8217;s
+minimum and maximum value respectively.  If <em>clip</em> is <em>True</em> and
+the given value falls outside the range, the returned value
+will be 0 or 1, whichever is closer. Returns 0 if:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">vmin</span><span class="o">==</span><span class="n">vmax</span>
+</pre></div>
+</div>
+<p>Works with scalars or arrays, including masked arrays.  If
+<em>clip</em> is <em>True</em>, masked values are set to 1; otherwise they
+remain masked.  Clipping silently defeats the purpose of setting
+the over, under, and masked colors in the colormap, so it is
+likely to lead to surprises; therefore the default is
+<em>clip</em> = <em>False</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.LogNorm.autoscale">
+<code class="descname">autoscale</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogNorm.autoscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <em>vmin</em>, <em>vmax</em> to min, max of <em>A</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.LogNorm.autoscale_None">
+<code class="descname">autoscale_None</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogNorm.autoscale_None" title="Permalink to this definition">¶</a></dt>
+<dd><p>autoscale only None-valued vmin or vmax</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.LogNorm.inverse">
+<code class="descname">inverse</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.LogNorm.inverse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="gaussian-kde">
+<h2><a class="reference internal" href="#popeye.plotting.gaussian_kde" title="popeye.plotting.gaussian_kde"><code class="xref py py-class docutils literal"><span class="pre">gaussian_kde</span></code></a><a class="headerlink" href="#gaussian-kde" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="popeye.plotting.gaussian_kde">
+<em class="property">class </em><code class="descclassname">popeye.plotting.</code><code class="descname">gaussian_kde</code><span class="sig-paren">(</span><em>dataset</em>, <em>bw_method=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Representation of a kernel-density estimate using Gaussian kernels.</p>
+<p>Kernel density estimation is a way to estimate the probability density
+function (PDF) of a random variable in a non-parametric way.
+<cite>gaussian_kde</cite> works for both uni-variate and multi-variate data.   It
+includes automatic bandwidth determination.  The estimation works best for
+a unimodal distribution; bimodal or multi-modal distributions tend to be
+oversmoothed.</p>
+<dl class="docutils">
+<dt>dataset <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>Datapoints to estimate from. In case of univariate data this is a 1-D
+array, otherwise a 2-D array with shape (# of dims, # of data).</dd>
+<dt>bw_method <span class="classifier-delimiter">:</span> <span class="classifier">str, scalar or callable, optional</span></dt>
+<dd>The method used to calculate the estimator bandwidth.  This can be
+&#8216;scott&#8217;, &#8216;silverman&#8217;, a scalar constant or a callable.  If a scalar,
+this will be used directly as <cite>kde.factor</cite>.  If a callable, it should
+take a <cite>gaussian_kde</cite> instance as only parameter and return a scalar.
+If None (default), &#8216;scott&#8217; is used.  See Notes for more details.</dd>
+</dl>
+<dl class="docutils">
+<dt>dataset <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The dataset with which <cite>gaussian_kde</cite> was initialized.</dd>
+<dt>d <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of dimensions.</dd>
+<dt>n <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of datapoints.</dd>
+<dt>factor <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The bandwidth factor, obtained from <cite>kde.covariance_factor</cite>, with which
+the covariance matrix is multiplied.</dd>
+<dt>covariance <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The covariance matrix of <cite>dataset</cite>, scaled by the calculated bandwidth
+(<cite>kde.factor</cite>).</dd>
+<dt>inv_cov <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The inverse of <cite>covariance</cite>.</dd>
+</dl>
+<dl class="docutils">
+<dt>kde.evaluate(points) <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Evaluate the estimated pdf on a provided set of points.</dd>
+<dt>kde(points) <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Same as kde.evaluate(points)</dd>
+<dt>kde.integrate_gaussian(mean, cov) <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Multiply pdf with a specified Gaussian and integrate over the whole
+domain.</dd>
+<dt>kde.integrate_box_1d(low, high) <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Integrate pdf (1D only) between two bounds.</dd>
+<dt>kde.integrate_box(low_bounds, high_bounds) <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Integrate pdf over a rectangular space between low_bounds and
+high_bounds.</dd>
+<dt>kde.integrate_kde(other_kde) <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Integrate two kernel density estimates multiplied together.</dd>
+<dt>kde.resample(size=None) <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>Randomly sample a dataset from the estimated pdf.</dd>
+<dt>kde.set_bandwidth(bw_method=&#8217;scott&#8217;) <span class="classifier-delimiter">:</span> <span class="classifier">None</span></dt>
+<dd>Computes the bandwidth, i.e. the coefficient that multiplies the data
+covariance matrix to obtain the kernel covariance matrix.
+.. versionadded:: 0.11.0</dd>
+<dt>kde.covariance_factor <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Computes the coefficient (<cite>kde.factor</cite>) that multiplies the data
+covariance matrix to obtain the kernel covariance matrix.
+The default is <cite>scotts_factor</cite>.  A subclass can overwrite this method
+to provide a different method, or set it through a call to
+<cite>kde.set_bandwidth</cite>.</dd>
+</dl>
+<p>Bandwidth selection strongly influences the estimate obtained from the KDE
+(much more so than the actual shape of the kernel).  Bandwidth selection
+can be done by a &#8220;rule of thumb&#8221;, by cross-validation, by &#8220;plug-in
+methods&#8221; or by other means; see <a class="footnote-reference" href="#id10" id="id1">[3]</a>, <a class="footnote-reference" href="#id11" id="id2">[4]</a> for reviews.  <cite>gaussian_kde</cite>
+uses a rule of thumb, the default is Scott&#8217;s Rule.</p>
+<p>Scott&#8217;s Rule <a class="footnote-reference" href="#id8" id="id3">[1]</a>, implemented as <cite>scotts_factor</cite>, is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">n</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">d</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span>
+</pre></div>
+</div>
+<p>with <code class="docutils literal"><span class="pre">n</span></code> the number of data points and <code class="docutils literal"><span class="pre">d</span></code> the number of dimensions.
+Silverman&#8217;s Rule <a class="footnote-reference" href="#id9" id="id4">[2]</a>, implemented as <cite>silverman_factor</cite>, is:</p>
+<div class="highlight-python"><div class="highlight"><pre>n * (d + 2) / 4.)**(-1. / (d + 4)).
+</pre></div>
+</div>
+<p>Good general descriptions of kernel density estimation can be found in <a class="footnote-reference" href="#id8" id="id5">[1]</a>
+and <a class="footnote-reference" href="#id9" id="id6">[2]</a>, the mathematics for this multi-dimensional implementation can be
+found in <a class="footnote-reference" href="#id8" id="id7">[1]</a>.</p>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>, <a class="fn-backref" href="#id7">3</a>)</em> D.W. Scott, &#8220;Multivariate Density Estimation: Theory, Practice, and
+Visualization&#8221;, John Wiley &amp; Sons, New York, Chicester, 1992.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> B.W. Silverman, &#8220;Density Estimation for Statistics and Data
+Analysis&#8221;, Vol. 26, Monographs on Statistics and Applied Probability,
+Chapman and Hall, London, 1986.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[3]</a></td><td>B.A. Turlach, &#8220;Bandwidth Selection in Kernel Density Estimation: A
+Review&#8221;, CORE and Institut de Statistique, Vol. 19, pp. 1-33, 1993.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[4]</a></td><td>D.M. Bashtannyk and R.J. Hyndman, &#8220;Bandwidth selection for kernel
+conditional density estimation&#8221;, Computational Statistics &amp; Data
+Analysis, Vol. 36, pp. 279-298, 2001.</td></tr>
+</tbody>
+</table>
+<p>Generate some random two-dimensional data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s">&quot;Measurement model, return two coupled measurements.&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">m1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">m2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">m1</span><span class="o">+</span><span class="n">m2</span><span class="p">,</span> <span class="n">m1</span><span class="o">-</span><span class="n">m2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xmin</span> <span class="o">=</span> <span class="n">m1</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xmax</span> <span class="o">=</span> <span class="n">m1</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ymin</span> <span class="o">=</span> <span class="n">m2</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ymax</span> <span class="o">=</span> <span class="n">m2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Perform a kernel density estimate on the data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="n">xmin</span><span class="p">:</span><span class="n">xmax</span><span class="p">:</span><span class="mi">100j</span><span class="p">,</span> <span class="n">ymin</span><span class="p">:</span><span class="n">ymax</span><span class="p">:</span><span class="mi">100j</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">X</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">Y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kernel</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">gaussian_kde</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">kernel</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Plot the results:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">Z</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">gist_earth_r</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="s">&#39;k.&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>dataset</em>, <em>bw_method=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.covariance_factor">
+<code class="descname">covariance_factor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.covariance_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the estimated pdf on a set of points.</p>
+<dl class="docutils">
+<dt>points <span class="classifier-delimiter">:</span> <span class="classifier">(# of dimensions, # of points)-array</span></dt>
+<dd>Alternatively, a (# of dimensions,) vector can be passed in and
+treated as a single point.</dd>
+</dl>
+<dl class="docutils">
+<dt>values <span class="classifier-delimiter">:</span> <span class="classifier">(# of points,)-array</span></dt>
+<dd>The values at each point.</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError <span class="classifier-delimiter">:</span> <span class="classifier">if the dimensionality of the input points is different than</span></dt>
+<dd>the dimensionality of the KDE.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.integrate_box">
+<code class="descname">integrate_box</code><span class="sig-paren">(</span><em>low_bounds</em>, <em>high_bounds</em>, <em>maxpts=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.integrate_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the integral of a pdf over a rectangular interval.</p>
+<dl class="docutils">
+<dt>low_bounds <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>A 1-D array containing the lower bounds of integration.</dd>
+<dt>high_bounds <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>A 1-D array containing the upper bounds of integration.</dd>
+<dt>maxpts <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The maximum number of points to use for integration.</dd>
+</dl>
+<dl class="docutils">
+<dt>value <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>The result of the integral.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.integrate_box_1d">
+<code class="descname">integrate_box_1d</code><span class="sig-paren">(</span><em>low</em>, <em>high</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.integrate_box_1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the integral of a 1D pdf between two bounds.</p>
+<dl class="docutils">
+<dt>low <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>Lower bound of integration.</dd>
+<dt>high <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>Upper bound of integration.</dd>
+</dl>
+<dl class="docutils">
+<dt>value <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>The result of the integral.</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError</dt>
+<dd>If the KDE is over more than one dimension.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.integrate_gaussian">
+<code class="descname">integrate_gaussian</code><span class="sig-paren">(</span><em>mean</em>, <em>cov</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.integrate_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply estimated density by a multivariate Gaussian and integrate
+over the whole space.</p>
+<dl class="docutils">
+<dt>mean <span class="classifier-delimiter">:</span> <span class="classifier">aray_like</span></dt>
+<dd>A 1-D array, specifying the mean of the Gaussian.</dd>
+<dt>cov <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>A 2-D array, specifying the covariance matrix of the Gaussian.</dd>
+</dl>
+<dl class="docutils">
+<dt>result <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>The value of the integral.</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError :</dt>
+<dd>If the mean or covariance of the input Gaussian differs from
+the KDE&#8217;s dimensionality.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.integrate_kde">
+<code class="descname">integrate_kde</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.integrate_kde" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the integral of the product of this  kernel density estimate
+with another.</p>
+<dl class="docutils">
+<dt>other <span class="classifier-delimiter">:</span> <span class="classifier">gaussian_kde instance</span></dt>
+<dd>The other kde.</dd>
+</dl>
+<dl class="docutils">
+<dt>value <span class="classifier-delimiter">:</span> <span class="classifier">scalar</span></dt>
+<dd>The result of the integral.</dd>
+</dl>
+<dl class="docutils">
+<dt>ValueError</dt>
+<dd>If the KDEs have different dimensionality.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.resample">
+<code class="descname">resample</code><span class="sig-paren">(</span><em>size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomly sample a dataset from the estimated pdf.</p>
+<dl class="docutils">
+<dt>size <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The number of samples to draw.  If not provided, then the size is
+the same as the underlying dataset.</dd>
+</dl>
+<dl class="docutils">
+<dt>resample <span class="classifier-delimiter">:</span> <span class="classifier">(self.d, <cite>size</cite>) ndarray</span></dt>
+<dd>The sampled dataset.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.scotts_factor">
+<code class="descname">scotts_factor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.scotts_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.set_bandwidth">
+<code class="descname">set_bandwidth</code><span class="sig-paren">(</span><em>bw_method=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.set_bandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the estimator bandwidth with given method.</p>
+<p>The new bandwidth calculated after a call to <cite>set_bandwidth</cite> is used
+for subsequent evaluations of the estimated density.</p>
+<dl class="docutils">
+<dt>bw_method <span class="classifier-delimiter">:</span> <span class="classifier">str, scalar or callable, optional</span></dt>
+<dd>The method used to calculate the estimator bandwidth.  This can be
+&#8216;scott&#8217;, &#8216;silverman&#8217;, a scalar constant or a callable.  If a
+scalar, this will be used directly as <cite>kde.factor</cite>.  If a callable,
+it should take a <cite>gaussian_kde</cite> instance as only parameter and
+return a scalar.  If None (default), nothing happens; the current
+<cite>kde.covariance_factor</cite> method is kept.</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.11.</span></p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mf">5.</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kde</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">gaussian_kde</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y1</span> <span class="o">=</span> <span class="n">kde</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kde</span><span class="o">.</span><span class="n">set_bandwidth</span><span class="p">(</span><span class="n">bw_method</span><span class="o">=</span><span class="s">&#39;silverman&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y2</span> <span class="o">=</span> <span class="n">kde</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kde</span><span class="o">.</span><span class="n">set_bandwidth</span><span class="p">(</span><span class="n">bw_method</span><span class="o">=</span><span class="n">kde</span><span class="o">.</span><span class="n">factor</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y3</span> <span class="o">=</span> <span class="n">kde</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.</span> <span class="o">*</span> <span class="n">x1</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="s">&#39;bo&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">label</span><span class="o">=</span><span class="s">&#39;Data points (rescaled)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Scott (default)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Silverman&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">y3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Const (1/3 * Silverman)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="popeye.plotting.gaussian_kde.silverman_factor">
+<code class="descname">silverman_factor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.gaussian_kde.silverman_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="beta-hist">
+<h2>beta_hist<a class="headerlink" href="#beta-hist" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.beta_hist">
+<code class="descclassname">popeye.plotting.</code><code class="descname">beta_hist</code><span class="sig-paren">(</span><em>beta</em>, <em>xlim</em>, <em>voxel_dim</em>, <em>plot_color</em>, <em>label_name</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.beta_hist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="eccentricity-hist">
+<h2>eccentricity_hist<a class="headerlink" href="#eccentricity-hist" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.eccentricity_hist">
+<code class="descclassname">popeye.plotting.</code><code class="descname">eccentricity_hist</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>xlim</em>, <em>voxel_dim</em>, <em>dof</em>, <em>plot_alpha=1.0</em>, <em>plot_color='k'</em>, <em>label_name=None</em>, <em>show_legend=False</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.eccentricity_hist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="eccentricity-sigma-fill">
+<h2>eccentricity_sigma_fill<a class="headerlink" href="#eccentricity-sigma-fill" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.eccentricity_sigma_fill">
+<code class="descclassname">popeye.plotting.</code><code class="descname">eccentricity_sigma_fill</code><span class="sig-paren">(</span><em>ecc</em>, <em>sigma</em>, <em>plot_color</em>, <em>label_name</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.eccentricity_sigma_fill" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="eccentricity-sigma-scatter">
+<h2>eccentricity_sigma_scatter<a class="headerlink" href="#eccentricity-sigma-scatter" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.eccentricity_sigma_scatter">
+<code class="descclassname">popeye.plotting.</code><code class="descname">eccentricity_sigma_scatter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>sigma</em>, <em>xlim</em>, <em>ylim</em>, <em>min_n</em>, <em>dof</em>, <em>plot_alpha=1.0</em>, <em>plot_color='k'</em>, <em>label_name=None</em>, <em>show_legend=False</em>, <em>show_fit=False</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.eccentricity_sigma_scatter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="field-coverage">
+<h2>field_coverage<a class="headerlink" href="#field-coverage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.field_coverage">
+<code class="descclassname">popeye.plotting.</code><code class="descname">field_coverage</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>s</em>, <em>deg_x</em>, <em>deg_y</em>, <em>log=False</em>, <em>polar=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.field_coverage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="generate-og-receptive-field">
+<h2>generate_og_receptive_field<a class="headerlink" href="#generate-og-receptive-field" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.generate_og_receptive_field">
+<code class="descclassname">popeye.plotting.</code><code class="descname">generate_og_receptive_field</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.generate_og_receptive_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a Gaussian.</p>
+<dl class="docutils">
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The x coordinate of the center of the Gaussian (degrees)</dd>
+<dt>y <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The y coordinate of the center of the Gaussian (degrees)</dd>
+<dt>s <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The dispersion of the Gaussian (degrees)</dd>
+<dt>beta <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The amplitude of the Gaussian</dd>
+<dt>deg_x <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>The coordinate matrix along the horizontal dimension of the display (degrees)</dd>
+<dt>deg_y <span class="classifier-delimiter">:</span> <span class="classifier">2D array</span></dt>
+<dd>The coordinate matrix along the vertical dimension of the display (degrees)</dd>
+</dl>
+<p>Returns</p>
+<dl class="docutils">
+<dt>stim <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd>The 1D array containing the stimulus energies given the Gaussian coordinates</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="hexbin-location-map">
+<h2>hexbin_location_map<a class="headerlink" href="#hexbin-location-map" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.hexbin_location_map">
+<code class="descclassname">popeye.plotting.</code><code class="descname">hexbin_location_map</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.hexbin_location_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="hrf-delay-hist">
+<h2>hrf_delay_hist<a class="headerlink" href="#hrf-delay-hist" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.hrf_delay_hist">
+<code class="descclassname">popeye.plotting.</code><code class="descname">hrf_delay_hist</code><span class="sig-paren">(</span><em>measure</em>, <em>bins</em>, <em>voxel_dim</em>, <em>dof</em>, <em>plot_alpha=1.0</em>, <em>plot_color='k'</em>, <em>label_name=None</em>, <em>show_legend=False</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.hrf_delay_hist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="hrf-delay-kde">
+<h2>hrf_delay_kde<a class="headerlink" href="#hrf-delay-kde" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.hrf_delay_kde">
+<code class="descclassname">popeye.plotting.</code><code class="descname">hrf_delay_kde</code><span class="sig-paren">(</span><em>delays</em>, <em>kernel_width</em>, <em>plot_color</em>, <em>label_name</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.hrf_delay_kde" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="lazy-field-coverage">
+<h2>lazy_field_coverage<a class="headerlink" href="#lazy-field-coverage" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.lazy_field_coverage">
+<code class="descclassname">popeye.plotting.</code><code class="descname">lazy_field_coverage</code><span class="sig-paren">(</span><em>field</em>, <em>log=False</em>, <em>polar=False</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.lazy_field_coverage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="linregress">
+<h2>linregress<a class="headerlink" href="#linregress" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.linregress">
+<code class="descclassname">popeye.plotting.</code><code class="descname">linregress</code><span class="sig-paren">(</span><em>x</em>, <em>y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.linregress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate a regression line</p>
+<p>This computes a least-squares regression for two sets of measurements.</p>
+<dl class="docutils">
+<dt>x, y <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd>two sets of measurements.  Both arrays should have the same length.
+If only x is given (and y=None), then it must be a two-dimensional
+array where one dimension has length 2.  The two sets of measurements
+are then found by splitting the array along the length-2 dimension.</dd>
+</dl>
+<dl class="docutils">
+<dt>slope <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>slope of the regression line</dd>
+<dt>intercept <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>intercept of the regression line</dd>
+<dt>r-value <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>correlation coefficient</dd>
+<dt>p-value <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>two-sided p-value for a hypothesis test whose null hypothesis is
+that the slope is zero.</dd>
+<dt>stderr <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Standard error of the estimate</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p># To get coefficient of determination (r_squared)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="s">&quot;r-squared:&quot;</span><span class="p">,</span> <span class="n">r_value</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">r-squared: 0.15286643777</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="location-and-size-map">
+<h2>location_and_size_map<a class="headerlink" href="#location-and-size-map" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.location_and_size_map">
+<code class="descclassname">popeye.plotting.</code><code class="descname">location_and_size_map</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>s</em>, <em>plot_color</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.location_and_size_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="location-estimate-jointdist">
+<h2>location_estimate_jointdist<a class="headerlink" href="#location-estimate-jointdist" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.location_estimate_jointdist">
+<code class="descclassname">popeye.plotting.</code><code class="descname">location_estimate_jointdist</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>plot_color</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.location_estimate_jointdist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="make-movie-calleable">
+<h2>make_movie_calleable<a class="headerlink" href="#make-movie-calleable" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.make_movie_calleable">
+<code class="descclassname">popeye.plotting.</code><code class="descname">make_movie_calleable</code><span class="sig-paren">(</span><em>stim_arr</em>, <em>dims</em>, <em>vmin</em>, <em>vmax</em>, <em>fps</em>, <em>bitrate</em>, <em>dpi</em>, <em>fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.make_movie_calleable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="make-movie-static">
+<h2>make_movie_static<a class="headerlink" href="#make-movie-static" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.make_movie_static">
+<code class="descclassname">popeye.plotting.</code><code class="descname">make_movie_static</code><span class="sig-paren">(</span><em>stim_arr</em>, <em>dims</em>, <em>vmin=0</em>, <em>vmax=255</em>, <em>dpi=100</em>, <em>fps=60</em>, <em>write=False</em>, <em>fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.make_movie_static" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="polar-angle-plot">
+<h2>polar_angle_plot<a class="headerlink" href="#polar-angle-plot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.polar_angle_plot">
+<code class="descclassname">popeye.plotting.</code><code class="descname">polar_angle_plot</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>voxel_dim</em>, <em>num_radians</em>, <em>rlim</em>, <em>dof</em>, <em>plot_alpha=1.0</em>, <em>plot_color='k'</em>, <em>label_name=None</em>, <em>show_legend=False</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.polar_angle_plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="sigma-hrf-delay-scatter">
+<h2>sigma_hrf_delay_scatter<a class="headerlink" href="#sigma-hrf-delay-scatter" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="popeye.plotting.sigma_hrf_delay_scatter">
+<code class="descclassname">popeye.plotting.</code><code class="descname">sigma_hrf_delay_scatter</code><span class="sig-paren">(</span><em>sigma</em>, <em>hrf_delay</em>, <em>xlim</em>, <em>ylim</em>, <em>min_vox</em>, <em>n</em>, <em>plot_color</em>, <em>label_name</em>, <em>show_legend=False</em>, <em>fig=None</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#popeye.plotting.sigma_hrf_delay_scatter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="popeye.reconstruction.html" class="btn btn-neutral float-right" title="reconstruction" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="popeye.onetime.html" class="btn btn-neutral" title="onetime" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Kevin DeSimone.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
