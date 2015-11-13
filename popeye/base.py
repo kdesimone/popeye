@@ -9,12 +9,11 @@ import ctypes
 import numpy as np
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
-import statsmodels.api as sm
+import numpy as np
 
 def set_verbose(verbose):
     
-    """
-    A convenience function for setting the verbosity of a popeye model+fit.
+    r"""A convenience function for setting the verbosity of a popeye model+fit.
     
     Paramaters
     ----------
@@ -41,12 +40,11 @@ def set_verbose(verbose):
 
 class PopulationModel(object):
     
-    """ Base class for all pRF models."""
+    r""" Base class for all pRF models."""
     
     def __init__(self, stimulus, hrf_model):
         
-        """
-        Base class for all pRF models.
+        r"""Base class for all pRF models.
         
         Paramaters
         ----------
@@ -74,14 +72,12 @@ class PopulationModel(object):
 class PopulationFit(object):
     
     
-    """ Base class for all pRF model fits."""
+    r""" Base class for all pRF model fits."""
     
     
     def __init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose):
         
-        """
-        
-        A class containing tools for fitting pRF models.
+        r"""A class containing tools for fitting pRF models.
         
         The `PopulationFit` class houses all the fitting tool that are associated with 
         estimatinga pRF model.  The `PopulationFit` takes a `PoulationModel` instance 
@@ -152,13 +148,16 @@ class PopulationFit(object):
         if self.auto_fit:
             
             try:
-                
                 # start
                 self.start = time.clock()
                 
-                # the business
+                # init
                 self.ballpark
+                
+                # final
                 self.estimate
+                
+                # performance
                 self.OLS
                 self.rss
                 self.rsquared
@@ -170,13 +169,19 @@ class PopulationFit(object):
                 if self.verbose:
                     print(self.msg)
             
-            # failsafe
             except:
-                print('Fitting failed for voxel %s' %(self.voxel_index))
+                self.finish = time.clock()
+                self.rsquared = np.nan
+                self.rss = np.nan
+                self.rsquared = np.nan
+                self.ballpark = np.nan
+                self.estimate = np.nan
+                print('Voxel %s failed.' %(str(self.voxel_index)))
+            
     
     # the brute search
     @auto_attr
-    def ballpark(self):
+    def brute_force(self):
         return utils.brute_force_search(self.grids,
                                         self.bounds,
                                         self.Ns,
@@ -185,16 +190,60 @@ class PopulationFit(object):
                                         self.model.generate_ballpark_prediction,
                                         self.very_verbose)
      
+     
+    @auto_attr
+    def ballpark(self):
+        return self.brute_force[0]
+        
+    @auto_attr
+    def hrf0(self):
+        return self.brute_force[4]
+    
+    @auto_attr
+    def fval(self):
+        return self.brute_force[1]
+    
+    @auto_attr
+    def grid(self):
+        return self.brute_force[2]
+    
+    @auto_attr
+    def Jout(self):
+        return self.brute_force[3]
+    
     # the gradient search                                  
     @auto_attr
-    def estimate(self):
+    def gradient_descent(self):
         return utils.gradient_descent_search(self.ballpark,
                                              self.bounds,
                                              self.data,
                                              utils.error_function,
                                              self.model.generate_prediction,
                                              self.very_verbose)
+                                             
+    @auto_attr
+    def estimate(self):
+        return self.gradient_descent[0]
     
+    @auto_attr
+    def fopt(self):
+        return self.gradient_descent[1]
+    
+    @auto_attr
+    def direc(self):
+        return self.gradient_descent[2]
+    
+    @auto_attr
+    def iter(self):
+        return self.gradient_descent[3]
+    
+    @auto_attr
+    def funcalls(self):
+        return self.gradient_descent[4]
+    
+    @auto_attr
+    def allvecs(self):
+        return self.gradient_descent[6]
     
     @auto_attr
     def prediction(self):
@@ -202,30 +251,48 @@ class PopulationFit(object):
     
     @auto_attr
     def OLS(self):
-        return sm.OLS(self.data,self.prediction).fit()
+        return utils.ols(self.data,self.prediction)
     
     @auto_attr
     def coefficient(self):
-        return self.OLS.params[0]
+        return self.OLS.b[1]
     
     @auto_attr
     def rsquared(self):
-        return self.OLS.rsquared
+        return self.OLS.R2adj
     
     @auto_attr
     def stderr(self):
-        return np.sqrt(self.OLS.mse_resid)
+        return self.OLS.se[1]
     
     @auto_attr
     def rss(self):
         return np.sum((self.data - self.prediction)**2)
     
+    @auto_attr
+    def msg(self):
+        if self.auto_fit:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.finish-self.start,
+                  self.rsquared,
+                  np.round(self.estimate,2)))
+        else:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.rsquared,
+                  np.round(self.estimate,2)))            
+        return txt
+    
 class StimulusModel(object):
 
     def __init__(self, stim_arr, dtype=ctypes.c_int16, tr_length=1.0):
         
-        """
-        A base class for all encoding stimuli.
+        r"""A base class for all encoding stimuli.
         
         This class houses the basic and common features of the encoding stimulus, which
         along with a `PopulationModel` constitutes what is commonly referred to as the 

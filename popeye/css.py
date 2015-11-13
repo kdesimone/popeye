@@ -17,14 +17,14 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class CompressiveSpatialSummationModel(PopulationModel):
     
-    """
+    r"""
     A Compressive Spatial Summation population receptive field model class
     
     """
     
     def __init__(self, stimulus, hrf_model):
         
-        """
+        r"""
         A Compressive Spatial Summation population receptive field model [1]_.
         
         Paramaters
@@ -120,7 +120,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        """
+        r"""
         A class containing tools for fitting the CSS pRF model.
         
         The `CompressiveSpatialSummationFit` class houses all the fitting tool that 
@@ -237,23 +237,3 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
-    
-    @auto_attr
-    def prediction(self):
-        return self.model.generate_prediction(self.x, self.y, self.sigma, self.n, self.beta, self.hrf_delay)
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f  RHO=%.02d   SIGMA=%.02f   POWER=%.02f   BETA=%.08f  HRF=%.02f" 
-                    %(self.voxel_index[0],
-                      self.voxel_index[1],
-                      self.voxel_index[2],
-                      self.finish-self.start,
-                      self.rsquared,
-                      self.theta,
-                      self.rho,
-                      self.sigma,
-                      self.n,
-                      self.beta,
-                      self.hrf_delay))
-        return txt

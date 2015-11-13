@@ -9,8 +9,11 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 from __future__ import division
 import ctypes
 
+import matplotlib
+matplotlib.use('pdf')
+from matplotlib.mlab import specgram
+
 import numpy as np
-from matplotlib.pyplot import specgram
 from numpy.lib import stride_tricks
 from scipy.misc import imresize
 import nibabel
@@ -21,8 +24,7 @@ import popeye.utilities as utils
 
 def generate_spectrogram(signal, NFFT, Fs, noverlap):
     
-    """
-    A Gaussian population receptive field model [1]_.
+    r""" Generation of spectrogram from a 1D audio signal.
     
     Paramaters
     ----------
@@ -47,23 +49,21 @@ def generate_spectrogram(signal, NFFT, Fs, noverlap):
         is 128.
     
     
-    For more information, see help of `pylab.specgram`.
-
+    For more information, see help of `mlab.specgram`.
+    
     """
     
     
-    spectrogram, freqs, times, handle = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap);
+    spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
     
     return spectrogram, freqs, times
 
 class AuditoryStimulus(StimulusModel):
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, dtype,tr_length):
+    def __init__(self, stim_arr, NFFT, Fs, noverlap, resample_factor, dtype, tr_length):
         
-        
-        """
-        A child of the StimulusModel class for auditory stimuli.
+        r"""A child of the StimulusModel class for auditory stimuli.
         
         Paramaters
         ----------
@@ -101,6 +101,7 @@ class AuditoryStimulus(StimulusModel):
         self.NFFT = NFFT
         self.Fs = Fs
         self.noverlap = noverlap
+        self.resample_factor = resample_factor
         
         # create the vars via matplotlib
         spectrogram, freqs, times = generate_spectrogram(self.stim_arr, self.NFFT, self.Fs, self.noverlap)
@@ -108,6 +109,7 @@ class AuditoryStimulus(StimulusModel):
         # share them
         self.spectrogram = utils.generate_shared_array(spectrogram, ctypes.c_double)
         self.freqs = utils.generate_shared_array(freqs, ctypes.c_double)
+        self.times = utils.generate_shared_array(times, ctypes.c_double)
         
         # # why don't the times returned from specgram start at 0? they are time bin centers?
         # self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)

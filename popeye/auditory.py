@@ -9,7 +9,6 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.signal import fftconvolve
 from scipy.interpolate import interp1d
-import statsmodels.api as sm
 import nibabel
 
 from popeye.onetime import auto_attr
@@ -19,14 +18,9 @@ from popeye.spinach import generate_rf_timeseries_1D
 
 class AuditoryModel(PopulationModel):
     
-    """
-    1D Gaussian population receptive field model.
-    """
-    
     def __init__(self, stimulus, hrf_model):
         
-        """
-        A 1D Gaussian population receptive field model [1]_.
+        r"""A 1D Gaussian population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -45,16 +39,16 @@ class AuditoryModel(PopulationModel):
         
         .. [1] Thomas JM, Huber E, Stecker GC, Boynton GM, Saenz M, Fine I. (2015) 
         Population receptive field estimates in human auditory cortex. 
-        NeuroImage 105:428-439.
+        NeuroImage 105, 428-439.
         
         """
         
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_prediction(self, center_freq, sigma, beta, hrf_delay):
+    def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
-        """
+        r"""
         Generate a prediction for the 1D Gaussian model.
         
         This function generates a prediction of the 1D Gaussian model, 
@@ -81,12 +75,13 @@ class AuditoryModel(PopulationModel):
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
-        rf *= beta
         
         # if the rf runs off the coords
         if np.round(rf[0],3) != 0:
             return np.inf
-            
+        if np.round(rf[-1],3) != 0:
+            return np.inf
+        
         # create mask for speed
         distance = self.stimulus.freqs - center_freq
         mask = np.zeros_like(distance, dtype='uint8')
@@ -95,24 +90,30 @@ class AuditoryModel(PopulationModel):
         # extract the response
         response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
-        # resample the time-series to the BOLD 
+        # resample the model time-series to 10x Fs of the BOLD
         source_times = np.linspace(0, 1, len(response), endpoint=True)
         f = interp1d(source_times, response, kind='linear')
         num_volumes = self.stimulus.stim_arr.shape[0]/self.stimulus.Fs/self.stimulus.tr_length
-        target_times = np.linspace(0, 1, num_volumes, endpoint=True)
-        resampled_response = f(target_times)
+        target_times = np.linspace(0, 1, num_volumes*self.stimulus.resample_factor, endpoint=True)
+        response = f(target_times)
         
         # generate the HRF
-        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
+        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length, fptr=self.stimulus.resample_factor*self.stimulus.tr_length)
         
         # pad and convolve
-        model = fftconvolve(resampled_response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
+        
+        # scale by beta
+        model *= beta
+        
+        # add the offset
+        model += baseline
         
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, hrf_delay):
+    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
-        """
+        r"""
         Generate a prediction for the 1D Gaussian model.
         
         This function generates a prediction of the 1D Gaussian model, 
@@ -138,14 +139,14 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, hrf_delay)
+        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
 
 class AuditoryFit(PopulationFit):
     
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        """
+        r"""
         A class containing tools for fitting the 1D Gaussian pRF model.
         
         The `AuditoryFit` class houses all the fitting tool that are associated with 
@@ -205,7 +206,16 @@ class AuditoryFit(PopulationFit):
         
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
-        
+        self.data
+    
+    @auto_attr
+    def data(self):
+        source_times = np.linspace(0, 1, self.data, endpoint=True)
+        f = interp1d(source_times, self.data, kind='linear')
+        target_times = np.linspace(0, 1, self.shape[-1]*self.model.stimulus.resample_factor, endpoint=True)
+        resampled_timeseries = f(target_times)
+        return resampled_timeseries
+    
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]
@@ -219,8 +229,12 @@ class AuditoryFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
-    def hrf0(self):
+    def baseline0(self):
         return self.ballpark[3]
+    
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark[4]
     
     @auto_attr
     def center_freq(self):
@@ -235,20 +249,10 @@ class AuditoryFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def hrf_delay(self):
+    def baseline(self):
         return self.estimate[3]
     
-    
     @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  CENTER=%.02d   SIGMA=%.02f   BETA=%.08f   HRF=%.02f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.center_freq,
-              self.sigma,
-              self.beta,
-              self.hrf_delay))
-        return txt
+    def hrf_delay(self):
+        return self.estimate[4]
+    

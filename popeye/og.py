@@ -17,15 +17,9 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    """
-    A 2D Gaussian population receptive field model class.
-    
-    """
-    
     def __init__(self, stimulus, hrf_model):
         
-        """
-        A 2D Gaussian population receptive field model [1]_.
+        r"""A 2D Gaussian population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -68,7 +62,7 @@ class GaussianModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same') / len(response)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # scale it by beta
         model *= beta
@@ -94,16 +88,21 @@ class GaussianModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same') / len(response)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # scale it by beta
         model *= beta
         
-        return model 
+        return model
+    
+    def generate_receptive_field(self, x, y, sigma):
+        return generate_og_receptive_field(x, y, sigma,
+                                           self.stimulus.deg_x,
+                                           self.stimulus.deg_y)
         
 class GaussianFit(PopulationFit):
     
-    """
+    r"""
     A 2D Gaussian population receptive field fit class.
     
     """
@@ -111,7 +110,7 @@ class GaussianFit(PopulationFit):
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        """
+        r"""
         A class containing tools for fitting the 2D Gaussian pRF model.
         
         The `GaussianFit` class houses all the fitting tool that are associated with 
@@ -223,20 +222,6 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def receptive_field(self):
         return generate_og_receptive_field(self.x, self.y, self.sigma,
-                                           self.stimulus.deg_x,
-                                           self.stimulus.deg_y)
-    
-    @auto_attr
-    def msg(self):
-        txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  THETA=%.02f   RHO=%.02d   SIGMA=%.02f   BETA=%.08f   HRF=%.02f" 
-            %(self.voxel_index[0],
-              self.voxel_index[1],
-              self.voxel_index[2],
-              self.finish-self.start,
-              self.rsquared,
-              self.theta,
-              self.rho,
-              self.sigma,
-              self.beta,
-              self.hrf_delay))
-        return txt
+                                           self.model.stimulus.deg_x,
+                                           self.model.stimulus.deg_y)
+                                           

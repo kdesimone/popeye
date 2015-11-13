@@ -17,13 +17,12 @@ from scipy.misc import imresize
 from scipy.ndimage.filters import median_filter
 from scipy.integrate import romb, trapz
 from scipy.interpolate import interp1d
-import statsmodels.api as sm
 import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_rf_timeseries_1D, generate_strf_timeseries
+from popeye.spinach import generate_rf_timeseries_1D
 
 def recast_estimation_results(output, grid_parent, write=True):
     

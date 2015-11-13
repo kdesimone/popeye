@@ -5,7 +5,6 @@ import shutil
 from multiprocessing import Process, Queue, Array
 
 import numpy as np
-from pylab import find
 from scipy.interpolate import interp1d
 
 import nibabel
@@ -19,7 +18,7 @@ def reconstruct_stimulus(metaData,stimData,funcData,verbose=True):
     # HRF tau estimate 
     runLength = np.shape(stimData['stimRecon'])[-1]
     usTime = np.array([np.round(item,1) for item in np.r_[0:runLength-1:0.1]])
-
+    
     # printing niceties
     numVoxels = len(xi)
     voxelCount = 1

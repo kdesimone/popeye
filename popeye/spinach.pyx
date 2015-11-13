@@ -66,6 +66,54 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_strf_betas_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                                    np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                                    np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                                    np.ndarray[DTYPE_t, ndim=1] flicker_vec,
+                                    DTYPE2_t m_beta, DTYPE2_t p_beta):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+        
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(slim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] buff = np.zeros(slim,dtype=DTYPE2)
+
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):   
+                stim[s] += m_resp[t,flicker_vec[s]-1] * m_beta * amp + p_resp[t,flicker_vec[s]-1] * p_beta * amp
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_strf_weight_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                                    np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                                    np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                                    np.ndarray[DTYPE_t, ndim=1] flicker_vec,
+                                    DTYPE2_t weight):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+        
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(slim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] buff = np.zeros(slim,dtype=DTYPE2)
+
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):   
+                stim[s] += m_resp[t,flicker_vec[s]-1] * (1-weight) * amp + p_resp[t,flicker_vec[s]-1] * weight * amp
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_rf_timeseries(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
                            np.ndarray[DTYPE_t, ndim=2] mask):
@@ -268,9 +316,9 @@ def generate_og_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
-                                 np.ndarray[DTYPE2_t, ndim=2] spectrogram,
-                                 DTYPE2_t center_freq, DTYPE2_t sd):
+def generate_spectrotemporal_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
+                                        np.ndarray[DTYPE2_t, ndim=2] spectrogram,
+                                        DTYPE2_t center_freq, DTYPE2_t sd):
                                  
     """
     Generate a time-series given a stimulus array and Gaussian parameters.
@@ -336,10 +384,6 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
     
     Parameters
     ----------
-    deg_x : 2D array
-            The coordinate matrix along the horizontal dimension of the display (degrees)
-    deg_y : 2D array
-            The coordinate matrix along the vertical dimension of the display (degrees)
     x : float
        The x coordinate of the center of the Gaussian (degrees)
     y : float
@@ -348,6 +392,11 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
        The dispersion of the Gaussian (degrees)
     beta : float
         The amplitude of the Gaussian
+    deg_x : 2D array
+            The coordinate matrix along the horizontal dimension of the display (degrees)
+    deg_y : 2D array
+            The coordinate matrix along the vertical dimension of the display (degrees)
+       
        
     Returns
     
@@ -393,6 +442,60 @@ def generate_gabor_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     cdef DTYPE2_t s_factor3 = (3.0*s0)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_y.shape[1]
+    cdef DTYPE2_t pi_180 = np.pi/180
+    cdef DTYPE2_t theta_rad = theta * pi_180
+    cdef DTYPE2_t phi_rad = phi * pi_180
+    cdef DTYPE2_t pi_2 = np.pi * 2
+    cdef DTYPE2_t d
+    
+    # fodder
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYt = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYf = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] grating = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gauss = np.zeros((xlim,ylim),dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gabor = np.zeros((xlim,ylim),dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            
+            # only compute inside the sigma*3
+            d = (deg_x[i,j]-x0)**2 + (deg_y[i,j]-y0)**2
+            
+            if d <= s_factor3:
+                
+                # creating the grating
+                XYt[i,j] =  (deg_x[i,j] * cos(theta_rad)) + (deg_y[i,j] * sin(theta_rad))
+                XYf[i,j] = XYt[i,j] * cpd * pi_2
+                grating[i,j] = sin(XYf[i,j] + phi_rad)
+                
+                # create the gaussian
+                gauss[i,j] =  exp(-d/s_factor2)
+                
+                # create the gabor
+                gabor[i,j] = gauss[i,j] * grating[i,j]
+                
+    return gabor
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_gabor_receptive_field(DTYPE2_t x0,
+                                   DTYPE2_t y0,
+                                   DTYPE2_t s0,
+                                   DTYPE2_t theta,
+                                   DTYPE2_t phi,
+                                   DTYPE2_t cpd,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_y,
+                                   np.ndarray[DTYPE_t, ndim=3] stim_arr):
+                  
+    # cdef's
+    cdef int i,j,k
+    cdef DTYPE2_t s_factor2 = (2.0*s0**2)                                 
+    cdef DTYPE2_t s_factor3 = (3.0*s0)**2
+    cdef int xlim = deg_x.shape[0]
+    cdef int ylim = deg_y.shape[1]
+    cdef int zlim = stim_arr.shape[-1]
     cdef DTYPE2_t pi_180 = np.pi/180
     cdef DTYPE2_t theta_rad = theta * pi_180
     cdef DTYPE2_t phi_rad = phi * pi_180

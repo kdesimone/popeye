@@ -69,7 +69,7 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05):
+def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'):
     
     """Resamples the visual stimulus
     
@@ -89,6 +89,12 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     scale_factor : float
         The scale factor by which the stimulus is resampled.  The scale factor
         must be a float, and must be greater than 0.
+    
+    mode : str, optional
+        Points outside the boundaries of the input are filled according
+        to the given mode ('constant', 'nearest', 'reflect' or 'wrap').
+        Default is 'nearest'.
+        
         
     Returns
     -------
@@ -98,13 +104,13 @@ def resample_stimulus(stim_arr, scale_factor=0.05):
     
     dims = np.shape(stim_arr)
     
-    resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]))
+    resampled_arr = np.zeros((dims[0]*scale_factor, dims[1]*scale_factor, dims[2]),dtype=dtype)
     
     # loop
     for tr in np.arange(dims[-1]):
         
         # resize it
-        f = zoom(stim_arr[:,:,tr], scale_factor)
+        f = zoom(stim_arr[:,:,tr], scale_factor, mode=mode)
         
         # insert it
         resampled_arr[:,:,tr] = f
@@ -177,17 +183,14 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
     # flicker
     t = np.linspace(0,total_secs,total_secs*projector_hz)
     full_run = np.sin(2 * np.pi * flicker_hz * t)
-    np.round(utils.normalize(full_run,-127,127)).astype('short')
+    full_run = np.uint8((full_run + 1) * 128)
     
     # visuotopic stuff
     ppd = np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0 # degrees of visual angle
     deg_x, deg_y = generate_coordinate_matrices(pixels_across, pixels_down, ppd, 1.0)
     
-    # create the unmasked stimulus
-    full_field = np.ones((pixels_down,pixels_across)).astype('short')
-    
     # initialize the bar array
-    bar_stimulus = np.zeros((pixels_down, pixels_across, total_frames)).astype('short')
+    bar_stimulus = np.uint8(np.ones((pixels_down, pixels_across, total_frames)))
     
     # counter
     tr_num = 0
@@ -229,8 +232,14 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                     # get the frame number
                     f_num = tr_num * frames_per_vol + fr
                     
-                    # set the frame
-                    bar_stimulus[:,:,f_num] = full_field * full_run[f_num] * Z_mask
+                    # set the frame to mean lum
+                    bar_stimulus[:,:,f_num] = 128
+                    
+                    # get the bar pixels
+                    xx,yy = np.nonzero(Z_mask)
+                    
+                    # set the amp modulation
+                    bar_stimulus[xx,yy,f_num] = full_run[f_num]
                     
                 # iterate TR
                 tr_num += 1
@@ -247,7 +256,7 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                     f_num = tr_num * frames_per_vol + f
                     
                     # set the frame to mean luminance
-                    bar_stimulus[:,:,f_num] = 0
+                    bar_stimulus[:,:,f_num] = 128
                     
                 # iterate
                 tr_num += 1
@@ -656,8 +665,10 @@ class VisualStimulus(StimulusModel):
         # share coordinate matrices
         self.deg_x = utils.generate_shared_array(deg_x, ctypes.c_double)
         self.deg_y = utils.generate_shared_array(deg_y, ctypes.c_double)
+        self.stim_arr = utils.generate_shared_array(stim_arr, dtype)
         
         if self.scale_factor == 1.0:
+            
             
             self.stim_arr_coarse = self.stim_arr
             self.deg_x_coarse = self.deg_x
