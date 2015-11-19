@@ -201,24 +201,20 @@ class SpatioTemporalFit(PopulationFit):
         return self.ballpark[2]
         
     @auto_attr
-    def beta0(self):
+    def mbeta0(self):
         return self.ballpark[3]
     
     @auto_attr
-    def baseline0(self):
+    def pbeta0(self):
         return self.ballpark[4]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[5]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark[5]
-    
-    @auto_attr
-    def mbeta0(self):
         return self.ballpark[6]
-    
-    @auto_attr
-    def pbeta0(self):
-        return self.ballpark[7]
         
     @auto_attr
     def x(self):
@@ -233,23 +229,19 @@ class SpatioTemporalFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def beta(self):
-        return self.estimate[3]
-    
-    def baseline(self):
-        return self.estimate[4]
-        
-    @auto_attr
-    def hrf_delay(self):
-        return self.estimate[5]
-    
-    @auto_attr
     def mbeta(self):
-        return self.estimate[6]
+        return self.estimate[3]
     
     @auto_attr
     def pbeta(self):
-        return self.estimate[7]
+        return self.estimate[4]
+    
+    def baseline(self):
+        return self.estimate[5]
+        
+    @auto_attr
+    def hrf_delay(self):
+        return self.estimate[6]
     
     @auto_attr
     def prediction(self):
