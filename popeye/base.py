@@ -149,7 +149,7 @@ class PopulationFit(object):
             
             try:
                 # start
-                self.start = time.clock()
+                self.start = time.now()
                 
                 # init
                 self.ballpark
@@ -163,7 +163,7 @@ class PopulationFit(object):
                 self.rsquared
                 
                 # finish
-                self.finish = time.clock()
+                self.finish = time.now()
                 
                 # print
                 if self.verbose:
