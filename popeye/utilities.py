@@ -333,6 +333,12 @@ def error_function(parameters, bounds, data, objective_function, verbose):
     
     # compute the RSS
     prediction = objective_function(*ensemble)
+    
+    # if nan, return inf
+    if np.any(np.isnan(prediction)):
+        return np.inf
+    
+    # else, return RSS
     error = np.sum((data-prediction)**2)
     
     # print for debugging
@@ -555,10 +561,31 @@ def parallel_fit(args):
               verbose)
     return fit
 
+def cartes_to_polar(cartes):
+    
+    """
+    Assumes that the 0th and 1st parameters are cartesian `x` and `y`
+    """
+    polar = cartes.copy()
+    polar[...,0] = np.mod(np.arctan2(cartes[...,1], cartes[...,0]),2*np.pi)
+    polar[...,1] = np.sqrt(polar[...,0]**2 + polar[...,1]**2)
+    return polar
+    
+    
 def find(name, path):
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
+
+def binner(signal, times, bins):
+    binned_response = np.zeros_like(bins)
+    bin_width = bins[1] - bins[0]
+    for t in xrange(len(bins)):
+        the_bin = bins[t]
+        binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
+        binned_response[t] = np.sum(binned_signal)
+    return binned_response
+    
 
 class ols:
     """

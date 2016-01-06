@@ -170,7 +170,7 @@ class PopulationFit(object):
                     print(self.msg)
             
             except:
-                self.finish = time.clock()
+                self.finish = time.time()
                 self.rsquared = np.nan
                 self.rss = np.nan
                 self.rsquared = np.nan
