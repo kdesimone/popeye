@@ -586,7 +586,7 @@ def binner(signal, times, bins):
         binned_response[t] = np.sum(binned_signal)
     return binned_response
 
-def save_pickle(output, output):
+def save_pickle(output, filename):
     
     # since we memmap'd the functional data, 
     # we need to unmemmap to pickle
