@@ -586,7 +586,27 @@ def binner(signal, times, bins):
         binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
         binned_response[t] = np.sum(binned_signal)
     return binned_response
+
+def save_pickle(output, filename):
     
+    # since we memmap'd the functional data, 
+    # we need to unmemmap to pickle
+    output_clean = [o for o in output]
+    for o in output_clean:
+        o.clean_data = np.array(o.data.copy())
+    
+    # pickle
+    f = open(filename,"rb")
+    cPickle.dump(output, f, protocol=2)
+    f.close()
+
+def load_pickle(filename):
+    
+    f = open(filename,"rb")
+    output = cPickle.load(f)
+    f.close()
+    
+    return output
 
 class ols:
     """
