@@ -21,6 +21,7 @@ from scipy.linalg import inv, solve, det
 from numpy import log, pi, sqrt, square, diagonal
 from numpy.random import randn, seed
 import sharedmem
+import cPickle
 
 def recast_estimation_results(output, grid_parent):
     
