@@ -8,6 +8,7 @@ import numpy.testing as npt
 import nibabel
 
 import popeye.utilities as utils
+import popeye.spinach as utils
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
@@ -410,3 +411,19 @@ def test_parallel_fit():
         nt.assert_almost_equal(fit.sigma, sigma, 2)
         nt.assert_almost_equal(fit.beta, beta, 2)
         nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+
+def test_binner():
+    
+    signal = np.random.rand(1000)
+    times = np.linspace(0,100,1000)
+    bins = np.arange(-0.5,101.5,1)
+    
+    a = utils.binner(signal, times, bins)
+    b = spin.binner(signal, times, bins)
+    
+    nt.assert_equal(a,b)
+    
+    
+    
+    
+    
