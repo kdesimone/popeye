@@ -14,7 +14,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_rf_timeseries_1D
+from popeye.spinach import generate_rf_timeseries_1D, binner
 
 class AuditoryModel(PopulationModel):
     
@@ -91,7 +91,7 @@ class AuditoryModel(PopulationModel):
         response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
         # bin the response to the resolution of the BOLD data
-        binned_response = utils.binner(response,self.stimulus.times,np.arange(0-self.stimulus.tr_length/2,np.ceil(self.stimulus.times[-1])+self.stimulus.tr_length/2,self.stimulus.tr_length))
+        binned_response = binner(response,self.stimulus.times,np.arange(0-self.stimulus.tr_length/2,np.ceil(self.stimulus.times[-1])+self.stimulus.tr_length/2,self.stimulus.tr_length))
         
         # generate the HRF
         hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
