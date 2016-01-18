@@ -451,14 +451,14 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_gabor_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                   np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                   DTYPE2_t x0,
+def generate_gabor_receptive_field(DTYPE2_t x0,
                                    DTYPE2_t y0,
                                    DTYPE2_t s0,
                                    DTYPE2_t theta,
                                    DTYPE2_t phi,
-                                   DTYPE2_t cpd):
+                                   DTYPE2_t cpd,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_y):
                   
     # cdef's
     cdef int i,j,k
@@ -510,8 +510,7 @@ def generate_gabor_receptive_field(DTYPE2_t x0,
                                    DTYPE2_t phi,
                                    DTYPE2_t cpd,
                                    np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                   np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                   np.ndarray[DTYPE_t, ndim=3] stim_arr):
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_y):
                   
     # cdef's
     cdef int i,j,k
@@ -519,7 +518,6 @@ def generate_gabor_receptive_field(DTYPE2_t x0,
     cdef DTYPE2_t s_factor3 = (3.0*s0)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_y.shape[1]
-    cdef int zlim = stim_arr.shape[-1]
     cdef DTYPE2_t pi_180 = np.pi/180
     cdef DTYPE2_t theta_rad = theta * pi_180
     cdef DTYPE2_t phi_rad = phi * pi_180
