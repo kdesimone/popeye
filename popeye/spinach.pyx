@@ -31,12 +31,12 @@ def binner(np.ndarray[DTYPE2_t, ndim=1] signal,
     bin_width = bins[1] - bins[0]
     
     # output
-    cdef np.ndarray[DTYPE2_t, ndim=1, mode='c'] binned_response = np.zeros((t_lim))
+    cdef np.ndarray[DTYPE2_t, ndim=1, mode='c'] binned_response = np.zeros((t_lim)-2)
     
-    for t in xrange(t_lim):
+    for t in xrange(1,t_lim):
         the_bin = bins[t]
         binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
-        binned_response[t] = np.sum(binned_signal)
+        binned_response[t-2] = np.sum(binned_signal)
     
     return binned_response
 
