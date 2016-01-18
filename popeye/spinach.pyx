@@ -18,6 +18,30 @@ from libc.math cimport sin, cos, exp, sqrt
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def binner(np.ndarray[DTYPE2_t, ndim=1] signal,
+           np.ndarray[DTYPE2_t, ndim=1] times,
+           np.ndarray[DTYPE2_t, ndim=1] bins):
+    
+    # type defs
+    cdef int t, t_lim
+    cdef DTYPE2_t bin_width
+    
+    # vars
+    t_lim = len(bins)
+    bin_width = bins[1] - bins[0]
+    
+    # output
+    cdef np.ndarray[DTYPE2_t, ndim=1, mode='c'] binned_response = np.zeros((t_lim))
+    
+    for t in xrange(t_lim):
+        the_bin = bins[t]
+        binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
+        binned_response[t] = np.sum(binned_signal)
+    
+    return binned_response
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                        np.ndarray[DTYPE2_t, ndim=2] deg_y,
                        DTYPE2_t x,
