@@ -414,16 +414,12 @@ def test_parallel_fit():
 
 def test_binner():
     
-    signal = np.random.rand(1000)
-    times = np.linspace(0,100,1000)
-    bins = np.arange(-0.5,101.5,1)
+    signal = np.ones(10)
+    times = np.linspace(0,1,10)
+    bins = np.arange(-0.5,1.5,0.5)
     
-    a = utils.binner(signal, times, bins)
-    b = spin.binner(signal, times, bins)
+    binned_signal = utils.binner(signal, times, bins)
     
-    nt.assert_true(np.all(a==b))
-    
-    
-    
-    
+    nt.assert_true(len(binned_signal), len(bins)-2)
+    nt.assert_true(np.all(binned_signal==[5,5]))
     
