@@ -579,12 +579,12 @@ def find(name, path):
             return os.path.join(root, name)
 
 def binner(signal, times, bins):
-    binned_response = np.zeros_like(bins)
+    binned_response = np.zeros(len(bins)-2)
     bin_width = bins[1] - bins[0]
-    for t in xrange(len(bins)):
+    for t in xrange(1,len(bins)):
         the_bin = bins[t]
         binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
-        binned_response[t] = np.sum(binned_signal)
+        binned_response[t-2] = np.sum(binned_signal)
     return binned_response
 
 def save_pickle(output, filename):
