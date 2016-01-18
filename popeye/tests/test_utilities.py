@@ -8,7 +8,7 @@ import numpy.testing as npt
 import nibabel
 
 import popeye.utilities as utils
-import popeye.spinach as utils
+import popeye.spinach as spin
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
@@ -421,7 +421,7 @@ def test_binner():
     a = utils.binner(signal, times, bins)
     b = spin.binner(signal, times, bins)
     
-    nt.assert_equal(a,b)
+    nt.assert_true(np.all(a==b))
     
     
     

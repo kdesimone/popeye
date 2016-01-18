@@ -3,6 +3,7 @@ import numpy.testing as npt
 import nose.tools as nt
 
 import popeye.utilities as utils
+import popeye.spinach as spin
 from popeye.visual_stimulus import generate_coordinate_matrices
 from popeye.spinach import generate_og_receptive_field, generate_og_timeseries
 
@@ -94,5 +95,5 @@ def test_binner():
     a = utils.binner(signal, times, bins)
     b = spin.binner(signal, times, bins)
     
-    nt.assert_equal(a,b)
+    nt.assert_true(np.all(a==b))
     
