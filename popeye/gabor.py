@@ -2,76 +2,18 @@
 
 """ Classes and functions for fitting population encoding models """
 
-from __future__ import division, print_function, absolute_import
-import time
+from __future__ import division
 import warnings
 warnings.simplefilter("ignore")
 
 import numpy as np
-from scipy.optimize import brute, fmin_powell
-from scipy.stats import linregress
-from scipy.interpolate import interp1d
-import scipy.signal as ss
+from scipy.signal import fftconvolve
+import nibabel
 
 from popeye.onetime import auto_attr
-
 import popeye.utilities as utils
-from popeye import og
 from popeye.base import PopulationModel, PopulationFit
-
-def generate_ballpark_prediction(x, y, sigma, theta, phi, cpd):
-    
-    # make sure theta and phi are 0-2*pi
-    theta = np.mod(theta, 2*np.pi)
-    phi = np.mod(theta, 2*np.pi)
-    
-    # create mask for speed
-    distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-    mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (5*sigma)**2] = 1
-    
-    # generate the RF
-    rf = generate_gabor_receptive_field(x, y, sigma, theta, phi, cpd,
-                                        self.stimulus.deg_x_coarse,
-                                        self.stimulus.deg_y_coarse)
-    
-    # extract the stimulus time-series
-    response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
-    
-    # convolve with the HRF
-    hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-    
-    # convolve it with the stimulus
-    model = fftconvolve(response, hrf, 'same')
-    
-    return model
-
-def generate_ballpark_prediction(x, y, sigma, theta, phi, cpd):
-    
-    # make sure theta and phi are 0-2*pi
-    theta = np.mod(theta, 2*np.pi)
-    phi = np.mod(theta, 2*np.pi)
-    
-    # create mask for speed
-    distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-    mask = np.zeros_like(distance, dtype='uint8')
-    mask[distance < (5*sigma)**2] = 1
-    
-    # generate the RF
-    rf = generate_gabor_receptive_field(x, y, sigma, theta, phi, cpd,
-                                        self.stimulus.deg_x, self.stimulus.deg_y)
-    
-    # extract the stimulus time-series
-    response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
-    
-    # convolve with the HRF
-    hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-    
-    # convolve it with the stimulus
-    model = fftconvolve(response, hrf, 'same')
-    
-    return model
-
+from popeye.spinach import generate_gabor_receptive_field, generate_rf_timeseries
 
 class GaborModel(PopulationModel):
     
@@ -80,12 +22,67 @@ class GaborModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus):
+    def __init__(self, stimulus, hrf_model):
         
         # this is a weird notation
-        PopulationModel.__init__(self, stimulus)
+        PopulationModel.__init__(self, stimulus, hrf_model)
         
-class GaborFit(object):
+        
+    def generate_ballpark_prediction(self, x, y, sigma, theta, phi, cpd):
+        
+        # make sure theta and phi are 0-2*pi
+        theta = np.mod(theta, 2*np.pi)
+        phi = np.mod(theta, 2*np.pi)
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma)**2] = 1
+        
+        # generate the RF
+        rf = generate_gabor_receptive_field(x, y, sigma, theta, phi, cpd,
+                                            self.stimulus.deg_x_coarse,
+                                            self.stimulus.deg_y_coarse)
+        
+        # extract the stimulus time-series
+        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        
+        # convolve with the HRF
+        hrf = self.hrf_model(0, self.stimulus.tr_length)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, hrf, 'same')
+        
+        return model
+    
+    
+    def generate_prediction(self, x, y, sigma, theta, phi, cpd):
+        
+        # make sure theta and phi are 0-2*pi
+        theta = np.mod(theta, 2*np.pi)
+        phi = np.mod(theta, 2*np.pi)
+        
+        # create mask for speed
+        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (5*sigma)**2] = 1
+        
+        # generate the RF
+        rf = generate_gabor_receptive_field(x, y, sigma, theta, phi, cpd,
+                                            self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # extract the stimulus time-series
+        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        
+        # convolve with the HRF
+        hrf = self.hrf_model(0, self.stimulus.tr_length)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, hrf, 'same')
+        
+        return model
+            
+class GaborFit(PopulationFit):
     
     r"""
     A class containing tools for fitting the 1D Gaussian pRF model.
@@ -156,7 +153,6 @@ class GaborFit(object):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
-                                           
     @auto_attr
     def x0(self):
         return self.ballpark[0]
