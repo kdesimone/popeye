@@ -596,7 +596,7 @@ def save_pickle(output, filename):
         o.clean_data = np.array(o.data.copy())
     
     # pickle
-    f = open(filename,"rb")
+    f = open(filename,"w")
     cPickle.dump(output, f, protocol=2)
     f.close()
 
