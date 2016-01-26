@@ -54,8 +54,8 @@ class SpatioTemporalModel(PopulationModel):
         # if the spatial RF is running off the screen ...
         x_rf = np.sum(spatial_rf,axis=1)
         y_rf = np.sum(spatial_rf,axis=0)
-        if ( np.round(x_rf[0],10) != 0 or np.round(x_rf[-1],10) != 0 or 
-             np.round(y_rf[0],10) != 0 or np.round(x_rf[-1],10) != 0 ):
+        if ( x_rf[0] > 1e-5 or x_rf[-1] > 1e-5  or 
+             y_rf[0] > 1e-5 or y_rf[-1] > 1e-5 ):
             return np.inf
         
         # create mask for speed
@@ -63,16 +63,22 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # if the temporal RF is running off the TR ...
+        # m and p RF
         p = self.p(tau)
         m = self.m(tau)
-        if ( np.round(self.p[0],3) != 0 or np.round(self.p[-1],3) != 0 or 
-             np.round(self.m[0],3) != 0 or np.round(self.m[-1],3) != 0 ):
+        
+        # if the temporal RF is running off the TR ...
+        if ( p[0] > 1e-5 or p[-1] > 1e-5  or 
+             m[0] > 1e-5 or m[-1] > 1e-5 ):
             return np.inf
         
-        # mix the m and p responses 
+        # get m and p responses
+        p_resp = self.p_resp(p)
+        m_resp = self.m_resp(m)
+        
+        # mix them
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
+        mp_ts = generate_strf_betas_timeseries(rf_ts, m_resp, p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -93,8 +99,8 @@ class SpatioTemporalModel(PopulationModel):
         # if the spatial RF is running off the screen ...
         x_rf = np.sum(spatial_rf,axis=1)
         y_rf = np.sum(spatial_rf,axis=0)
-        if ( np.round(x_rf[0],10) != 0 or np.round(x_rf[-1],10) != 0 or 
-             np.round(y_rf[0],10) != 0 or np.round(x_rf[-1],10) != 0 ):
+        if ( x_rf[0] > 1e-5 or x_rf[-1] > 1e-5  or 
+             y_rf[0] > 1e-5 or y_rf[-1] > 1e-5 ):
             return np.inf
         
         # create mask for speed
@@ -102,16 +108,22 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # if the temporal RF is running off the TR ...
+        # m and p RF
         p = self.p(tau)
         m = self.m(tau)
-        if ( np.round(p[0],10) != 0 or np.round(p[-1],10) != 0 or 
-             np.round(m[0],10) != 0 or np.round(m[-1],10) != 0 ):
+        
+        # if the temporal RF is running off the TR ...
+        if ( p[0] > 1e-5 or p[-1] > 1e-5  or 
+             m[0] > 1e-5 or m[-1] > 1e-5 ):
             return np.inf
         
-        # mix the m and p responses 
+        # get m and p responses
+        p_resp = self.p_resp(p)
+        m_resp = self.m_resp(m)
+        
+        # mix them
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
+        mp_ts = generate_strf_betas_timeseries(rf_ts, m_resp, p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -203,12 +215,16 @@ class SpatioTemporalFit(PopulationFit):
         return self.ballpark[4]
     
     @auto_attr
-    def baseline0(self):
+    def tau0(self):
         return self.ballpark[5]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[6]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark[6]
+        return self.ballpark[7]
         
     @auto_attr
     def x(self):
@@ -230,12 +246,17 @@ class SpatioTemporalFit(PopulationFit):
     def pbeta(self):
         return self.estimate[4]
     
-    def baseline(self):
+    @auto_attr
+    def tau(self):
         return self.estimate[5]
+    
+    @auto_attr
+    def baseline(self):
+        return self.estimate[6]
         
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[6]
+        return self.estimate[7]
     
     @auto_attr
     def prediction(self):

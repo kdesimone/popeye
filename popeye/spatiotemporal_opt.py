@@ -54,8 +54,8 @@ class SpatioTemporalModel(PopulationModel):
         # if the spatial RF is running off the screen ...
         x_rf = np.sum(spatial_rf,axis=1)
         y_rf = np.sum(spatial_rf,axis=0)
-        if ( np.round(x_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 or 
-             np.round(y_rf[0],3) != 0 or np.round(x_rf[-1],3) != 0 ):
+        if ( x_rf[0] > 1e-5 or x_rf[-1] > 1e-5  or 
+             y_rf[0] > 1e-5 or y_rf[-1] > 1e-5 ):
             return np.inf
         
         # create mask for speed
@@ -64,8 +64,8 @@ class SpatioTemporalModel(PopulationModel):
         mask[distance < (5*sigma)**2] = 1
         
         # if the temporal RF is running off the TR ...
-        if ( np.round(self.p[0],3) != 0 or np.round(self.p[-1],3) != 0 or 
-             np.round(self.m[0],3) != 0 or np.round(self.m[-1],3) != 0 ):
+        if ( self.p[0] > 1e-5 or self.p[-1] > 1e-5  or 
+             self.m[0] > 1e-5 or self.m[-1] > 1e-5 ):
             return np.inf
             
         # mix the m and p responses 
