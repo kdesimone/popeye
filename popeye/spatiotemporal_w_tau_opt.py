@@ -217,7 +217,7 @@ class SpatioTemporalFit(PopulationFit):
         return self.ballpark[4]
     
     @auto_attr
-    def base0(self):
+    def beta0(self):
         return self.ballpark[5]
     
     @auto_attr
