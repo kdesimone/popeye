@@ -90,7 +90,7 @@ class SpatioTemporalModel(PopulationModel):
         return model
     
     # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, m_beta, p_beta, tau, baseline, hrf_delay):
+    def generate_prediction(self, x, y, sigma, tau, m_beta, p_beta, baseline, hrf_delay):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -205,17 +205,17 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def sigma0(self):
         return self.ballpark[2]
-        
-    @auto_attr
-    def mbeta0(self):
-        return self.ballpark[3]
-    
-    @auto_attr
-    def pbeta0(self):
-        return self.ballpark[4]
     
     @auto_attr
     def tau0(self):
+        return self.ballpark[3]
+        
+    @auto_attr
+    def mbeta0(self):
+        return self.ballpark[4]
+    
+    @auto_attr
+    def pbeta0(self):
         return self.ballpark[5]
     
     @auto_attr
@@ -239,17 +239,17 @@ class SpatioTemporalFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def mbeta(self):
+    def tau(self):
         return self.estimate[3]
     
     @auto_attr
-    def pbeta(self):
+    def mbeta(self):
         return self.estimate[4]
     
     @auto_attr
-    def tau(self):
+    def pbeta(self):
         return self.estimate[5]
-    
+        
     @auto_attr
     def baseline(self):
         return self.estimate[6]
