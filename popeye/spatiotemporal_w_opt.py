@@ -45,7 +45,7 @@ class SpatioTemporalModel(PopulationModel):
     
     
     # for the final solution, we use spatiotemporal
-    def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
+    def generate_ballpark_prediction(self, x, y, sigma, weight, beta, baseline, hrf_delay):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
@@ -85,7 +85,7 @@ class SpatioTemporalModel(PopulationModel):
         return model
     
     # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay, weight):
+    def generate_prediction(self, x, y, sigma, weight, beta, baseline, hrf_delay):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -199,21 +199,21 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def sigma0(self):
         return self.ballpark[2]
-        
-    @auto_attr
-    def beta0(self):
-        return self.ballpark[3]
-    
-    @auto_attr
-    def baseline0(self):
-        return self.ballpark[4]
-        
-    @auto_attr
-    def hrf0(self):
-        return self.ballpark[5]
     
     @auto_attr
     def weight0(self):
+        return self.ballpark[3]
+        
+    @auto_attr
+    def beta0(self):
+        return self.ballpark[4]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[5]
+        
+    @auto_attr
+    def hrf0(self):
         return self.ballpark[6]
         
     @auto_attr
@@ -227,20 +227,20 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[2]
+        
+    @auto_attr
+    def weight(self):
+        return self.estimate[6]
     
     @auto_attr
     def beta(self):
-        return self.estimate[3]
+        return self.estimate[4]
     
     def baseline(self):
-        return self.estimate[4]
+        return self.estimate[5]
         
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[5]
-    
-    @auto_attr
-    def weight(self):
         return self.estimate[6]
     
     @auto_attr
