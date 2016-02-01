@@ -76,10 +76,8 @@ class AuditoryModel(PopulationModel):
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
         
-        # if the rf runs off the coords
-        if np.round(rf[0],3) != 0:
-            return np.inf
-        if np.round(rf[-1],3) != 0:
+        # if the tuning curve is falling off the edges of the frequency space
+        if ( rf[0] > 1e-5 or rf[-1] > 1e-5 ):
             return np.inf
         
         # create mask for speed
