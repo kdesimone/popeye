@@ -176,7 +176,7 @@ class PopulationFit(object):
                 self.rsquared = np.nan
                 self.ballpark = np.nan
                 self.estimate = np.nan
-                print('Voxel %s failed.' %(str(self.voxel_index)))
+                print('VOXEL %s FAILED TO CONVERGE.' %(str(self.voxel_index)))
             
     
     # the brute search
