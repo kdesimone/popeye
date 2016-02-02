@@ -204,16 +204,7 @@ class AuditoryFit(PopulationFit):
         
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
-        self.data
-    
-    @auto_attr
-    def data(self):
-        source_times = np.linspace(0, 1, self.data, endpoint=True)
-        f = interp1d(source_times, self.data, kind='linear')
-        target_times = np.linspace(0, 1, self.shape[-1]*self.model.stimulus.resample_factor, endpoint=True)
-        resampled_timeseries = f(target_times)
-        return resampled_timeseries
-    
+
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]
