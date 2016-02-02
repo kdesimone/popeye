@@ -589,11 +589,11 @@ def binner(signal, times, bins):
 
 def save_pickle(output, filename):
     
-    # since we memmap'd the functional data, 
-    # we need to unmemmap to pickle
-    output_clean = [o for o in output]
-    for o in output_clean:
-        o.clean_data = np.array(o.data.copy())
+    # # since we memmap'd the functional data, 
+    # # we need to unmemmap to pickle
+    # output_clean = [o for o in output]
+    # for o in output_clean:
+    #     o.clean_data = np.array(o.data.copy())
     
     # pickle
     f = open(filename,"w")
