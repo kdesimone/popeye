@@ -51,13 +51,6 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
         
-        # if the spatial RF is running off the screen ...
-        x_rf = np.sum(spatial_rf,axis=1)
-        y_rf = np.sum(spatial_rf,axis=0)
-        if ( x_rf[0] > 1e-5 or x_rf[-1] > 1e-5  or 
-             y_rf[0] > 1e-5 or y_rf[-1] > 1e-5 ):
-            return np.inf
-        
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
@@ -66,11 +59,6 @@ class SpatioTemporalModel(PopulationModel):
         # m and p RF
         p = self.p(tau)
         m = self.m(tau)
-        
-        # if the temporal RF is running off the TR ...
-        if ( p[0] > 1e-5 or p[-1] > 1e-5  or 
-             m[0] > 1e-5 or m[-1] > 1e-5 ):
-            return np.inf
         
         # get m and p responses
         p_resp = self.p_resp(p)
@@ -96,13 +84,6 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
-        # if the spatial RF is running off the screen ...
-        x_rf = np.sum(spatial_rf,axis=1)
-        y_rf = np.sum(spatial_rf,axis=0)
-        if ( x_rf[0] > 1e-5 or x_rf[-1] > 1e-5  or 
-             y_rf[0] > 1e-5 or y_rf[-1] > 1e-5 ):
-            return np.inf
-        
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
@@ -111,11 +92,6 @@ class SpatioTemporalModel(PopulationModel):
         # m and p RF
         p = self.p(tau)
         m = self.m(tau)
-        
-        # if the temporal RF is running off the TR ...
-        if ( p[0] > 1e-5 or p[-1] > 1e-5  or 
-             m[0] > 1e-5 or m[-1] > 1e-5 ):
-            return np.inf
         
         # get m and p responses
         p_resp = self.p_resp(p)
