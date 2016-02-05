@@ -174,7 +174,7 @@ class PopulationFit(object):
                 self.estimate = np.nan
                 self.msg = ('VOXEL=(%.03d,%.03d,%.03d)   FAILED TO CONVERGE!'  %(self.voxel_index[0],
                                                                                  self.voxel_index[1],
-                                                                                 self.voxel_index[2]))            
+                                                                                 self.voxel_index[2]))
             
             # print
             if self.verbose:

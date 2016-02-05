@@ -220,7 +220,7 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def weight(self):
-        return self.pbeta / (self.mbeta+self.pbeta)
+        return (self.pbeta - self.mbeta) / (self.mbeta + self.pbeta)
         
     @auto_attr
     def rho(self):
@@ -235,3 +235,14 @@ class SpatioTemporalFit(PopulationFit):
         return generate_og_receptive_field(self.x, self.y, self.sigma,
                                            self.model.stimulus.deg_x,
                                            self.model.stimulus.deg_y)
+    @auto_attr
+    def ideal_magno_resp(self):
+        response = self.model.generate_prediction(self.x, self.y, self.sigma, self.mbeta, 0, self.baseline, self.hrf_delay)
+        return utils.normalize(response, self.prediction.min(), self.prediction.max())
+    
+    @auto_attr
+    def ideal_parvo_resp(self):
+        response = self.model.generate_prediction(self.x, self.y, self.sigma, 0, self.pbeta, self.baseline, self.hrf_delay)
+        return utils.normalize(response, self.prediction.min(), self.prediction.max())
+
+        
