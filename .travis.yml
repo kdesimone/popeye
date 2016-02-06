@@ -23,7 +23,7 @@ before_install:
     - python --version # just to check
     - pip install nose # always
     - pip install pillow
-    - pip install --timeout=60 --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
+    - pip install --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
     - pip install git+git://github.com/rainwoodman/sharedmem
     - if [ "${COVERAGE}" == "1" ]; then
       pip install coverage;
