@@ -5,6 +5,8 @@
 # - There can't be any leading "-"s - All newlines will be removed, so use
 # ";"s
 
+
+rvm: 1.9.3
 sudo: false
 language: python
 env:
