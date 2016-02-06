@@ -76,10 +76,8 @@ class AuditoryModel(PopulationModel):
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
         
-        # if the rf runs off the coords
-        if np.round(rf[0],3) != 0:
-            return np.inf
-        if np.round(rf[-1],3) != 0:
+        # if the tuning curve is falling off the edges of the frequency space
+        if ( rf[0] > 1e-5 or rf[-1] > 1e-5 ):
             return np.inf
         
         # create mask for speed
@@ -206,16 +204,7 @@ class AuditoryFit(PopulationFit):
         
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
-        self.data
-    
-    @auto_attr
-    def data(self):
-        source_times = np.linspace(0, 1, self.data, endpoint=True)
-        f = interp1d(source_times, self.data, kind='linear')
-        target_times = np.linspace(0, 1, self.shape[-1]*self.model.stimulus.resample_factor, endpoint=True)
-        resampled_timeseries = f(target_times)
-        return resampled_timeseries
-    
+
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]

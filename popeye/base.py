@@ -165,10 +165,6 @@ class PopulationFit(object):
                 # finish
                 self.finish = time.time()
                 
-                # print
-                if self.verbose:
-                    print(self.msg)
-            
             except:
                 self.finish = time.time()
                 self.rsquared = np.nan
@@ -176,9 +172,14 @@ class PopulationFit(object):
                 self.rsquared = np.nan
                 self.ballpark = np.nan
                 self.estimate = np.nan
-                print('Voxel %s failed.' %(str(self.voxel_index)))
+                self.msg = ('VOXEL=(%.03d,%.03d,%.03d)   FAILED TO CONVERGE!'  %(self.voxel_index[0],
+                                                                                 self.voxel_index[1],
+                                                                                 self.voxel_index[2]))
             
-    
+            # print
+            if self.verbose:
+                print(self.msg)
+                
     # the brute search
     @auto_attr
     def brute_force(self):

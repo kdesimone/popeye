@@ -73,13 +73,10 @@ class AuditoryModel(PopulationModel):
         """
         
         # generate stimulus time-series
-        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
-        rf /= (sigma*np.sqrt(2*np.pi))
+        rf = self.receptive_field(center_freq, sigma)
         
-        # if the rf runs off the coords
-        if np.round(rf[0],3) != 0:
-            return np.inf
-        if np.round(rf[-1],3) != 0:
+        # if the tuning curve is running off the edges of the frequency space
+        if self.compare_rf_volumes(rf):
             return np.inf
         
         # create mask for speed
@@ -91,13 +88,16 @@ class AuditoryModel(PopulationModel):
         response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
         # bin the response to the resolution of the BOLD data
-        binned_response = binner(response,self.stimulus.times,np.arange(0-self.stimulus.tr_length/2,np.ceil(self.stimulus.times[-1])+self.stimulus.tr_length/2,self.stimulus.tr_length))
+        binned_response = self.binned_response(response)
+        
+        # roll it forward to correct for the binning
+        rolled_response = np.roll(binned_response, 0)
         
         # generate the HRF
         hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
         
         # pad and convolve
-        model = fftconvolve(binned_response, hrf)[0:len(binned_response)]
+        model = fftconvolve(rolled_response, hrf)[0:len(rolled_response)]
         
         # scale by beta
         model *= beta
@@ -136,7 +136,49 @@ class AuditoryModel(PopulationModel):
         """
         
         return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
-
+        
+    # seconds
+    @auto_attr
+    def length_in_seconds(self):
+        return np.ceil(self.stimulus.times[-1])
+    
+    # volumes
+    @auto_attr
+    def length_in_volumes(self):
+        return self.length_in_seconds / self.stimulus.tr_length
+    
+    # convenience function
+    def receptive_field(self, center_freq, sigma):
+        return np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2)) * 1/(sigma * np.sqrt(2*np.pi))
+    
+    # Reference RF.  We always compare the volume of the candidate RF with this one.
+    # If candidate RF volume is more than 50% smaller in volume, we return inf above ...
+    @auto_attr
+    def reference_rf(self):
+        return self.receptive_field(self.stimulus.freqs[-1]/4,self.stimulus.freqs[-1]/20)
+    
+    # convenience function
+    def compare_rf_volumes(self, rf):
+        if (1-np.sum(rf)/np.sum(self.reference_rf))*100 > 50:
+            return True
+        else:
+            return False
+    
+    # bin stimulus to BOLD
+    def binned_response(self, response):
+        
+        # initialize empty array
+        b = np.zeros(self.length_in_volumes)
+        
+        # bin it
+        counter = 0
+        for i in np.arange(0,self.length_in_seconds,self.stimulus.tr_length):
+            idx = np.nonzero((self.stimulus.times < i+1) & (self.stimulus.times > i))[0]
+            b[counter] = np.sum(response[idx[0]:idx[-1]])
+            counter += 1
+        
+        return b
+        
 class AuditoryFit(PopulationFit):
     
     def __init__(self, model, data, grids, bounds, Ns,
@@ -202,15 +244,6 @@ class AuditoryFit(PopulationFit):
         
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
-        self.data
-    
-    @auto_attr
-    def data(self):
-        source_times = np.linspace(0, 1, self.data, endpoint=True)
-        f = interp1d(source_times, self.data, kind='linear')
-        target_times = np.linspace(0, 1, self.shape[-1]*self.model.stimulus.resample_factor, endpoint=True)
-        resampled_timeseries = f(target_times)
-        return resampled_timeseries
     
     @auto_attr
     def center_freq0(self):
@@ -251,4 +284,8 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[4]
+    
+    @auto_attr
+    def receptive_field(self):
+        return np.exp(-((self.model.stimulus.freqs-self.center_freq)**2)/(2*self.sigma**2)) * 1/(self.sigma * np.sqrt(2*np.pi))
     
