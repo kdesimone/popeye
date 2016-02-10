@@ -498,7 +498,10 @@ def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, 
               repeat(auto_fit,num_voxels),
               repeat(verbose,num_voxels))
     
-    shuffle(dat)
+    # return randomized order
+    np.random.seed(12345)
+    idx = np.argsort(np.random.rand(len(dat)))
+    dat = [dat[i] for i in idx]
     
     return dat
 
