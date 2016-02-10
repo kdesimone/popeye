@@ -231,11 +231,6 @@ def test_brute_force_search():
     
 
 def test_double_gamma_hrf():
-    """
-    Test voxel-wise gabor estimation function in popeye.estimation 
-    using the stimulus and BOLD time-series data that ship with the 
-    popeye installation.
-    """
     
     # set the TR length ... this affects the HRF sampling rate ...
     tr_length = 1.0
