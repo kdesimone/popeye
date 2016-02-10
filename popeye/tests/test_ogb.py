@@ -27,7 +27,7 @@ def test_ogb_fit():
     pixels_across = 800 * resample_factor
     pixels_down = 600 * resample_factor
     dtype = ctypes.c_int16
-    Ns = 3
+    Ns = 4
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
