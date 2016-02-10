@@ -410,14 +410,14 @@ def test_parallel_fit():
         nt.assert_almost_equal(fit.beta, beta, 2)
         nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
 
-def test_binner():
-    
-    signal = np.ones(10)
-    times = np.linspace(0,1,10)
-    bins = np.arange(-0.5,1.5,0.5)
-    
-    binned_signal = utils.binner(signal, times, bins)
-    
-    nt.assert_true(len(binned_signal), len(bins)-2)
-    nt.assert_true(np.all(binned_signal==[5,5]))
+# def test_binner():
+#     
+#     signal = np.ones(10)
+#     times = np.linspace(0,1,10)
+#     bins = np.arange(-0.5,1.5,0.5)
+#     
+#     binned_signal = utils.binner(signal, times, bins)
+#     
+#     nt.assert_true(len(binned_signal), len(bins)-2)
+#     nt.assert_true(np.all(binned_signal==[5,5]))
     
