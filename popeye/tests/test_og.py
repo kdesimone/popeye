@@ -1,5 +1,5 @@
 import os
-import multiprocessing
+import sharedmem
 import ctypes
 
 import numpy as np
@@ -165,10 +165,8 @@ def test_parallel_og_fit():
     bundle = utils.multiprocess_bundle(og.GaussianFit, model, data, grids, bounds, 3, indices, True, 1)
     
     # run analysis
-    pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
-    output = pool.map(utils.parallel_fit, bundle)
-    pool.close()
-    pool.join()
+    with sharedmem.MapReduce(np=sharedmem.cpu_count()-1) as pool:
+        output = pool.map(utils.parallel_fit, bundle)
     
     # assert equivalence
     for fit in output:

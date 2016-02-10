@@ -1,5 +1,4 @@
-import ctypes, multiprocessing
-from itertools import repeat
+import ctypes, sharedmem
 
 import numpy as np
 import nose.tools as nt
@@ -84,15 +83,18 @@ def test_recast_estimation_results():
     # create 3 voxels of data
     all_data = np.array([data,data,data])
     indices = [(0,0,0),(0,0,1),(0,0,2)]
-    bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data,
-                                       grids, bounds, Ns, indices, auto_fit, verbose)
     
+    # fitting
+    auto_fit = True
+    verbose = 1
+    Ns = 3
+    
+    # bundle the voxels
+    bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, Ns, indices, auto_fit, verbose)
     
     # run analysis
-    pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
-    output = pool.map(utils.parallel_fit, bundle)
-    pool.close()
-    pool.join()
+    with sharedmem.MapReduce(np=sharedmem.cpu_count()-1) as pool:
+        output = pool.map(utils.parallel_fit, bundle)
     
     # create grid parent
     arr = np.zeros((1,1,3))
@@ -366,8 +368,9 @@ def test_parallel_fit():
     data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
     # make 3 voxels
-    data = np.array([data,data,data])
+    all_data = np.array([data,data,data])
     num_voxels = data.shape[0]
+    indices = [(1,2,3)]*3
     
     # set search grid
     x_grid = (-10,10)
@@ -384,25 +387,20 @@ def test_parallel_fit():
     h_bound = (-5.0,5.0)
     
     # make grids+bounds for all voxels in the sample
-    grids = [(x_grid, y_grid, s_grid, b_grid, h_grid),]*num_voxels
-    bounds = [(x_bound, y_bound, s_bound, b_bound, h_bound),]*num_voxels
+    grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
+    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
     
-    # package the data structure
-    dat = zip(repeat(og.GaussianFit,num_voxels),
-              repeat(model,num_voxels),
-              data,
-              grids,
-              bounds,
-              repeat(3,num_voxels),
-              repeat((1,2,3),num_voxels),
-              repeat(True,num_voxels),
-              repeat(0,num_voxels))
-              
+    # fitting params
+    auto_fit = True
+    verbose = 1
+    Ns = 3
+    
+    # bundle the voxels
+    bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, Ns, indices, auto_fit, verbose)
+    
     # run analysis
-    pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
-    output = pool.map(utils.parallel_fit,dat)
-    pool.close()
-    pool.join()
+    with sharedmem.MapReduce(np=sharedmem.cpu_count()-1) as pool:
+        output = pool.map(utils.parallel_fit, bundle)
     
     # assert equivalence
     for fit in output:
