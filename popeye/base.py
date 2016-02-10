@@ -279,14 +279,14 @@ class PopulationFit(object):
                   self.voxel_index[2],
                   self.finish-self.start,
                   self.rsquared,
-                  np.round(self.estimate,2)))
+                  np.round(self.estimate,4)))
         else:
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
                   self.rsquared,
-                  np.round(self.estimate,2)))            
+                  np.round(self.estimate,4)))
         return txt
     
 class StimulusModel(object):
