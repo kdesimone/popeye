@@ -86,14 +86,14 @@ def test_generate_og_timeseries():
     # correlates with a step function: 
     nt.assert_equal(round(rval, 3), 1)
 
-def test_binner():
-    
-    signal = np.ones(10)
-    times = np.linspace(0,1,10)
-    bins = np.arange(-0.5,1.5,0.5)
-    
-    binned_signal = spin.binner(signal, times, bins)
-    
-    nt.assert_true(len(binned_signal), len(bins)-2)
-    nt.assert_true(np.all(binned_signal==[5,5]))
-    
+# def test_binner():
+#     
+#     signal = np.ones(10)
+#     times = np.linspace(0,1,10)
+#     bins = np.arange(-0.5,1.5,0.5)
+#     
+#     binned_signal = spin.binner(signal, times, bins)
+#     
+#     nt.assert_true(len(binned_signal), len(bins)-2)
+#     nt.assert_true(np.all(binned_signal==[5,5]))
+#     
