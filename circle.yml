@@ -22,7 +22,7 @@ dependencies:
         - pip install scipy
         - pip install sphinx
         - pip install matplotlib
-        - pip install git+git://github.com/rainwoodman/sharedmem
+        - pip install sharedmem
         - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
         - sudo cp .coveragerc tests_dir/.coveragerc
