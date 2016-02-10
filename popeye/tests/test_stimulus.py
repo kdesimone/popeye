@@ -8,7 +8,7 @@ import numpy.testing as npt
 
 import nose.tools as nt
 
-from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus
+from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_checkerboard_bar
 
 
 def test_generate_coordinate_matrices():
@@ -67,3 +67,13 @@ def test_resample_stimulus():
     nt.assert_true(stim_coarse_dims[0]/stim_dims[0] == scale_factor)
     nt.assert_true(stim_coarse_dims[1]/stim_dims[1] == scale_factor)
     nt.assert_true(stim_coarse_dims[2] == stim_dims[2])
+
+def test_simulate_sinflicker_bar():
+    
+    bar = simulate_sinflicker_bar(500,500,50,50,[0],1,10,5,1,1,60)
+    y = bar[250,250,:]
+    
+    t = np.linspace(0,1,60)
+    yhat = y = utils.normalize(np.sin(2 * np.pi * t),0,255).astype('uint8')
+    
+    nt.assert_true(np.all(y==yhat))
