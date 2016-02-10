@@ -87,8 +87,8 @@ def test_ogb_fit():
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x)
-    nt.assert_almost_equal(fit.y, y)
-    nt.assert_almost_equal(fit.sigma, sigma)
-    nt.assert_almost_equal(fit.beta, beta)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay)
+    nt.assert_almost_equal(fit.x, x, 1)
+    nt.assert_almost_equal(fit.y, y, 1)
+    nt.assert_almost_equal(fit.sigma, sigma, 1)
+    nt.assert_almost_equal(fit.beta, beta, 1)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)
