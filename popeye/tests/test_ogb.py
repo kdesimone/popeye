@@ -22,12 +22,12 @@ def test_ogb_fit():
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.40
-    resample_factor = 0.125
+    scale_factor = 0.50
+    resample_factor = 0.10
     pixels_across = 800 * resample_factor
     pixels_down = 600 * resample_factor
     dtype = ctypes.c_int16
-    Ns = 4
+    Ns = 5
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -87,8 +87,8 @@ def test_ogb_fit():
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 1)
-    nt.assert_almost_equal(fit.y, y, 1)
-    nt.assert_almost_equal(fit.sigma, sigma, 1)
-    nt.assert_almost_equal(fit.beta, beta, 1)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)
+    nt.assert_almost_equal(fit.x, x, 2)
+    nt.assert_almost_equal(fit.y, y, 2)
+    nt.assert_almost_equal(fit.sigma, sigma, 2)
+    nt.assert_almost_equal(fit.beta, beta, 2)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
