@@ -102,8 +102,8 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def p(self):
-        p = np.exp(-((self.t-self.center)**2)/(2*self.tsigma**2))
-        p = p * 1/(np.sqrt(2*np.pi)*self.tsigma)
+        p = np.exp(-((self.t-self.center)**2)/(2*self.tau**2))
+        p = p * 1/(np.sqrt(2*np.pi)*self.tau)
         return p
     
     @auto_attr
@@ -118,7 +118,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def tau(self):
-        return 0.011
+        return 0.01
     
     @auto_attr
     def center(self):
@@ -212,6 +212,7 @@ class SpatioTemporalFit(PopulationFit):
     def beta(self):
         return self.estimate[4]
     
+    @auto_attr
     def baseline(self):
         return self.estimate[5]
         
