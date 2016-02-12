@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_strf_betas_timeseries, generate_rf_timeseries, generate_strf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries, generate_strf_timeseries
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -130,7 +130,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def tau(self):
-        return 0.01097021
+        return 0.0109677
     
     @auto_attr
     def center(self):

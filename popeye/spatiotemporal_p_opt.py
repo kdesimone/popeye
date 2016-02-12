@@ -118,7 +118,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def tau(self):
-        return 0.01097021
+        return 0.0109677
     
     @auto_attr
     def mbeta(self):
