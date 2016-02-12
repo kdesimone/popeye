@@ -91,9 +91,9 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
-                                    np.ndarray[DTYPE2_t, ndim=2] m_resp,
-                                    np.ndarray[DTYPE2_t, ndim=2] p_resp,
-                                    np.ndarray[DTYPE_t, ndim=1] flicker_vec):
+                             np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                             np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                             np.ndarray[DTYPE_t, ndim=1] flicker_vec):
     # cdef's
     cdef int s,t
     cdef int slim = stim_ts.shape[0]
@@ -102,7 +102,7 @@ def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
     # initialize output variable
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] m_ts = np.zeros(slim,dtype=DTYPE2)
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] p_ts = np.zeros(slim,dtype=DTYPE2)
-
+    
     # the loop
     for s in xrange(slim):
         amp = stim_ts[s]
