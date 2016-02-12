@@ -118,7 +118,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def tau(self):
-        return 0.011
+        return 0.01097021
     
     @auto_attr
     def center(self):

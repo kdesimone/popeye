@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_strf_weight_timeseries, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_strf_timeseries, generate_rf_timeseries
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -49,16 +49,29 @@ class SpatioTemporalModel(PopulationModel):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # mix the m and p responses 
+        # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
-        mp_ts = generate_strf_weight_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, weight)
+        
+        # temporal response
+        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
+        
+        # set the ranges
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0,1)
+        
+        # mix them
+        mp_ts = weight * m_ts + (1-weight) * p_ts
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -84,10 +97,19 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # mix the m and p responses 
+        # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
-        mp_ts = generate_strf_weight_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, weight)
-             
+        
+        # temporal response
+        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        
+        # set the ranges
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0,1)
+        
+        # mix them
+        mp_ts = weight * m_ts + (1-weight) * p_ts
+        
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
@@ -118,7 +140,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def tau(self):
-        return 0.01
+        return 0.01097021
     
     @auto_attr
     def center(self):
