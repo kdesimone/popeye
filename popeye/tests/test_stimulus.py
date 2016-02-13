@@ -8,7 +8,7 @@ import numpy.testing as npt
 
 import nose.tools as nt
 
-from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_checkerboard_bar
+from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus
 
 
 def test_generate_coordinate_matrices():
