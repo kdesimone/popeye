@@ -1,4 +1,5 @@
-import ctypes, sharedmem
+import ctypes, sharedmem, sys
+from StringIO import StringIO
 
 import numpy as np
 import nose.tools as nt
@@ -9,7 +10,7 @@ import nibabel
 import popeye.utilities as utils
 import popeye.spinach as spin
 import popeye.og as og
-from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
+from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
 
 def test_recast_estimation_results():
     
@@ -162,7 +163,7 @@ def test_error_function():
     bounds = ((0.0,20.0),)
     
     # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
-    verbose = 0
+    verbose = 2
     
     # create a simple function to transform the parameters
     func = lambda freq: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq)
@@ -172,7 +173,19 @@ def test_error_function():
     
     # assert 0 error
     npt.assert_equal(utils.error_function(params, bounds, response, func, verbose),0)
-
+    
+    # assert parameter outside of bounds return inf
+    params = (30.0,)
+    nt.assert_true(utils.error_function(params, bounds, response, func, verbose) == np.inf)
+    
+    # assert print is param and 0 error
+    params = (10.0,)
+    out = StringIO()
+    sys.stdout = out
+    x = utils.error_function(params, bounds, response, func, verbose)
+    output = out.getvalue().strip()
+    nt.assert_true(output == '((10.0,), 0.0)')
+    
 def test_gradient_descent_search():
     
     # create a parameter to estimate
@@ -405,14 +418,73 @@ def test_parallel_fit():
         nt.assert_almost_equal(fit.beta, beta, 2)
         nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
 
-# def test_binner():
-#     
-#     signal = np.ones(10)
-#     times = np.linspace(0,1,10)
-#     bins = np.arange(-0.5,1.5,0.5)
-#     
-#     binned_signal = utils.binner(signal, times, bins)
-#     
-#     nt.assert_true(len(binned_signal), len(bins)-2)
-#     nt.assert_true(np.all(binned_signal==[5,5]))
+def test_gaussian_2D():
+    
+    # set some dummy display parameters
+    pixels_across = 101
+    pixels_down = 101
+    ppd = 1.0
+    scale_factor = 1.0
+    
+    # generate coordinates
+    deg_x, deg_y = generate_coordinate_matrices(pixels_across,pixels_down,ppd,scale_factor)
+    
+    # generate 2D case
+    G = utils.gaussian_2D(deg_x,deg_y,0,0,10,10,0)
+    
+    # generate 1D case
+    gx = np.exp(-((deg_x[0,:]-0)**2)/(2*10**2))
+    gy = np.exp(-((deg_y[:,0]-0)**2)/(2*10**2))
+    
+    # assertions
+    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gx,8)))
+    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gy,8)))
+ 
+def test_cartes_to_polar():
+    cartes = np.array([5,0]).astype('double')
+    polar = utils.cartes_to_polar(cartes)
+    nt.assert_equal(polar[...,0], 0)
+    nt.assert_equal(polar[...,1], 5)
+    
+    cartes = np.array([-5,0]).astype('double')
+    polar = utils.cartes_to_polar(cartes)
+    nt.assert_equal(polar[...,0], np.pi)
+    nt.assert_equal(polar[...,1], 5)
+    
+    cartes = np.array([0,5]).astype('double')
+    polar = utils.cartes_to_polar(cartes)
+    nt.assert_equal(polar[...,0], np.pi/2)
+    nt.assert_equal(polar[...,1], 5)
+    
+    cartes = np.array([0,-5]).astype('double')
+    polar = utils.cartes_to_polar(cartes)
+    nt.assert_equal(polar[...,0], np.pi*3/2)
+    nt.assert_equal(polar[...,1], 5)
+    
+def test_binner():
+    
+    signal = np.ones(10)
+    times = np.linspace(0,1,10)
+    bins = np.arange(-0.5,1.5,0.5)
+    binned_signal = utils.binner(signal, times, bins)
+    
+    nt.assert_true(len(binned_signal), len(bins)-2)
+    nt.assert_true(np.all(binned_signal==[5,5]))
+
+def test_find():
+    
+    f = open('/tmp/test.txt', 'w')
+    f.close()
+    
+    path = utils.find('test.txt','/tmp/')
+    
+    nt.assert_equal(path,'/tmp/test.txt')
+    
+    
+    
+    
+    
+    
+    
+    
     
