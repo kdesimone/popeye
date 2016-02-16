@@ -4,9 +4,11 @@
    :target: https://travis-ci.org/kdesimone/popeye/
    :alt: Build Status
 
+.. image:: https://circleci.com/gh/kdesimone/popeye.svg?style=shield&circle-token=:circle-token
+   :target: https://circleci.com/gh/kdesimone/popeye
+   
 .. image:: https://coveralls.io/repos/kdesimone/popeye/badge.svg?branch=master
    :target: https://coveralls.io/r/kdesimone/popeye
-   
 
 popeye
 ============

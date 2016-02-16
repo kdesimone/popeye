@@ -572,7 +572,7 @@ def cartes_to_polar(cartes):
     """
     polar = cartes.copy()
     polar[...,0] = np.mod(np.arctan2(cartes[...,1], cartes[...,0]),2*np.pi)
-    polar[...,1] = np.sqrt(polar[...,0]**2 + polar[...,1]**2)
+    polar[...,1] = np.sqrt(cartes[...,0]**2 + cartes[...,1]**2)
     return polar
     
     
@@ -589,27 +589,6 @@ def binner(signal, times, bins):
         binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
         binned_response[t-2] = np.sum(binned_signal)
     return binned_response
-
-def save_pickle(output, filename):
-    
-    # # since we memmap'd the functional data, 
-    # # we need to unmemmap to pickle
-    # output_clean = [o for o in output]
-    # for o in output_clean:
-    #     o.clean_data = np.array(o.data.copy())
-    
-    # pickle
-    f = open(filename,"w")
-    cPickle.dump(output, f, protocol=2)
-    f.close()
-
-def load_pickle(filename):
-    
-    f = open(filename,"rb")
-    output = cPickle.load(f)
-    f.close()
-    
-    return output
 
 import sys
 from numpy import NaN, Inf, arange, isscalar, asarray, array
@@ -684,15 +663,6 @@ def peakdet(v, delta, x = None):
                 lookformax = True
                 
     return array(maxtab), array(mintab)
-
-if __name__=="__main__":
-    from matplotlib.pyplot import plot, scatter, show
-    series = [0,0,0,2,0,0,0,-2,0,0,0,2,0,0,0,-2,0]
-    maxtab, mintab = peakdet(series,.3)
-    plot(series)
-    scatter(array(maxtab)[:,0], array(maxtab)[:,1], color='blue')
-    scatter(array(mintab)[:,0], array(mintab)[:,1], color='red')
-    show()
 
 class ols:
     """
