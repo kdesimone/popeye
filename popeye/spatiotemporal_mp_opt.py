@@ -117,10 +117,6 @@ class SpatioTemporalModel(PopulationModel):
         return np.linspace(0, self.stimulus.tr_length, self.stimulus.fps * self.stimulus.tr_length)
     
     @auto_attr
-    def tau(self):
-        return 0.0109677
-    
-    @auto_attr
     def center(self):
         return self.t[len(self.t)/2]
     

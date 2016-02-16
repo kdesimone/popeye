@@ -64,9 +64,15 @@ class SpatioTemporalModel(PopulationModel):
         p_resp = self.p_resp(p)
         m_resp = self.m_resp(m)
         
-        # mix them
+        # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, m_resp, p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
+        
+        # temporal response
+        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -97,9 +103,15 @@ class SpatioTemporalModel(PopulationModel):
         p_resp = self.p_resp(p)
         m_resp = self.m_resp(m)
         
-        # mix them
+        # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, m_resp, p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
+        
+        # temporal response
+        m_ts,p_ts = generate_strf_timeseries(rf_ts, m_resp, p_resp, self.stimulus.flicker_vec)
+        
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)

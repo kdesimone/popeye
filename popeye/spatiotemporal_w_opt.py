@@ -66,12 +66,8 @@ class SpatioTemporalModel(PopulationModel):
         m_ts /= len(m_ts)
         p_ts /= len(p_ts)
         
-        # set the ranges
-        m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0,1)
-        
         # mix them
-        mp_ts = weight * m_ts + (1-weight) * p_ts
+        mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -103,12 +99,8 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
-        # set the ranges
-        m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0,1)
-        
         # mix them
-        mp_ts = weight * m_ts + (1-weight) * p_ts
+        mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -137,10 +129,6 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def t(self):
         return np.linspace(0, self.stimulus.tr_length, self.stimulus.fps * self.stimulus.tr_length)
-    
-    @auto_attr
-    def tau(self):
-        return 0.0109677
     
     @auto_attr
     def center(self):
