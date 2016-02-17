@@ -508,10 +508,13 @@ def test_OLS():
     nt.assert_true(o.F == np.inf)
     nt.assert_almost_equal(np.sum(o.b),1.0)
     nt.assert_true(o.df_e == len(np.arange(100-2)))
-    nt.assert_almost_equal(np.sum(o.p),1.0,5)
+    nt.assert_almost_equal(o.p[1],0)
     nt.assert_true(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
     nt.assert_true(o.nobs == 100)
-    nt.assert_true(o.omni() == (18.093297390235648, 0.00011778511003501986))
+    omni_1 = o.omni()[0]
+    omni_2 = o.omni()[1]
+    nt.assert_almost_equal(omni_1,18.093297390235648)
+    nt.assert_almost_equal(omni_2, 0.00011778511003501986)
     nt.assert_true(o.JB() == (5.0825725194665461,0.07876502232916649,0.16483617111543283,1.9458968022816807))
     nt.assert_true(o.dw() == 0.0051450432267976026)
     
