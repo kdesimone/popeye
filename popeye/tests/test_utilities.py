@@ -508,7 +508,7 @@ def test_OLS():
     nt.assert_true(o.F == np.inf)
     nt.assert_almost_equal(np.sum(o.b),1.0)
     nt.assert_true(o.df_e == len(np.arange(100-2)))
-    nt.assert_almost_equal(np.sum(o.p),1.0)
+    nt.assert_almost_equal(np.sum(o.p),1.0,5)
     nt.assert_true(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
     nt.assert_true(o.nobs == 100)
     nt.assert_true(o.omni() == (18.093297390235648, 0.00011778511003501986))
