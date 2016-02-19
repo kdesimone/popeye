@@ -170,6 +170,11 @@ class GaussianFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
+
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return [self.theta,self.rho,self.sigma,self.beta,self.baseline,self.hrf_delay + 5.0]
     
     @auto_attr
     def x0(self):
