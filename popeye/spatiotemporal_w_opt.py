@@ -99,6 +99,10 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
+        
         # mix them
         mp_ts = (1-weight) * m_ts + weight * p_ts
         

@@ -56,12 +56,18 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # mix them
+        # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
         
-        # normalize units by length
-        mp_ts /= len(mp_ts)
+        # temporal response
+        m_ts, p_ts = generate_strf_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec)
+        
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
+        
+        # mix them
+        mp_ts = m_ts * m_beta + p_ts * p_beta
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -84,12 +90,18 @@ class SpatioTemporalModel(PopulationModel):
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
-        # mix them
+        # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
-        mp_ts = generate_strf_betas_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec, m_beta, p_beta)
         
-        # normalize units by length
-        mp_ts /= len(mp_ts)
+        # temporal response
+        m_ts, p_ts = generate_strf_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec)
+        
+        # normalize units
+        m_ts /= len(m_ts)
+        p_ts /= len(p_ts)
+        
+        # mix them
+        mp_ts = m_ts * m_beta + p_ts * p_beta
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
