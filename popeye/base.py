@@ -156,6 +156,7 @@ class PopulationFit(object):
                 
                 # final
                 self.estimate
+                self.overloaded_estimate
                 
                 # performance
                 self.OLS
@@ -221,7 +222,11 @@ class PopulationFit(object):
                                              utils.error_function,
                                              self.model.generate_prediction,
                                              self.very_verbose)
-                                             
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return None
+        
     @auto_attr
     def estimate(self):
         return self.gradient_descent[0]
@@ -272,7 +277,15 @@ class PopulationFit(object):
     
     @auto_attr
     def msg(self):
-        if self.auto_fit:
+        if self.auto_fit is True and self.overloaded_estimate is not None:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.finish-self.start,
+                  self.rsquared,
+                  np.round(self.overloaded_estimate,4)))
+        elif self.auto_fit is True:
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
