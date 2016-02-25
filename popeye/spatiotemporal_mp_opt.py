@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_strf_betas_timeseries, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_strf_timeseries, generate_rf_timeseries
 
 class SpatioTemporalModel(PopulationModel):
     
