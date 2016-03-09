@@ -524,7 +524,7 @@ def field_coverage(x, y, s, deg_x, deg_y, log=False, polar=False):
     
     # create the RFs
     for r in np.arange(len(x)):
-        rf = generate_og_receptive_field(deg_x, deg_y, x[r], y[r], s[r])
+        rf = generate_og_receptive_field(x[r], y[r], s[r], deg_x, deg_y)
         # d = np.sqrt((x[r]-deg_x)**2 + (y[r]-deg_y)**2)<s[r]
         field += rf
     
