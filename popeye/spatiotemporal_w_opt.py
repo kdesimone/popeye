@@ -49,12 +49,12 @@ class SpatioTemporalModel(PopulationModel):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (3*sigma)**2] = 1
         
         # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
@@ -85,12 +85,12 @@ class SpatioTemporalModel(PopulationModel):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
-        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (3*sigma)**2] = 1
         
         # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
@@ -175,6 +175,10 @@ class SpatioTemporalFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return [self.theta,self.rho,self.sigma,self.weight,self.beta,self.baseline,self.hrf_delay + 5.0]
     
     @auto_attr
     def x0(self):
