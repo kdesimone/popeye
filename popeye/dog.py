@@ -78,10 +78,10 @@ class DifferenceOfGaussiansModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         return model
-
+        
     def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
         
         # create mask for speed
@@ -106,7 +106,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         return model
     
