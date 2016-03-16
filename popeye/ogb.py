@@ -95,7 +95,7 @@ class GaussianModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)] / len(response)
         
-        model /= len(modle)
+        model /= len(model)
         
         # scale it by beta
         model *= beta
