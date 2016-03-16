@@ -53,7 +53,7 @@ class GaussianModel(PopulationModel):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
                 
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
@@ -63,6 +63,8 @@ class GaussianModel(PopulationModel):
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        
+        model /= len(model)
         
         # scale it by beta
         model *= beta
@@ -92,6 +94,8 @@ class GaussianModel(PopulationModel):
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        
+        model /= len(modle)
         
         # scale it by beta
         model *= beta
