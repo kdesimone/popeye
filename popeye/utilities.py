@@ -29,7 +29,7 @@ def recast_estimation_results(output, grid_parent):
     dims = list(grid_parent.shape)
     dims = dims[0:3]
     
-    if output[0].__dict__.has_key('overloaded_estimate'):
+    if output[0].overloaded_estimate is not None:
         dims.append(len(output[0].overloaded_estimate)+1)
     else:
         dims.append(len(output[0].estimate)+1)
@@ -43,7 +43,7 @@ def recast_estimation_results(output, grid_parent):
         if not np.isnan(fit.rsquared):
         
             # gather the estimate + stats
-            if fit.__dict__.has_key('overloaded_estimate'):
+            if fit.overloaded_estimate is not None:
                 voxel_dat = list(fit.overloaded_estimate)
             else:
                 voxel_dat = list(fit.estimate)
