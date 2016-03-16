@@ -62,7 +62,7 @@ class GaussianModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         model /= len(model)
         
@@ -93,7 +93,7 @@ class GaussianModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf)[0:len(response)] / len(response)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         model /= len(model)
         
