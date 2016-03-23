@@ -16,14 +16,14 @@ def test_ogb_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 20
     num_bar_steps = 40
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.50
-    resample_factor = 0.10
+    scale_factor = 0.10
+    resample_factor = 0.50
     pixels_across = 800 * resample_factor
     pixels_down = 600 * resample_factor
     dtype = ctypes.c_int16
@@ -53,21 +53,21 @@ def test_ogb_fit():
     model = ogb.GaussianModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
-    x = -2.24
-    y = 2.58
-    sigma = 0.58
-    beta = 1.1
+    x = -2.2
+    y = 2.6
+    sigma = 0.8
+    beta = 85
     baseline = 0.5
-    hrf_delay = -0.25
+    hrf_delay = -0.3
     
     # create data
     data = model.generate_prediction(x, y, sigma, beta, baseline, hrf_delay)
     
     # set search grid
-    x_grid = (-10,10)
-    y_grid = (-10,10)
+    x_grid = (-5,5)
+    y_grid = (-5,5)
     s_grid = (1/stimulus.ppd,5.25)
-    b_grid = (0.1,1.0)
+    b_grid = (1,100)
     bl_grid = (-1,1)
     h_grid = (-4.0,4.0)
     
@@ -75,7 +75,7 @@ def test_ogb_fit():
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (1/stimulus.ppd,12.0)
-    b_bound = (1e-8,1e2)
+    b_bound = (1e-8,None)
     bl_bound = (-1,1)
     h_bound = (-5.0,5.0)
     
@@ -87,8 +87,8 @@ def test_ogb_fit():
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
-    nt.assert_almost_equal(fit.sigma, sigma, 2)
-    nt.assert_almost_equal(fit.beta, beta, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    nt.assert_almost_equal(fit.x, x, 1)
+    nt.assert_almost_equal(fit.y, y, 1)
+    nt.assert_almost_equal(fit.sigma, sigma, 1)
+    nt.assert_almost_equal(np.round(fit.beta), beta, 1)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)
