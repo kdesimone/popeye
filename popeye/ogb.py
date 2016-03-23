@@ -49,7 +49,7 @@ class GaussianModel(PopulationModel):
         
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
@@ -80,7 +80,7 @@ class GaussianModel(PopulationModel):
         # create mask of central 5 sigmas for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
