@@ -54,7 +54,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (3*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
@@ -90,7 +90,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (3*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
