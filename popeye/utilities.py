@@ -5,7 +5,7 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time
+import sys, os, time, fnmatch
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
@@ -23,13 +23,13 @@ from numpy.random import randn, seed
 import sharedmem
 import cPickle
 
-def recast_estimation_results(output, grid_parent):
+def recast_estimation_results(output, grid_parent, overloaded=False):
     
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
     
-    if output[0].overloaded_estimate is not None:
+    if overloaded == True and output[0].overloaded_estimate is not None:
         dims.append(len(output[0].overloaded_estimate)+1)
     else:
         dims.append(len(output[0].estimate)+1)
@@ -43,7 +43,7 @@ def recast_estimation_results(output, grid_parent):
         if not np.isnan(fit.rsquared):
         
             # gather the estimate + stats
-            if fit.overloaded_estimate is not None:
+            if overloaded == True and fit.overloaded_estimate is not None:
                 voxel_dat = list(fit.overloaded_estimate)
             else:
                 voxel_dat = list(fit.estimate)
@@ -582,10 +582,14 @@ def cartes_to_polar(cartes):
     return polar
     
     
-def find(name, path):
-    for root, dirs, files in os.walk(path):
-        if name in files:
-            return os.path.join(root, name)
+def find_files(directory, pattern):
+    names = []
+    for root, dirs, files in os.walk(directory):
+        for basename in files:
+            if fnmatch.fnmatch(basename, pattern):
+                filename = os.path.join(root, basename)
+                names.append(filename)
+    return names
 
 def binner(signal, times, bins):
     binned_response = np.zeros(len(bins)-2)
