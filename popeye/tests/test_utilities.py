@@ -471,14 +471,14 @@ def test_binner():
     nt.assert_true(len(binned_signal), len(bins)-2)
     nt.assert_true(np.all(binned_signal==[5,5]))
 
-def test_find():
+def test_find_files():
     
-    f = open('/tmp/test.txt', 'w')
+    f = open('/tmp/test_abc.txt', 'w')
     f.close()
     
-    path = utils.find('test.txt','/tmp/')
+    path = utils.find_files('/tmp/','test*.txt')
     
-    nt.assert_equal(path,'/tmp/test.txt')
+    nt.assert_equal(path[0],'/tmp/test_abc.txt')
 
 def test_peakdet():
     
