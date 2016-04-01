@@ -62,15 +62,16 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
+        # normalize each timeseries
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0.1)
+        
         # mix them
-        mp_ts = (1-weight) * m_ts + weight * p_ts
+        mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
-        
-        # normalize units
-        model /= len(model)
         
         # scale
         model *= beta
@@ -98,15 +99,16 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
+        # normalize each timeseries
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0.1)
+        
         # mix them
-        mp_ts = (1-weight) * m_ts + weight * p_ts
+        mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
         
         # convolve with HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
-        
-        # normalize units
-        model /= len(model)
         
         # scale
         model *= beta
