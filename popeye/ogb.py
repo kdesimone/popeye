@@ -58,13 +58,14 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
+        # normalize units
+        response = utils.normalize(response, 0, 1)
+        
         # generate HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
-        
-        model /= len(model)
         
         # scale it by beta
         model *= beta
@@ -89,13 +90,14 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
+        # normalize units
+        response = utils.normalize(response,0,1)
+        
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
-        
-        model /= len(model)
         
         # scale it by beta
         model *= beta

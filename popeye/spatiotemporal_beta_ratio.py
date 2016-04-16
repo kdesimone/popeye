@@ -49,22 +49,22 @@ class SpatioTemporalModel(PopulationModel):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        m_ts, p_ts = generate_strf_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec)
         
-        # normalize units
-        m_ts /= len(m_ts)
-        p_ts /= len(p_ts)
+        # normalize each timeseries
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0.1)
         
         # mix them
         mp_ts = m_ts * beta + p_ts * beta_ratio/beta
@@ -83,22 +83,22 @@ class SpatioTemporalModel(PopulationModel):
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
-        spatial_rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # spatial_response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        m_ts, p_ts = generate_strf_timeseries(rf_ts, self.m_resp, self.p_resp, self.stimulus.flicker_vec)
         
-        # normalize units
-        m_ts /= len(m_ts)
-        p_ts /= len(p_ts)
+        # normalize each timeseries
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0.1)
         
         # mix them
         mp_ts = m_ts * beta + p_ts * beta_ratio/beta

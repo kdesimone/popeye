@@ -73,8 +73,6 @@ class SpatioTemporalModel(PopulationModel):
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
         
-        model = utils.normalize(model,0,1)
-         
         # offset
         model += baseline
         
@@ -90,7 +88,7 @@ class SpatioTemporalModel(PopulationModel):
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        mask[distance < (1*sigma)**2] = 1
         
         # spatial response
         rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
