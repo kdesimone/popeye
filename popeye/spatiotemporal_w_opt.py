@@ -64,7 +64,7 @@ class SpatioTemporalModel(PopulationModel):
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0.1)
+        p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
         mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
@@ -101,7 +101,7 @@ class SpatioTemporalModel(PopulationModel):
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0.1)
+        p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
         mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
