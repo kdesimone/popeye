@@ -67,7 +67,7 @@ class SpatioTemporalModel(PopulationModel):
         p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
-        mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
+        mp_ts = ((1-weight) * m_ts + weight * p_ts)
         
         # convolve with HRF
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
@@ -101,7 +101,7 @@ class SpatioTemporalModel(PopulationModel):
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0.1)
+        p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
         mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
@@ -154,7 +154,12 @@ class SpatioTemporalModel(PopulationModel):
         p_resp = np.zeros((ts,fs))
         for f in xrange(1,fs+1):
             p_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.p))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
-        return p_resp
+        
+        p_resp_rs = np.reshape(p_resp,(np.prod(p_resp.shape)),order='F')
+        p_resp_norm = utils.normalize(p_resp_rs,0,1)
+        p_resp_final = np.reshape(p_resp_norm,p_resp.shape,order='F')
+        
+        return p_resp_final
     
     @auto_attr
     def m_resp(self):
@@ -163,7 +168,12 @@ class SpatioTemporalModel(PopulationModel):
         m_resp = np.zeros((ts,fs))
         for f in xrange(1,fs+1):
             m_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.m))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
-        return m_resp
+        
+        m_resp_rs = np.reshape(m_resp,(np.prod(m_resp.shape)),order='F')
+        m_resp_norm = utils.normalize(m_resp_rs,0,1)
+        m_resp_final = np.reshape(m_resp_norm,m_resp.shape,order='F')
+        
+        return m_resp_final
         
 class SpatioTemporalFit(PopulationFit):
     
