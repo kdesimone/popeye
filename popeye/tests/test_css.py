@@ -84,10 +84,10 @@ def test_css_fit():
     fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
+    nt.assert_almost_equal(fit.x, x, 1)
+    nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(fit.n, n, 1)
     nt.assert_almost_equal(fit.beta, beta, 1)
-    nt.assert_almost_equal(fit.baseline, baseline, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    nt.assert_almost_equal(fit.baseline, baseline, 1)
+    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)
