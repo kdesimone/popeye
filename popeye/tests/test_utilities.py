@@ -138,19 +138,21 @@ def test_make_nifti():
     npt.assert_equal(np.mean(arr[...,1]),100)
     npt.assert_equal(nif.get_affine(),np.eye(4,4))
 
-def test_normalize():
+def test_error_function():
     
-    # create an array
+    # 1D
     arr = np.linspace(0,1,100)
-    
-    # create new bounds
-    lo = 0.0
+    lo = 100.0
     hi = 200.0
-    
-    # rescale the array
     arr_new = utils.normalize(arr, lo, hi)
+    npt.assert_equal(np.min(arr_new), lo)
+    npt.assert_equal(np.max(arr_new), hi)
     
-    # assert equivalence
+    # 2D
+    arr = np.tile(np.linspace(0,1,100),(10,1))
+    lo = np.repeat(lo,10)
+    hi = np.repeat(hi,10)
+    arr_new = utils.normalize(arr, lo, hi)
     npt.assert_equal(np.min(arr_new), lo)
     npt.assert_equal(np.max(arr_new), hi)
 
