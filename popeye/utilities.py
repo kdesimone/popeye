@@ -5,7 +5,7 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time, fnmatch
+import sys, os, time, fnmatch, copy
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
@@ -112,7 +112,7 @@ def generate_shared_array(unshared_arr,dtype):
     return shared_arr
 
 # normalize to a specific range
-def normalize(array, imin=-1, imax=1):
+def normalize(array, imin=-1, imax=1, axis=-1):
     
     r"""A short-hand function for normalizing an array to a desired range.
     
@@ -135,14 +135,23 @@ def normalize(array, imin=-1, imax=1):
         maximum values.
     """
     
-    new_arr = array.copy()
+    new_arr = copy.deepcopy(array)
     
-    dmin = new_arr.min()
-    dmax = new_arr.max()
-    new_arr -= dmin
-    new_arr *= imax - imin
-    new_arr /= dmax - dmin
-    new_arr += imin
+    if np.ndim(imin) == 0:
+        dmin = new_arr.min()
+        dmax = new_arr.max()
+        new_arr -= dmin
+        new_arr *= imax - imin
+        new_arr /= dmax - dmin
+        new_arr += imin
+    else:
+        dmin = new_arr.min(axis=axis)
+        dmax = new_arr.max(axis=axis)
+        new_arr -= dmin[:,np.newaxis]
+        new_arr *= imax[:,np.newaxis] - imin[:,np.newaxis]
+        new_arr /= dmax[:,np.newaxis] - dmin[:,np.newaxis]
+        new_arr += imin[:,np.newaxis]
+        
     return new_arr
     
 
