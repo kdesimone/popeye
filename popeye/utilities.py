@@ -135,15 +135,15 @@ def normalize(array, imin=-1, imax=1, axis=-1):
         maximum values.
     """
     
-    new_arr = copy.deepcopy(array)
+    new_arr = array.copy()
     
     if np.ndim(imin) == 0:
         dmin = new_arr.min()
         dmax = new_arr.max()
-        new_arr -= dmin
-        new_arr *= imax - imin
-        new_arr /= dmax - dmin
-        new_arr += imin
+        new_arr = new_arr-dmin
+        new_arr = new_arr*(imax - imin)
+        new_arr = new_arr/(dmax - dmin)
+        new_arr = new_arr+imin
     else:
         dmin = new_arr.min(axis=axis)
         dmax = new_arr.max(axis=axis)
