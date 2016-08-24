@@ -130,6 +130,17 @@ class SpatioTemporalModel(PopulationModel):
         m = m/(simps(np.abs(m),self.t))
         return m
     
+    def p_rf(self, tau):
+        p = np.exp(-((self.t-self.center)**2)/(2*tau**2))
+        p = p * 1/(np.sqrt(2*np.pi)*tau)
+        return p
+    
+    def m_rf(self, tau):
+        p = self.p_rf(tau)
+        m = np.insert(np.diff(p),0,0)
+        m = m/(simps(np.abs(m),self.t))
+        return m
+    
     @auto_attr
     def t(self):
         return np.linspace(0, self.stimulus.tr_length, self.stimulus.fps * self.stimulus.tr_length)

@@ -8,7 +8,7 @@ import nose.tools as nt
 from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
-import popeye.css as css
+import popeye.css_nohrf as css
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
 def test_css_fit():
@@ -39,22 +39,22 @@ def test_css_fit():
     
     # initialize the gaussian model
     model = css.CompressiveSpatialSummationModel(stimulus, utils.double_gamma_hrf)
+    model.hrf_delay = 0.2
     
     # generate a random pRF estimate
-    x = -5.24
-    y = 2.58
+    x = -2.24
+    y = 1.58
     sigma = 1.23
     n = 0.90
-    beta = 0.52
-    baseline = 0.1
-    hrf_delay = -0.25
+    beta = 1.0
+    baseline = 0.0
     
     # create the "data"
-    data =  model.generate_prediction(x, y, sigma, n, beta, baseline, hrf_delay)
+    data =  model.generate_prediction(x, y, sigma, n, beta, baseline)
     
     # set search grid
-    x_grid = (-5,5)
-    y_grid = (-5,5)
+    x_grid = (-3,2)
+    y_grid = (-3,2)
     s_grid = (1/stimulus.ppd,2.75)
     n_grid = (0.1,0.90)
     b_grid = (0.01,1)
@@ -71,8 +71,8 @@ def test_css_fit():
     h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid, h_grid)
-    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound, h_bound)
+    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid,)
+    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound,)
     
     # set some meta data
     Ns = 3
@@ -81,13 +81,12 @@ def test_css_fit():
     verbose = 0
     
     # fit the response
-    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 2)
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
+    nt.assert_almost_equal(fit.x, x, 1)
+    nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(fit.n, n, 1)
     nt.assert_almost_equal(fit.beta, beta, 1)
-    nt.assert_almost_equal(fit.baseline, baseline, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    nt.assert_almost_equal(fit.baseline, baseline, 1)
