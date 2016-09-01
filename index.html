@@ -39,13 +39,14 @@
 
 <br><h3><a name="welcome" class="anchor" href="#welcome"><span class="octicon octicon-link"></span></a>Installation</h3>
 
-<p>Download the popeye source code from the GitHub repository.  Links to the tarball and zip files are at the top of this page for your convenience.  Using popeye requires that you have installed <a href="http://www.numpy.org/">NumPy</a>, <a href="http://www.scipy.org/">SciPy</a>, <a href="https://pypi.python.org/pypi/statsmodels/">statsmodel</a>, and <a href="http://www.cython.org/">Cython</a>.  Installing <a href="http://www.matplotlib.org/">matplotlib</a> is recommended as we'll be plotting the results of our pRF estimation but is not required for any of the model fitting procedures in popeye.</p>
+<p>Download the popeye source code from the GitHub repository.  Links to the tarball and zip files are at the top of this page for your convenience.  Using popeye requires that you have installed <a href="http://www.numpy.org/">NumPy</a>, <a href="http://www.scipy.org/">SciPy</a>, <a href="https://pypi.python.org/pypi/statsmodels/">statsmodel</a>, <a href="http://www.cython.org/">Cython</a>, and <a href="http://nipy.org/nibabel/">nibabel</a>.  Installing <a href="http://www.matplotlib.org/">matplotlib</a> is recommended as we'll be plotting the results of our pRF estimation but is not required for any of the model fitting procedures in popeye.</p>
 
 <p>Once you've downloaded the popeye source code and installed the aforementioned dependencies, you'll need to install popeye and build the Cython extensions I've written for speeding up the analyses.</p> 
 
 <pre><code><font size="2">
 $ cd popeye
 $ sudo python setup.py install build_ext
+$ cd ~ # this ensures that we test the newly installed popeye rather than the one in the cwd
 $ python
 >>> import popeye
 >>> popeye.__version__
@@ -62,7 +63,7 @@ $ python
 <p>Below is a small demonstration of how to interact with the popeye API.  Here, we'll generate our stimulus and simulate the BOLD response of a Gaussian pRF model estimate we'll just invent.  Normally, we'd be analyzing the BOLD time-series that we collect while we present a participant with a visual stimulus.</p>
 
 <pre><code><font size="2">
-import ctypes
+import ctypes, multiprocessing
 import numpy as np
 import popeye.og as og
 import popeye.utilities as utils
@@ -71,10 +72,10 @@ from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 ### STIMULUS
 ## create sweeping bar stimulus
 sweeps = np.array([-1,0,-1,90,-1,180,-1,270,-1]) # in degrees, -1 is blank
-bar = simulate_bar_stimulus(500, 500, 40, 20, sweeps, 30, 30, 10)
+bar = simulate_bar_stimulus(100, 100, 40, 20, sweeps, 30, 30, 10)
                             
 ## create an instance of the Stimulus class
-stimulus = VisualStimulus(bar, 50, 25, 0.25, 1.0, ctypes.c_int16)
+stimulus = VisualStimulus(bar, 50, 25, 0.50, 1.0, ctypes.c_int16)
  
 ### MODEL
 ## initialize the gaussian model
