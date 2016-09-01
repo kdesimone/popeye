@@ -11,7 +11,7 @@ Installation
 
 Download the popeye source code from the GitHub repository `here <https://github.com/kdesimone/popeye>`_.
 Using popeye requires that you have installed `NumPy <http://www.numpy.org>`_, `SciPy <http://www.scipy.org>`_,
-`statsmodel <https://pypi.python.org/pypi/statsmodels>`_, `Cython <http://www.cython.org>`_, and 
+`statsmodel <https://pypi.python.org/pypi/statsmodels>`_, `Cython <http://www.cython.org>`_, and `nibabel <http://nipy.org/nibabel>`_.
 `matplotlib <http://www.matplotlib.org>`_.
 
 Once you've downloaded the popeye source code and installed the dependencies, install 
@@ -19,6 +19,7 @@ popeye and build the Cython extensions I've written for speeding up the analyses
 
     $ cd popeye
     $ sudo python setup.py install build_ext
+    $ cd ~ # this ensures we invoke the system install, rather than the cwd
     $ python 
     >>> import popeye
     >>> popeye.__version__
@@ -32,7 +33,7 @@ we'll generate our stimulus and simulate the BOLD response of a Gaussian pRF
 model estimate we'll just invent.  Normally, we'd be analyzing the BOLD time-series 
 that we collect while we present a participant with a visual stimulus. ::
     
-    import ctypes
+    import ctypes, multiprocessing
     import numpy as np
     import popeye.og as og
     import popeye.utilities as utils
