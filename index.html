@@ -143,9 +143,6 @@ bundle = utils.multiprocess_bundle(og.GaussianFit, model, data,
 ## run analysis
 pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
 output = pool.map(utils.parallel_fit, bundle)
-pool.close()
-pool.join()
-
 </font></code></pre></br>
 
 <p> Below is the output of the model fit we invoked in the code block above. Explore the attributes of the fit object to get a sense of the kinds of measures we've gleaned from the model.</p>
