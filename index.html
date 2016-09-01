@@ -71,7 +71,7 @@ from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 
 ### STIMULUS
 ## create sweeping bar stimulus
-sweeps = np.array([-1,0,-1,90,-1,180,-1,270,-1]) # in degrees, -1 is blank
+sweeps = np.array([-1,0,90,180,270,-1]) # in degrees, -1 is blank
 bar = simulate_bar_stimulus(100, 100, 40, 20, sweeps, 30, 30, 10)
                             
 ## create an instance of the Stimulus class
