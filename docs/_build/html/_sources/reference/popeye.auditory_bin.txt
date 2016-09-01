@@ -1,0 +1,101 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:mod:`auditory_bin`
+===================
+.. automodule:: popeye.auditory_bin
+
+.. currentmodule:: popeye.auditory_bin
+.. autosummary::
+
+   AuditoryFit
+   AuditoryModel
+   PopulationFit
+   PopulationModel
+   interp1d
+   auto_attr
+   binner
+   fftconvolve
+   generate_rf_timeseries_1D
+
+
+.. currentmodule:: popeye.auditory_bin
+
+:class:`AuditoryFit`
+~~~~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: AuditoryFit
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+  .. automethod:: __init__
+
+
+:class:`AuditoryModel`
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: AuditoryModel
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+  .. automethod:: __init__
+
+
+:class:`PopulationFit`
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: PopulationFit
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+  .. automethod:: __init__
+
+
+:class:`PopulationModel`
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: PopulationModel
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+  .. automethod:: __init__
+
+
+:class:`interp1d`
+~~~~~~~~~~~~~~~~~
+
+
+.. autoclass:: interp1d
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+  .. automethod:: __init__
+
+auto_attr
+~~~~~~~~~
+
+.. autofunction:: auto_attr
+
+binner
+~~~~~~
+
+.. autofunction:: binner
+
+fftconvolve
+~~~~~~~~~~~
+
+.. autofunction:: fftconvolve
+
+generate_rf_timeseries_1D
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: generate_rf_timeseries_1D
+

@@ -11,6 +11,7 @@
    LogFormatterMathtext
    LogNorm
    gaussian_kde
+   XY_scatter
    beta_hist
    eccentricity_hist
    eccentricity_sigma_fill
@@ -78,6 +79,11 @@
   :show-inheritance:
 
   .. automethod:: __init__
+
+XY_scatter
+~~~~~~~~~~
+
+.. autofunction:: XY_scatter
 
 beta_hist
 ~~~~~~~~~

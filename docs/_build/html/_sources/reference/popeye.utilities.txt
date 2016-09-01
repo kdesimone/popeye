@@ -10,15 +10,20 @@
    ols
    repeat
    Array
+   arange
+   array
+   asarray
+   binner
    brute
    brute_force_search
+   cartes_to_polar
    det
    diagonal
    diff
    dot
    double_gamma_hrf
    error_function
-   find
+   find_files
    fmin
    fmin_powell
    gaussian_2D
@@ -26,11 +31,13 @@
    gradient_descent_search
    imresize
    inv
+   isscalar
    make_nifti
    multiprocess_bundle
    normalize
    ones
    parallel_fit
+   peakdet
    percent_change
    randn
    recast_estimation_results
@@ -72,6 +79,26 @@ Array
 
 .. autofunction:: Array
 
+arange
+~~~~~~
+
+.. autofunction:: arange
+
+array
+~~~~~
+
+.. autofunction:: array
+
+asarray
+~~~~~~~
+
+.. autofunction:: asarray
+
+binner
+~~~~~~
+
+.. autofunction:: binner
+
 brute
 ~~~~~
 
@@ -81,6 +108,11 @@ brute_force_search
 ~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: brute_force_search
+
+cartes_to_polar
+~~~~~~~~~~~~~~~
+
+.. autofunction:: cartes_to_polar
 
 det
 ~~~
@@ -112,10 +144,10 @@ error_function
 
 .. autofunction:: error_function
 
-find
-~~~~
+find_files
+~~~~~~~~~~
 
-.. autofunction:: find
+.. autofunction:: find_files
 
 fmin
 ~~~~
@@ -152,6 +184,11 @@ inv
 
 .. autofunction:: inv
 
+isscalar
+~~~~~~~~
+
+.. autofunction:: isscalar
+
 make_nifti
 ~~~~~~~~~~
 
@@ -176,6 +213,11 @@ parallel_fit
 ~~~~~~~~~~~~
 
 .. autofunction:: parallel_fit
+
+peakdet
+~~~~~~~
+
+.. autofunction:: peakdet
 
 percent_change
 ~~~~~~~~~~~~~~

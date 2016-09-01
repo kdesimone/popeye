@@ -11,12 +11,10 @@
    GaborModel
    PopulationFit
    PopulationModel
-   interp1d
    auto_attr
-   brute
-   fmin_powell
-   generate_ballpark_prediction
-   linregress
+   fftconvolve
+   generate_gabor_receptive_field
+   generate_rf_timeseries
 
 
 .. currentmodule:: popeye.gabor
@@ -68,40 +66,23 @@
 
   .. automethod:: __init__
 
-
-:class:`interp1d`
-~~~~~~~~~~~~~~~~~
-
-
-.. autoclass:: interp1d
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-  .. automethod:: __init__
-
 auto_attr
 ~~~~~~~~~
 
 .. autofunction:: auto_attr
 
-brute
-~~~~~
-
-.. autofunction:: brute
-
-fmin_powell
+fftconvolve
 ~~~~~~~~~~~
 
-.. autofunction:: fmin_powell
+.. autofunction:: fftconvolve
 
-generate_ballpark_prediction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+generate_gabor_receptive_field
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: generate_ballpark_prediction
+.. autofunction:: generate_gabor_receptive_field
 
-linregress
-~~~~~~~~~~
+generate_rf_timeseries
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: linregress
+.. autofunction:: generate_rf_timeseries
 

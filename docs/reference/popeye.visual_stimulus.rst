@@ -16,8 +16,6 @@
    loadmat
    resample_stimulus
    simulate_bar_stimulus
-   simulate_checkerboard_bar
-   simulate_movie_bar
    simulate_sinflicker_bar
    square
    zoom
@@ -82,16 +80,6 @@ simulate_bar_stimulus
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: simulate_bar_stimulus
-
-simulate_checkerboard_bar
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: simulate_checkerboard_bar
-
-simulate_movie_bar
-~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: simulate_movie_bar
 
 simulate_sinflicker_bar
 ~~~~~~~~~~~~~~~~~~~~~~~
