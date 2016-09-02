@@ -405,17 +405,16 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     """
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 5.0/tr+delay/tr
+    alpha_1 = 6.0/tr+delay/tr
     beta_1 = 1.0
     c = 0.1
-    alpha_2 = 15.0/tr+delay/tr
+    alpha_2 = 16.0/tr+delay/tr
     beta_2 = 1.0
     
-    t = np.arange(0,33/tr,tr/fptr)
-    scale = 1
-    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
-                      np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))/gamma( alpha_2 ) ) )
+    t = np.arange(0,33,tr)
+    
+    hrf = ( ( ( t ** (alpha_1) * beta_1 ** alpha_1 * np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
+            ( ( t ** (alpha_2) * beta_2 ** alpha_2 * np.exp( -beta_2 * t )) /gamma( alpha_2 )) )
     
     if integrator:
         hrf /= integrator(hrf)
