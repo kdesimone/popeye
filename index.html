@@ -141,7 +141,7 @@ bundle = utils.multiprocess_bundle(og.GaussianFit, model, data,
                                    grids, bounds, 3, indices, True, 1)
 
 ## run analysis
-pool = multiprocessing.Pool(multiprocessing.cpu_count()-1)
+pool = multiprocessing.Pool(3)
 output = pool.map(utils.parallel_fit, bundle)
 </font></code></pre></br>
 
