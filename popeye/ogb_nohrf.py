@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
-""" Classes and functions for estimating Compressive Spatial Summation pRF model """
+""" Classes and functions for fitting Gaussian population encoding models """
 
 from __future__ import division
+import time
+import gc
 import warnings
 warnings.simplefilter("ignore")
 
@@ -15,17 +17,11 @@ import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
 from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
-class CompressiveSpatialSummationModel(PopulationModel):
-    
-    r"""
-    A Compressive Spatial Summation population receptive field model class
-    
-    """
+class GaussianModel(PopulationModel):
     
     def __init__(self, stimulus, hrf_model):
         
-        r"""
-        A Compressive Spatial Summation population receptive field model [1]_.
+        r"""A 2D Gaussian population receptive field model [1]_.
         
         Paramaters
         ----------
@@ -33,40 +29,36 @@ class CompressiveSpatialSummationModel(PopulationModel):
         stimulus : `VisualStimulus` class object
             A class instantiation of the `VisualStimulus` class
             containing a representation of the visual stimulus.
-        
+            
         hrf_model : callable
             A function that generates an HRF model given an HRF delay.
             For more information, see `popeye.utilties.double_gamma_hrf_hrf`
         
+        
         References
         ----------
-        
-        .. [1] Kay KN, Winawer J, Mezer A, Wandell BA (2014) Compressive spatial
-        summation in human visual cortex. Journal of Neurophysiology 110:481-494.
+        .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field estimates in human visual cortex. NeuroImage 39, 647-660
         
         """
         
         PopulationModel.__init__(self, stimulus, hrf_model)
-        
+    
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, n, beta, baseline):
+    def generate_ballpark_prediction(self, x, y, sigma, beta, baseline):
         
-        # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
         mask = np.ones_like(distance, dtype='uint8')
         # mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)**n
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
-        
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
+                
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
-        # convolve with the HRF
+        # generate HRF
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
@@ -75,24 +67,22 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # scale it by beta
         model *= beta
         
-        # offset
+        # add the baseline
         model += baseline
         
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, n, beta, baseline):
+    def generate_prediction(self, x, y, sigma, beta, baseline):
         
-        # create mask for speed
+        # create mask of central 5 sigmas for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
         mask = np.ones_like(distance, dtype='uint8')
         # mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)**n
-        
-        # normalize by the integral
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
@@ -106,37 +96,35 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # scale it by beta
         model *= beta
         
-        # offset
+        # add the baseline
         model += baseline
         
         return model
-        
-class CompressiveSpatialSummationFit(PopulationFit):
     
-    """
-    A Compressive Spatial Summation population receptive field fit class
+class GaussianFit(PopulationFit):
+    
+    r"""
+    A class containing tools for fitting the 2D Gaussian pRF model.
     
     """
     
     def __init__(self, model, data, grids, bounds, Ns,
                  voxel_index=(1,2,3), auto_fit=True, verbose=0):
         
-        r"""
-        A class containing tools for fitting the CSS pRF model.
+        r""" A class containing tools for fitting the 2D Gaussian pRF model.
         
-        The `CompressiveSpatialSummationFit` class houses all the fitting tool that 
-        are associated with estimating a pRF model. The `GaussianFit` takes a 
-        `CompressiveSpatialSummationModel` instance  `model` and a time-series `data`. 
-        In addition, extent and sampling-rate of a  brute-force grid-search is set 
-        with `grids` and `Ns`.  Use `bounds` to set limits on the search space for 
-        each parameter.  
+        The `GaussianFit` class houses all the fitting tool that are associated with 
+        estimatinga pRF model.  The `GaussianFit` takes a `GaussianModel` instance 
+        `model` and a time-series `data`.  In addition, extent and sampling-rate of a 
+        brute-force grid-search is set with `grids` and `Ns`.  Use `bounds` to set 
+        limits on the search space for each parameter.  
         
         Paramaters
         ----------
         
                 
-        model : `CompressiveSpatialSummationModel` class instance
-            An object representing the CSS model. 
+        model : `GaussianModel` class instance
+            An object representing the 2D Gaussian model. 
         
         data : ndarray
             An array containing the measured BOLD signal of a single voxel.
@@ -182,7 +170,12 @@ class CompressiveSpatialSummationFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
-                               
+
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return [self.theta,self.rho,self.sigma,self.beta,self.baseline,]
+    
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -194,19 +187,15 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def s0(self):
         return self.ballpark[2]
-        
-    @auto_attr
-    def n0(self):
-        return self.ballpark[3]
-        
+    
     @auto_attr
     def beta0(self):
-        return self.ballpark[4]
+        return self.ballpark[3]
     
     @auto_attr
     def baseline0(self):
-        return self.ballpark[5]
-    
+        return self.ballpark[4]
+        
     @auto_attr
     def x(self):
         return self.estimate[0]
@@ -218,19 +207,15 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[2]
-        
-    @auto_attr
-    def n(self):
-        return self.estimate[3]
-        
+    
     @auto_attr
     def beta(self):
-        return self.estimate[4]
-        
+        return self.estimate[3]
+    
     @auto_attr
     def baseline(self):
-        return self.estimate[5]
-        
+        return self.estimate[4]
+    
     @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
@@ -238,3 +223,4 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
+                                           

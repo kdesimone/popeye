@@ -48,8 +48,8 @@ class GaussianModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
+        mask = np.ones_like(distance, dtype='uint8')
+        #mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
@@ -58,11 +58,8 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
-        # normalize units
-        response = utils.normalize(response, 0, 1)
-        
         # generate HRF
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(hrf_delay, 1.0)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
@@ -80,8 +77,8 @@ class GaussianModel(PopulationModel):
         
         # create mask of central 5 sigmas for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
+        mask = np.ones_like(distance, dtype='uint8')
+        # mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -90,11 +87,8 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
-        # normalize units
-        response = utils.normalize(response,0,1)
-        
         # convolve with the HRF
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(hrf_delay, 1.0)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]

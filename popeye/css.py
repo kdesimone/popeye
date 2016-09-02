@@ -54,17 +54,14 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         # create mask for speed
         distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
+        mask = np.ones_like(distance, dtype='uint8')
+        # mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)**n
         
         # normalize by the integral
         rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
-        
-        # raise the gaussian to then n
-        # rf **= n
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
@@ -88,17 +85,14 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         # create mask for speed
         distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
+        mask = np.ones_like(distance, dtype='uint8')
+        # mask[distance < (1*sigma)**2] = 1
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)**n
         
         # normalize by the integral
         rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
-        
-        # raise the gaussian to then n
-        # rf **= n
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
