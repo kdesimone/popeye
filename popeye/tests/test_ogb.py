@@ -51,6 +51,7 @@ def test_ogb_fit():
     
     # initialize the gaussian model
     model = ogb.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model.tr_length = 1.0
     
     # generate a random pRF estimate
     x = -2.2
