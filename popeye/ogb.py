@@ -47,19 +47,20 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        #mask[distance < (1*sigma)**2] = 1
+        # mask pixels
+        mask = self.distance_mask_ballpark(x, y, sigma*6)
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        
+        # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
                 
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
         
         # generate HRF
-        hrf = self.hrf_model(hrf_delay, 1.0)
+        hrf = self.hrf_model(hrf_delay, self.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
@@ -75,20 +76,20 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        # create mask of central 5 sigmas for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        # mask[distance < (1*sigma)**2] = 1
+        # mask pixels
+        mask = self.distance_mask(x, y, sigma*6)
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # convolve with the HRF
-        hrf = self.hrf_model(hrf_delay, 1.0)
+        hrf = self.hrf_model(hrf_delay, self.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
@@ -101,6 +102,18 @@ class GaussianModel(PopulationModel):
         
         return model
     
+    def distance_mask_ballpark(self, x, y, sigma):
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (1*sigma)**2] = 1
+        return mask
+        
+    def distance_mask(self, x, y, sigma):
+        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < (1*sigma)**2] = 1
+        return mask
+            
 class GaussianFit(PopulationFit):
     
     r"""
