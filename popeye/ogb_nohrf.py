@@ -47,12 +47,13 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, baseline):
         
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        # mask[distance < (1*sigma)**2] = 1
+        # mask pixels
+        mask = self.distance_mask_ballpark
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        
+        # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
                 
         # extract the stimulus time-series
@@ -75,13 +76,13 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline):
         
-        # create mask of central 5 sigmas for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        # mask[distance < (1*sigma)**2] = 1
-        
+        # mask pixels
+        mask = self.distance_mask
+                
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
@@ -100,6 +101,14 @@ class GaussianModel(PopulationModel):
         model += baseline
         
         return model
+    
+    @auto_attr
+    def distance_mask_ballpark(self):
+        return np.ones_like(self.stimulus.deg_x_coarse, dtype='uint8')
+    
+    @auto_attr
+    def distance_mask(self):
+        return np.ones_like(self.stimulus.deg_x, dtype='uint8')
     
 class GaussianFit(PopulationFit):
     
