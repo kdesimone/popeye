@@ -53,18 +53,19 @@ class CompressiveSpatialSummationModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
         
         # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        # mask[distance < (1*sigma)**2] = 1
+        mask = self.distance_mask_ballpark(x, y, sigma*6)
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)**n
+        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         
         # normalize by the integral
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        
+        # compression
+        response **= n
         
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -83,19 +84,20 @@ class CompressiveSpatialSummationModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
         
-        # create mask for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.ones_like(distance, dtype='uint8')
-        # mask[distance < (1*sigma)**2] = 1
+        # RF mask
+        mask = self.distance_mask(x, y, sigma*6)
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)**n
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         
         # normalize by the integral
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        
+        # compression
+        response **= n
         
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
@@ -110,6 +112,18 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model += baseline
         
         return model
+    
+    def distance_mask_ballpark(self, x, y, sigma):
+        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < sigma**2] = 1
+        return mask
+        
+    def distance_mask(self, x, y, sigma):
+        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+        mask = np.zeros_like(distance, dtype='uint8')
+        mask[distance < sigma**2] = 1
+        return mask
         
 class CompressiveSpatialSummationFit(PopulationFit):
     
