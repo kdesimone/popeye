@@ -178,7 +178,7 @@ class PopulationFit(object):
                                                                                  self.voxel_index[2]))
             
             # print
-            if self.verbose:
+            if self.verbose and self.rsquared > 0.0:
                 print(self.msg)
                 
     # the brute search
