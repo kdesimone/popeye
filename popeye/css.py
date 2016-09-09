@@ -196,7 +196,11 @@ class CompressiveSpatialSummationFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
-                               
+   
+    @auto_attr
+    def overloaded_estimate(self):
+        return [self.theta,self.rho,self.sigma,self.n,self.beta,self.baseline,self.hrf_delay]
+    
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -260,3 +264,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
+    
+    @auto_attr
+    def sigma_size(self):
+        return self.sigma / np.sqrt(self.n)
