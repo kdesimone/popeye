@@ -186,6 +186,28 @@ def generate_strf_weight_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_rf_timeseries_nomask(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
+                                  np.ndarray[DTYPE2_t, ndim=2] rf):
+    
+    # cdef's
+    cdef int i,j,k
+    cdef int xlim = stim_arr.shape[0]
+    cdef int ylim = stim_arr.shape[1]
+    cdef int zlim = stim_arr.shape[2]
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            for k in xrange(zlim):
+                stim[k] += stim_arr[i,j,k]*rf[i,j]
+                
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_rf_timeseries(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
                            np.ndarray[DTYPE2_t, ndim=2] rf,
                            np.ndarray[DTYPE_t, ndim=2] mask):
