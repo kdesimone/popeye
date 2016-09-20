@@ -191,26 +191,27 @@ def test_error_function():
 def test_gradient_descent_search():
     
     # create a parameter to estimate
-    params = (10,10)
+    params = (12.0,7.0)
     
     # set grids + bounds
-    grids = ((0,20),(5,15))
+    grids = ((1,99),(1,99))
     bounds = ()
     
     # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
-    verbose = 0
+    verbose = 2
     
     # set the number of search samples
-    Ns = 3
+    Ns = 11
     
     # create a simple function to transform the parameters
-    func = lambda freq, offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
+    func = lambda freq, offset: np.sin( np.linspace(0.0,1.0,1000) * 2 * np.pi * freq) + offset
     
     # create a "response"
     response = func(*params)
     
     # get the fine estimate
-    phat = utils.gradient_descent_search((8,8), bounds, response, utils.error_function, func, verbose)
+    p0 = utils.brute_force_search(grids, bounds, Ns, response, utils.error_function, func, verbose)
+    phat = utils.gradient_descent_search(p0[0], bounds, response, utils.error_function, func, verbose)
     
     # assert that the estimate is equal to the parameter
     npt.assert_almost_equal(params, phat[0])
