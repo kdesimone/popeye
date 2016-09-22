@@ -15,7 +15,6 @@ from matplotlib.mlab import specgram
 
 import numpy as np
 from numpy.lib import stride_tricks
-from scipy.misc import imresize
 import nibabel
 
 from popeye.base import StimulusModel
