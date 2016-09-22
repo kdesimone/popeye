@@ -11,8 +11,11 @@ from __future__ import division
 import ctypes
 import gc
 import sys  
+from PIL import Image
+import PIL.ImageOps
 
 import numpy as np
+from scipy.misc import imresize, imread
 from scipy.ndimage.interpolation import zoom
 from scipy.io import loadmat
 from scipy.signal import square
