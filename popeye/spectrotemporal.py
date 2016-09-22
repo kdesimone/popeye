@@ -13,7 +13,6 @@ from scipy.optimize import brute, fmin_powell
 from scipy.special import gamma
 from scipy.stats import linregress
 from scipy.signal import fftconvolve, decimate
-from scipy.misc import imresize
 from scipy.ndimage.filters import median_filter
 from scipy.integrate import romb, trapz
 from scipy.interpolate import interp1d
