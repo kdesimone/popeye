@@ -4,7 +4,7 @@ Base-classes for poulation encoding models and fits.
 
 
 """
-import time, datetime
+import time
 import ctypes
 import numpy as np
 from popeye.onetime import auto_attr
@@ -147,20 +147,38 @@ class PopulationFit(object):
         # automatic fitting
         if self.auto_fit:
             
-            # start
-            self.start = datetime.datetime.now()
-            
-            # fit it
-            self.brute_force
-            self.ballpark
-            self.gradient_descent
-            self.estimate
-            
-            # finish
-            self.finish = datetime.datetime.now()
+            try:
+                # start
+                self.start = time.time()
+                
+                # init
+                self.ballpark
+                
+                # final
+                self.estimate
+                self.overloaded_estimate
+                
+                # performance
+                # self.OLS
+                self.rss
+                self.rsquared
+                
+                # finish
+                self.finish = time.time()
+                
+            except:
+                self.finish = time.time()
+                self.rsquared = np.nan
+                self.rss = np.nan
+                self.rsquared = np.nan
+                self.ballpark = np.nan
+                self.estimate = np.nan
+                self.msg = ('VOXEL=(%.03d,%.03d,%.03d)   FAILED TO CONVERGE!'  %(self.voxel_index[0],
+                                                                                 self.voxel_index[1],
+                                                                                 self.voxel_index[2]))
             
             # print
-            if self.verbose:
+            if self.verbose and self.rsquared > 0.0:
                 print(self.msg)
                 
     # the brute search
@@ -174,33 +192,24 @@ class PopulationFit(object):
                                         self.model.generate_ballpark_prediction,
                                         self.very_verbose)
      
-    
-    @auto_attr
-    def duration(self):
-        duration = self.finish-self.start
-        return duration.total_seconds()
-        
+     
     @auto_attr
     def ballpark(self):
         return self.brute_force[0]
-        
-    @auto_attr
-    def hrf0(self):
-        return self.brute_force[4]
     
-    @auto_attr
-    def fval(self):
-        return self.brute_force[1]
+    # @auto_attr
+    # def fval(self):
+    #     return self.brute_force[1]
+    # 
+    # @auto_attr
+    # def grid(self):
+    #     return self.brute_force[2]
+    # 
+    # @auto_attr
+    # def Jout(self):
+    #     return self.brute_force[3]
     
-    @auto_attr
-    def grid(self):
-        return self.brute_force[2]
-    
-    @auto_attr
-    def Jout(self):
-        return self.brute_force[3]
-    
-    # the gradient search                                  
+    # the gradient search
     @auto_attr
     def gradient_descent(self):
         return utils.gradient_descent_search(self.ballpark,
@@ -218,25 +227,25 @@ class PopulationFit(object):
     def estimate(self):
         return self.gradient_descent[0]
     
-    @auto_attr
-    def fopt(self):
-        return self.gradient_descent[1]
-    
-    @auto_attr
-    def direc(self):
-        return self.gradient_descent[2]
-    
-    @auto_attr
-    def iter(self):
-        return self.gradient_descent[3]
-    
-    @auto_attr
-    def funcalls(self):
-        return self.gradient_descent[4]
-    
-    @auto_attr
-    def allvecs(self):
-        return self.gradient_descent[6]
+    # @auto_attr
+    # def fopt(self):
+    #     return self.gradient_descent[1]
+    # 
+    # @auto_attr
+    # def direc(self):
+    #     return self.gradient_descent[2]
+    # 
+    # @auto_attr
+    # def iter(self):
+    #     return self.gradient_descent[3]
+    # 
+    # @auto_attr
+    # def funcalls(self):
+    #     return self.gradient_descent[4]
+    # 
+    # @auto_attr
+    # def allvecs(self):
+    #     return self.gradient_descent[6]
     
     @auto_attr
     def prediction(self):
@@ -246,13 +255,13 @@ class PopulationFit(object):
     # def OLS(self):
     #     return utils.ols(self.data,self.prediction)
     
-    @auto_attr
-    def coefficient(self):
-        return self.OLS.b[1]
+    # @auto_attr
+    # def coefficient(self):
+    #     return self.OLS.b[1]
     
     @auto_attr
     def rsquared(self):
-        return np.corrcoef(self.prediction,self.data)[0,1]**2
+        return np.corrcoef(self.data,self.prediction)[1][0]**2
     
     # @auto_attr
     # def stderr(self):
@@ -264,13 +273,12 @@ class PopulationFit(object):
     
     @auto_attr
     def msg(self):
-        txt = '%s' % (np.round(self.overloaded_estimate,4))
         if self.auto_fit is True and self.overloaded_estimate is not None:
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  np.round(self.duration),
+                  self.finish-self.start,
                   self.rsquared,
                   np.round(self.overloaded_estimate,4)))
         elif self.auto_fit is True:
@@ -278,7 +286,7 @@ class PopulationFit(object):
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  np.round(self.duration),
+                  self.finish-self.start,
                   self.rsquared,
                   np.round(self.estimate,4)))
         else:
