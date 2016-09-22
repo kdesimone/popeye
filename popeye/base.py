@@ -158,6 +158,11 @@ class PopulationFit(object):
                 self.estimate
                 self.overloaded_estimate
                 
+                # flush if not testing
+                if not self.very_verbose:
+                    self.gradient_descent = [None]*7
+                    self.brute_force =  [None,]*4
+                
                 # performance
                 # self.OLS
                 self.rss
@@ -196,18 +201,18 @@ class PopulationFit(object):
     @auto_attr
     def ballpark(self):
         return self.brute_force[0]
+
+    @auto_attr
+    def fval(self):
+        return self.brute_force[1]
     
-    # @auto_attr
-    # def fval(self):
-    #     return self.brute_force[1]
-    # 
-    # @auto_attr
-    # def grid(self):
-    #     return self.brute_force[2]
-    # 
-    # @auto_attr
-    # def Jout(self):
-    #     return self.brute_force[3]
+    @auto_attr
+    def grid(self):
+        return self.brute_force[2]
+    
+    @auto_attr
+    def Jout(self):
+        return self.brute_force[3]
     
     # the gradient search
     @auto_attr
@@ -227,25 +232,25 @@ class PopulationFit(object):
     def estimate(self):
         return self.gradient_descent[0]
     
-    # @auto_attr
-    # def fopt(self):
-    #     return self.gradient_descent[1]
-    # 
-    # @auto_attr
-    # def direc(self):
-    #     return self.gradient_descent[2]
-    # 
-    # @auto_attr
-    # def iter(self):
-    #     return self.gradient_descent[3]
-    # 
-    # @auto_attr
-    # def funcalls(self):
-    #     return self.gradient_descent[4]
-    # 
-    # @auto_attr
-    # def allvecs(self):
-    #     return self.gradient_descent[6]
+    @auto_attr
+    def fopt(self):
+        return self.gradient_descent[1]
+    
+    @auto_attr
+    def direc(self):
+        return self.gradient_descent[2]
+    
+    @auto_attr
+    def iter(self):
+        return self.gradient_descent[3]
+    
+    @auto_attr
+    def funcalls(self):
+        return self.gradient_descent[4]
+    
+    @auto_attr
+    def allvecs(self):
+        return self.gradient_descent[6]
     
     @auto_attr
     def prediction(self):
