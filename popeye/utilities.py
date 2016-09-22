@@ -12,6 +12,7 @@ from random import shuffle
 
 import numpy as np
 import nibabel
+from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell, fmin
 from scipy.integrate import romb, trapz
