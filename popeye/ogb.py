@@ -15,7 +15,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask
 
 class GaussianModel(PopulationModel):
     
@@ -50,14 +50,11 @@ class GaussianModel(PopulationModel):
         # mask pixels
         mask = self.distance_mask_ballpark(x, y, sigma*6)
         
-        # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        
         # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
                 
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
         
         # generate HRF
         hrf = self.hrf_model(hrf_delay, self.tr_length)
@@ -76,9 +73,6 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        # mask pixels
-        mask = self.distance_mask(x, y, sigma*6)
-        
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         
@@ -86,7 +80,7 @@ class GaussianModel(PopulationModel):
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
         
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.tr_length)
