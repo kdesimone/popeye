@@ -147,45 +147,34 @@ class PopulationFit(object):
         # automatic fitting
         if self.auto_fit:
             
-            try:
-                # start
-                self.start = time.time()
-                
-                # init
-                self.ballpark
-                
-                # final
-                self.estimate
-                self.overloaded_estimate
-                
-                # flush if not testing
-                if not self.very_verbose:
-                    self.gradient_descent = [None]*7
-                    self.brute_force =  [None,]*4
-                
-                # performance
-                # self.OLS
-                self.rss
-                self.rsquared
-                
-                # finish
-                self.finish = time.time()
-                
-            except:
-                self.finish = time.time()
-                self.rsquared = np.nan
-                self.rss = np.nan
-                self.rsquared = np.nan
-                self.ballpark = np.nan
-                self.estimate = np.nan
-                self.msg = ('VOXEL=(%.03d,%.03d,%.03d)   FAILED TO CONVERGE!'  %(self.voxel_index[0],
-                                                                                 self.voxel_index[1],
-                                                                                 self.voxel_index[2]))
+            # start
+            self.start = time.time()
+            
+            # init
+            self.brute_force
+            self.ballpark
+            
+            # final
+            self.gradient_descent
+            self.estimate
+            self.overloaded_estimate 
+            
+            # finish
+            self.finish = time.time()
+            
+            # performance
+            self.rss
+            self.rsquared
+            
+            # flush if not testing
+            if self.very_verbose == False:
+                self.gradient_descent = [None]*6
+                self.brute_force =[None,]*4
             
             # print
-            if self.verbose and self.rsquared > 0.0:
+            if self.verbose:
                 print(self.msg)
-                
+                                                                              
     # the brute search
     @auto_attr
     def brute_force(self):
@@ -250,27 +239,15 @@ class PopulationFit(object):
     
     @auto_attr
     def allvecs(self):
-        return self.gradient_descent[6]
+        return self.gradient_descent[5]
     
     @auto_attr
     def prediction(self):
         return self.model.generate_prediction(*self.estimate)
     
-    # @auto_attr
-    # def OLS(self):
-    #     return utils.ols(self.data,self.prediction)
-    
-    # @auto_attr
-    # def coefficient(self):
-    #     return self.OLS.b[1]
-    
     @auto_attr
     def rsquared(self):
         return np.corrcoef(self.data,self.prediction)[1][0]**2
-    
-    # @auto_attr
-    # def stderr(self):
-    #     return self.OLS.se[1]
     
     @auto_attr
     def rss(self):
