@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_strf_timeseries, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_strf_timeseries, generate_rf_timeseries_nomask
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -51,16 +51,11 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
-        # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
-        
         # spatial_response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
+        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        m_ts,p_ts = generate_strf_timeseries_nomask(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
@@ -88,13 +83,8 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
-        # create mask for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (1*sigma)**2] = 1
-        
         # spatial response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
+        rf_ts = generate_rf_timeseries_nomask(self.stimulus.stim_arr, spatial_rf)
         
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
