@@ -62,7 +62,7 @@ class SpatioTemporalModel(PopulationModel):
         p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
-        mp_ts = ((1-weight) * m_ts + weight * p_ts)
+        mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
@@ -94,7 +94,7 @@ class SpatioTemporalModel(PopulationModel):
         p_ts = utils.normalize(p_ts,0,1)
         
         # mix them
-        mp_ts = ((1-weight) * m_ts + weight * p_ts) / 2
+        mp_ts = (1-weight) * m_ts + weight * p_ts 
         
         # convolve with HRF
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
