@@ -52,10 +52,10 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
         # spatial_response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf)
+        rf_ts = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, spatial_rf)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries_nomask(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
