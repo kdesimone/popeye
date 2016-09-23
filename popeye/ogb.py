@@ -47,8 +47,8 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
         
-        # mask pixels
-        mask = self.distance_mask_ballpark(x, y, sigma*6)
+        # generate the RF
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         
         # normalize volume
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
