@@ -5,7 +5,6 @@ import ctypes
 import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
-from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
 import popeye.css_nohrf as css
@@ -13,22 +12,22 @@ from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resamp
 
 def test_css_fit():
     
-    # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
-    thetas = np.concatenate((np.array([-1]),thetas))
-    thetas = np.concatenate((thetas,np.array([-1])))
-    num_blank_steps = 30
+    thetas = np.arange(0,360,90)
+    num_blank_steps = 0
     num_bar_steps = 30
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.20
-    resample_factor = 0.25
-    pixels_across = 800 * resample_factor
-    pixels_down = 600 * resample_factor
+    scale_factor = 0.10
+    pixels_down = 100
+    pixels_across = 100
     dtype = ctypes.c_int16
+    Ns = 5
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -73,12 +72,6 @@ def test_css_fit():
     # loop over each voxel and set up a GaussianFit object
     grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid,)
     bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound,)
-    
-    # set some meta data
-    Ns = 3
-    voxel_index = (1,2,3)
-    auto_fit = True
-    verbose = 0
     
     # fit the response
     fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 2)

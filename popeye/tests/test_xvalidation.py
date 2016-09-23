@@ -33,17 +33,21 @@ def test_kfold_xval_repeated_runs():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
-    num_blank_steps = 20
-    num_bar_steps = 40
-    ecc = 12
+    thetas = np.arange(0,360,90)
+    num_blank_steps = 0
+    num_bar_steps = 30
+    ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.20
-    resample_factor = 0.25
-    pixels_across = 800 * resample_factor
-    pixels_down = 600 * resample_factor
+    scale_factor = 0.10
+    pixels_down = 100
+    pixels_across = 100
     dtype = ctypes.c_int16
+    Ns = 5
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
+    
     num_runs = 4
     folds = 2
     
