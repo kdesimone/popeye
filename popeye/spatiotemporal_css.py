@@ -205,7 +205,7 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta, self.rho, self.sigma, fit.n, self.weight, self.beta, self.baseline]
+        return [self.theta, self.rho, self.sigma, self.n, self.weight, self.beta, self.baseline]
     
     @auto_attr
     def x0(self):
