@@ -57,7 +57,7 @@ class GaussianModel(PopulationModel):
         response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
         
         # generate HRF
-        hrf = self.hrf_model(hrf_delay, self.tr_length)
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
@@ -83,7 +83,7 @@ class GaussianModel(PopulationModel):
         response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
         
         # convolve with the HRF
-        hrf = self.hrf_model(hrf_delay, self.tr_length)
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
