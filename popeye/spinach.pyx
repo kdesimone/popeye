@@ -690,13 +690,13 @@ def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                  np.ndarray[DTYPE2_t, ndim=2] deg_y,
                                  np.ndarray[DTYPE2_t, ndim=1] xs,
                                  np.ndarray[DTYPE2_t, ndim=1] ys,
-                                 DTYPE2_t s):
+                                 np.ndarray[DTYPE2_t, ndim=1] ss,):
     # cdef's
     cdef int i,j,k
-    cdef DTYPE2_t s_factor2 = (2.0*s**2)
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef int zlim = len(xs)
+    cdef DTYPE2_t s_factor2 = (2.0*ss[0]**2)
     
     # initilize the output variable
     cdef np.ndarray[DTYPE2_t, ndim=3, mode='c'] rfs = np.zeros((xlim,ylim,zlim),dtype=DTYPE2)
@@ -704,6 +704,7 @@ def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             for k in xrange(zlim):
+                s_factor2 = (2.0*ss[k]**2)
                 d = (deg_x[i,j]-xs[k])**2 + (deg_y[i,j]-ys[k])**2
                 rfs[i,j,k] += exp(-d/s_factor2)
                 
