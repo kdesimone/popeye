@@ -592,10 +592,10 @@ def field_coverage(x, y, s, deg_x, deg_y, log=False, polar=False):
     
     # create image
     if log:
-        im = ax.imshow(field,cmap='jet',extent=(-12,12,-12,12),norm=LogNorm(),vmin=1e0,vmax=1e2)
+        im = ax.imshow(field,cmap='viridis',extent=(-12,12,-12,12),norm=LogNorm(),vmin=1e0,vmax=1e2)
         cb = plt.colorbar(im, format=LogFormatterMathtext(),)
     else:
-        im = ax.imshow(field,cmap='jet',extent=(-12,12,-12,12),vmin=1e0,vmax=1e2)
+        im = ax.imshow(field,cmap='viridis',extent=(-12,12,-12,12),vmin=1e0,vmax=1e2)
         cb = plt.colorbar(im)
         
     # beautify
