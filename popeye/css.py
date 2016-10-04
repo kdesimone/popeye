@@ -199,7 +199,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
    
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta,self.rho,self.sigma,self.n,self.beta,self.baseline,self.hrf_delay]
+        return [self.theta,self.rho,self.sigma_size,self.n,self.beta,self.baseline,self.hrf_delay]
     
     @auto_attr
     def x0(self):
