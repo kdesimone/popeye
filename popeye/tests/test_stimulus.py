@@ -1,6 +1,6 @@
 from __future__ import division
 
-import os
+import os, ctypes
 
 import popeye.utilities as utils
 import numpy as np
@@ -8,7 +8,7 @@ import numpy.testing as npt
 
 import nose.tools as nt
 
-from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus
+from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus, VisualStimulus
 
 
 def test_generate_coordinate_matrices():
@@ -47,6 +47,37 @@ def test_generate_coordinate_matrices():
     nt.assert_true(np.sum(deg_x[0,0:50]) == np.sum(deg_x[0,50::])*-1)
     nt.assert_true(np.sum(deg_y[0:50,0]) == np.sum(deg_y[50::,0])*-1)
 
+def test_noresample_stimulus():
+    
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,90)
+    num_blank_steps = 0
+    num_bar_steps = 30
+    ecc = 12
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 1.0
+    pixels_across = 100
+    pixels_down = 100
+    dtype = ctypes.c_int16
+    Ns = 3
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # stimulus
+    npt.assert_equal(stimulus.stim_arr.shape[0:2],stimulus.stim_arr_coarse.shape[0:2])
+    npt.assert_equal(stimulus.deg_x.shape,stimulus.deg_x_coarse.shape)
+    npt.assert_equal(stimulus.deg_y.shape,stimulus.deg_y_coarse.shape)
 
 def test_resample_stimulus():
     
@@ -70,10 +101,18 @@ def test_resample_stimulus():
 
 def test_simulate_sinflicker_bar():
     
-    bar = simulate_sinflicker_bar(500,500,50,50,[0],1,10,5,1,1,60)
-    y = bar[250,250,:]
-    
+    # no blanks
+    bar = simulate_sinflicker_bar(100,100,50,10,[0],1,10,5,1,1,60)
+    y = utils.normalize(bar[1,1,:],0,1)
     t = np.linspace(0,1,60)
-    yhat = y = utils.normalize(np.sin(2 * np.pi * t),0,255).astype('uint8')
+    yhat = utils.normalize(np.sin(2 * np.pi * t),0,1)
+    nt.assert_almost_equal(np.sum(yhat-y),0)
     
-    nt.assert_true(np.all(y==yhat))
+    # blanks
+    bar = simulate_sinflicker_bar(100,100,50,10,[0,-1],1,10,5,1,1,60)
+    y = np.round(utils.normalize(bar[1,1,:],0,1),2)
+    t = np.linspace(0,1,60)
+    yhat = utils.normalize(np.sin(2 * np.pi * t),0,1)
+    yhat = np.append(yhat,np.repeat(0.5,60))
+    nt.assert_almost_equal(np.sum(yhat-np.round(y,2)),0,1)
+    
