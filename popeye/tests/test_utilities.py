@@ -13,35 +13,23 @@ import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
 
 def test_recast_estimation_results():
-    
-    # create 3 known prf estimates to fit    # stimulus features
+
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
-    num_blank_steps = 20
-    num_bar_steps = 40
-    ecc = 12
+    thetas = np.arange(0,360,90)
+    num_bar_steps = 30
+    num_blank_steps = 0
+    ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.20
-    resample_factor = 0.25
-    pixels_across = 800 * resample_factor
-    pixels_down = 600 * resample_factor
+    scale_factor = 0.10
+    pixels_across = 100
+    pixels_down = 100
     dtype = ctypes.c_int16
     Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 0
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -54,8 +42,8 @@ def test_recast_estimation_results():
     model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
     
     # generate a random pRF estimate
-    x = -5.24
-    y = 2.58
+    x = 1
+    y = 0
     sigma = 1.24
     beta = 1.1
     hrf_delay = -0.25
@@ -85,11 +73,6 @@ def test_recast_estimation_results():
     all_data = np.array([data,data,data])
     indices = [(0,0,0),(0,0,1),(0,0,2)]
     
-    # fitting
-    auto_fit = True
-    verbose = 1
-    Ns = 3
-    
     # bundle the voxels
     bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, Ns, indices, auto_fit, verbose)
     
@@ -111,6 +94,19 @@ def test_recast_estimation_results():
     npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
     npt.assert_almost_equal(np.mean(dat[...,3]), beta)
     npt.assert_almost_equal(np.mean(dat[...,4]), hrf_delay)
+    
+    # recast the estimation results - OVERLOADED
+    nif = utils.recast_estimation_results(output, grid_parent, True)
+    dat = nif.get_data()
+    
+    # assert equivalence
+    npt.assert_almost_equal(np.mean(dat[...,0]), 2*np.pi,2)
+    npt.assert_almost_equal(np.mean(dat[...,1]), 1)
+    npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
+    npt.assert_almost_equal(np.mean(dat[...,3]), beta)
+    npt.assert_almost_equal(np.mean(dat[...,4]), hrf_delay+6)
+    
+    
 
 def test_make_nifti():
     
@@ -138,7 +134,7 @@ def test_make_nifti():
     npt.assert_equal(np.mean(arr[...,1]),100)
     npt.assert_equal(nif.get_affine(),np.eye(4,4))
 
-def test_error_function():
+def test_normalize():
     
     # 1D
     arr = np.linspace(0,1,100)
