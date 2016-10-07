@@ -23,6 +23,7 @@ dependencies:
         - pip install sphinx
         - pip install matplotlib
         - pip install sharedmem
+        - pip install statsmodels
         - if [ "${COVERAGE}" == "1" ];then pip install coverage;pip install coveralls;fi
         - sudo mkdir tests_dir
         - sudo cp .coveragerc tests_dir/.coveragerc
