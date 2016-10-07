@@ -257,6 +257,19 @@ def test_double_gamma_hrf():
     diff_2 = np.abs(np.sum(utils.double_gamma_hrf(1, tr_length))-np.sum(utils.double_gamma_hrf(0, tr_length)))
     
     npt.assert_almost_equal(diff_1, diff_2, 2)
+    
+def test_spm_hrf():
+    
+    # set the TR length ... this affects the HRF sampling rate ...
+    tr_length = 1.0
+    
+    # compute the difference in area under curve for hrf_delays of -1 and 0
+    diff_1 = np.abs(np.sum(utils.spm_hrf(-1, tr_length))-np.sum(utils.spm_hrf(0, tr_length)))
+    
+    # compute the difference in area under curver for hrf_delays of 0 and 1
+    diff_2 = np.abs(np.sum(utils.spm_hrf(1, tr_length))-np.sum(utils.spm_hrf(0, tr_length)))
+    
+    npt.assert_almost_equal(diff_1, diff_2, 2)
 
 def test_randomize_voxels():
     
