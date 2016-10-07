@@ -31,16 +31,6 @@ def test_og_fit():
     auto_fit = True
     verbose = 1
     
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
-    
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
@@ -108,16 +98,6 @@ def test_parallel_og_fit():
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
