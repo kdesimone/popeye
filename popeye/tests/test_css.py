@@ -7,7 +7,7 @@ import numpy.testing as npt
 import nose.tools as nt
 
 import popeye.utilities as utils
-import popeye.css_nohrf as css
+from popeye import css
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
 def test_css_fit():
@@ -20,11 +20,11 @@ def test_css_fit():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.10
-    pixels_down = 100
-    pixels_across = 100
+    scale_factor = 0.50
+    pixels_down = 50
+    pixels_across = 50
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -37,7 +37,7 @@ def test_css_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = css.CompressiveSpatialSummationModel(stimulus, utils.double_gamma_hrf)
+    model = css.CompressiveSpatialSummationModel(stimulus, utils.spm_hrf)
     model.hrf_delay = 0.2
     
     # generate a random pRF estimate
@@ -47,9 +47,10 @@ def test_css_fit():
     n = 0.90
     beta = 1.0
     baseline = 0.0
+    hrf_delay = 0.25
     
     # create the "data"
-    data =  model.generate_prediction(x, y, sigma, n, beta, baseline)
+    data =  model.generate_prediction(x, y, sigma, n, beta, baseline, hrf_delay)
     
     # set search grid
     x_grid = (-3,2)
@@ -58,7 +59,7 @@ def test_css_fit():
     n_grid = (0.1,0.90)
     b_grid = (0.01,1)
     bl_grid = (-2,2)
-    h_grid = (-4.0,4.0)
+    h_grid = (-2.0,2.0)
     
     # set search bounds
     x_bound = (-10,10)
@@ -67,11 +68,11 @@ def test_css_fit():
     n_bound = (1e-8,1.0)
     b_bound = (1e-8,1e5)
     bl_bound = (None,None)
-    h_bound = (-5.0,5.0)
+    h_bound = (-3.0,3.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid,)
-    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound,)
+    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid, h_grid,)
+    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound, h_bound,)
     
     # fit the response
     fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 2)

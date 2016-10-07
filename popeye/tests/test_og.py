@@ -16,7 +16,7 @@ def test_og_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 12
@@ -26,7 +26,7 @@ def test_og_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -94,7 +94,7 @@ def test_parallel_og_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 12
@@ -104,7 +104,7 @@ def test_parallel_og_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1

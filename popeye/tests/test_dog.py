@@ -16,15 +16,15 @@ def test_dog():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.10
-    pixels_down = 100
-    pixels_across = 100
+    scale_factor = 0.50
+    pixels_down = 50
+    pixels_across = 50
     dtype = ctypes.c_int16
     Ns = 5
     voxel_index = (1,2,3)
@@ -39,8 +39,8 @@ def test_dog():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = dog.DifferenceOfGaussiansModel(stimulus, utils.double_gamma_hrf)
-    model.hrf_delay = 0
+    model = dog.DifferenceOfGaussiansModel(stimulus, utils.spm_hrf)
+    model.hrf_delay = 0.2
     
     # set the pRF params
     x = -1.4
