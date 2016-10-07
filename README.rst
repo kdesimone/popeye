@@ -6,9 +6,9 @@
 
 .. image:: https://circleci.com/gh/kdesimone/popeye.svg?style=shield&circle-token=:circle-token
    :target: https://circleci.com/gh/kdesimone/popeye
-   
-.. image:: https://coveralls.io/repos/kdesimone/popeye/badge.svg?branch=master
-   :target: https://coveralls.io/r/kdesimone/popeye
+
+.. image:: https://coveralls.io/repos/github/kdesimone/popeye/badge.svg?branch=master
+    :target: https://coveralls.io/github/kdesimone/popeye?branch=master
 
 popeye
 ============
