@@ -22,7 +22,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, nuissance=None):
         
         r"""
         A Compressive Spatial Summation population receptive field model [1]_.
@@ -46,7 +46,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model)
+        PopulationModel.__init__(self, stimulus, hrf_model, nuissance)
         
     
     # main method for deriving model time-series
