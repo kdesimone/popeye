@@ -106,18 +106,6 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model += baseline
         
         return model
-    
-    def distance_mask_ballpark(self, x, y, sigma):
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < sigma**2] = 1
-        return mask
-        
-    def distance_mask(self, x, y, sigma):
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < sigma**2] = 1
-        return mask
         
 class CompressiveSpatialSummationFit(PopulationFit):
     
