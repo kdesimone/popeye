@@ -8,7 +8,7 @@ import nose.tools as nt
 from scipy.signal import fftconvolve
 
 import popeye.utilities as utils
-import popeye.ogb as ogb
+import popeye.ogb_nohrf as ogb
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
 
 def test_ogb_fit():
@@ -49,8 +49,9 @@ def test_ogb_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = ogb.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = ogb.GaussianModel(stimulus, utils.spm_hrf)
     model.tr_length = 1.0
+    model.hrf_delay = 0.0
     
     # generate a random pRF estimate
     x = -2.2
@@ -58,10 +59,9 @@ def test_ogb_fit():
     sigma = 0.8
     beta = 85
     baseline = 0.5
-    hrf_delay = -0.3
     
     # create data
-    data = model.generate_prediction(x, y, sigma, beta, baseline, hrf_delay)
+    data = model.generate_prediction(x, y, sigma, beta, baseline,)
     
     # set search grid
     x_grid = (-5,5)
@@ -69,7 +69,6 @@ def test_ogb_fit():
     s_grid = (1/stimulus.ppd,5.25)
     b_grid = (1,100)
     bl_grid = (-1,1)
-    h_grid = (-4.0,4.0)
     
     # set search bounds
     x_bound = (-12.0,12.0)
@@ -77,11 +76,10 @@ def test_ogb_fit():
     s_bound = (1/stimulus.ppd,12.0)
     b_bound = (1e-8,None)
     bl_bound = (-1,1)
-    h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid, bl_grid, h_grid)
-    bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound, h_bound)
+    grids = (x_grid, y_grid, s_grid, b_grid, bl_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound,)
     
     # fit the response
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
@@ -91,4 +89,3 @@ def test_ogb_fit():
     nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(np.round(fit.beta), beta, 1)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)

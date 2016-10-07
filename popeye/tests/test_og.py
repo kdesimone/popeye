@@ -16,7 +16,7 @@ def test_og_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 12
@@ -26,20 +26,10 @@ def test_og_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -94,7 +84,7 @@ def test_parallel_og_fit():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 12
@@ -104,20 +94,10 @@ def test_parallel_og_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 

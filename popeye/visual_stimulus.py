@@ -167,10 +167,6 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                             thetas, sweep_steps, bar_width,
                             ecc, tr_length, flicker_hz, projector_hz):
     
-    # compute a single flicker cycle
-    if np.mod(projector_hz/flicker_hz,2) != 0:
-        sys.exit('mod(projector_hz/flicker_hz,2) must equal 0!')
-    
     # get number of frames per volume
     frames_per_vol = tr_length*projector_hz
     total_trs = len(thetas)*sweep_steps
