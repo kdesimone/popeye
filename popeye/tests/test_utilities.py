@@ -176,13 +176,19 @@ def test_error_function():
     params = (30.0,)
     nt.assert_true(utils.error_function(params, bounds, response, func, verbose) == np.inf)
     
-    # assert print is param and 0 error
-    params = (10.0,)
-    out = StringIO()
-    sys.stdout = out
-    x = utils.error_function(params, bounds, response, func, verbose)
-    output = out.getvalue().strip()
-    nt.assert_true(output == '((10.0,), 0.0)')
+    # # assert print is param and 0 error
+    # params = (10.0,)
+    # out = StringIO()
+    # sys.stdout = out
+    # x = utils.error_function(params, bounds, response, func, verbose)
+    # output = out.getvalue().strip()
+    # nt.assert_true(output == '((10.0,), 0.0)')
+    
+    # test nan returns inf
+    response = func(params)
+    response[0] = np.nan
+    err = utils.error_function(params, bounds, response, func, verbose)
+    nt.assert_equal(err,np.inf)
     
 def test_gradient_descent_search():
     
