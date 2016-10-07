@@ -96,14 +96,6 @@ class GaussianModel(PopulationModel):
         
         return model
     
-    @auto_attr
-    def distance_mask_ballpark(self):
-        return np.ones_like(self.stimulus.deg_x_coarse, dtype='uint8')
-    
-    @auto_attr
-    def distance_mask(self):
-        return np.ones_like(self.stimulus.deg_x, dtype='uint8')
-    
 class GaussianFit(PopulationFit):
     
     r"""
