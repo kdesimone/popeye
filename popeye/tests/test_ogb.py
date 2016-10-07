@@ -23,8 +23,8 @@ def test_ogb_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.10
-    pixels_down = 100
-    pixels_across = 100
+    pixels_down = 50
+    pixels_across = 50
     dtype = ctypes.c_int16
     Ns = 3
     voxel_index = (1,2,3)
