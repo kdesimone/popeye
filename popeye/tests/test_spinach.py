@@ -2,6 +2,8 @@ import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
 
+import popeye.utilities as utils
+import popeye.spinach as spin
 from popeye.visual_stimulus import generate_coordinate_matrices
 from popeye.spinach import generate_og_receptive_field, generate_og_timeseries
 
@@ -83,3 +85,15 @@ def test_generate_og_timeseries():
     # The voxel responds when the stimulus covers its PRF, so it perfectly
     # correlates with a step function: 
     nt.assert_equal(round(rval, 3), 1)
+
+# def test_binner():
+#     
+#     signal = np.ones(10)
+#     times = np.linspace(0,1,10)
+#     bins = np.arange(-0.5,1.5,0.5)
+#     
+#     binned_signal = spin.binner(signal, times, bins)
+#     
+#     nt.assert_true(len(binned_signal), len(bins)-2)
+#     nt.assert_true(np.all(binned_signal==[5,5]))
+#     

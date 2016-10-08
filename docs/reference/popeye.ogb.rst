@@ -14,7 +14,7 @@
    auto_attr
    fftconvolve
    generate_og_receptive_field
-   generate_rf_timeseries
+   generate_rf_timeseries_nomask
 
 
 .. currentmodule:: popeye.ogb
@@ -81,8 +81,8 @@ generate_og_receptive_field
 
 .. autofunction:: generate_og_receptive_field
 
-generate_rf_timeseries
-~~~~~~~~~~~~~~~~~~~~~~
+generate_rf_timeseries_nomask
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: generate_rf_timeseries
+.. autofunction:: generate_rf_timeseries_nomask
 

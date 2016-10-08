@@ -1,4 +1,4 @@
-import ctypes, multiprocessing
+import ctypes
 
 import matplotlib
 from matplotlib.pyplot import specgram

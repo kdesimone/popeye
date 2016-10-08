@@ -5,14 +5,13 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time
+import sys, os, time, fnmatch, copy
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
 
 import numpy as np
 import nibabel
-from scipy.misc import imresize
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell, fmin
 from scipy.integrate import romb, trapz
@@ -21,13 +20,59 @@ from scipy.linalg import inv, solve, det
 from numpy import log, pi, sqrt, square, diagonal
 from numpy.random import randn, seed
 import sharedmem
+import cPickle
 
-def recast_estimation_results(output, grid_parent):
+def spm_hrf(delay, TR):
+    """ An implementation of spm_hrf.m from the SPM distribution
+
+Arguments:
+
+Required:
+TR: repetition time at which to generate the HRF (in seconds)
+
+Optional:
+p: list with parameters of the two gamma functions:
+                                                     defaults
+                                                    (seconds)
+   p[0] - delay of response (relative to onset)         6
+   p[1] - delay of undershoot (relative to onset)      16
+   p[2] - dispersion of response                        1
+   p[3] - dispersion of undershoot                      1
+   p[4] - ratio of response to undershoot               6
+   p[5] - onset (seconds)                               0
+   p[6] - length of kernel (seconds)                   32
+
+"""
+    # default settings
+    p=[6,16,1,1,6,0,32]
+    p=[float(x) for x in p]
+    
+    # delay variation
+    p[0] += delay
+    p[1] += delay
+    
+    fMRI_T = 16.0
+    
+    TR=float(TR)
+    dt  = TR/fMRI_T
+    u   = np.arange(p[6]/dt + 1) - p[5]/dt
+    hrf=stats.gamma.pdf(u,p[0]/p[2],scale=1.0/(dt/p[2])) - stats.gamma.pdf(u,p[1]/p[3],scale=1.0/(dt/p[3]))/p[4]
+    good_pts=np.array(range(np.int(p[6]/TR)))*fMRI_T
+    hrf=hrf[list(good_pts)]
+    # hrf = hrf([0:(p(7)/RT)]*fMRI_T + 1);
+    hrf = hrf/np.sum(hrf);
+    return hrf
+
+def recast_estimation_results(output, grid_parent, overloaded=False):
     
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-    dims.append(len(output[0].estimate)+3)
+    
+    if overloaded == True and output[0].overloaded_estimate is not None:
+        dims.append(len(output[0].overloaded_estimate)+1)
+    else:
+        dims.append(len(output[0].estimate)+1)
     
     # initialize the statmaps
     estimates = np.zeros(dims)
@@ -38,10 +83,12 @@ def recast_estimation_results(output, grid_parent):
         if not np.isnan(fit.rsquared):
         
             # gather the estimate + stats
-            voxel_dat = list(fit.estimate)
+            if overloaded == True and fit.overloaded_estimate is not None:
+                voxel_dat = list(fit.overloaded_estimate)
+            else:
+                voxel_dat = list(fit.estimate)
+                
             voxel_dat.append(fit.rsquared)
-            voxel_dat.append(fit.coefficient)
-            voxel_dat.append(fit.stderr)
             voxel_dat = np.array(voxel_dat)
         
             # assign to 
@@ -105,7 +152,7 @@ def generate_shared_array(unshared_arr,dtype):
     return shared_arr
 
 # normalize to a specific range
-def normalize(array, imin=-1, imax=1):
+def normalize(array, imin=-1, imax=1, axis=-1):
     
     r"""A short-hand function for normalizing an array to a desired range.
     
@@ -130,12 +177,21 @@ def normalize(array, imin=-1, imax=1):
     
     new_arr = array.copy()
     
-    dmin = new_arr.min()
-    dmax = new_arr.max()
-    new_arr -= dmin
-    new_arr *= imax - imin
-    new_arr /= dmax - dmin
-    new_arr += imin
+    if np.ndim(imin) == 0:
+        dmin = new_arr.min()
+        dmax = new_arr.max()
+        new_arr = new_arr-dmin
+        new_arr = new_arr*(imax - imin)
+        new_arr = new_arr/(dmax - dmin)
+        new_arr = new_arr+imin
+    else:
+        dmin = new_arr.min(axis=axis)
+        dmax = new_arr.max(axis=axis)
+        new_arr -= dmin[:,np.newaxis]
+        new_arr *= imax[:,np.newaxis] - imin[:,np.newaxis]
+        new_arr /= dmax[:,np.newaxis] - dmin[:,np.newaxis]
+        new_arr += imin[:,np.newaxis]
+        
     return new_arr
     
 
@@ -333,6 +389,12 @@ def error_function(parameters, bounds, data, objective_function, verbose):
     
     # compute the RSS
     prediction = objective_function(*ensemble)
+    
+    # if nan, return inf
+    if np.any(np.isnan(prediction)):
+        return np.inf
+    
+    # else, return RSS
     error = np.sum((data-prediction)**2)
     
     # print for debugging
@@ -389,11 +451,10 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     alpha_2 = 15.0/tr+delay/tr
     beta_2 = 1.0
     
-    t = np.arange(0,33/tr,tr/fptr)
-    scale = 1
-    hrf = scale*( ( ( t ** (alpha_1) * beta_1 ** alpha_1 *
-                      np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
-                  ( ( t ** (alpha_2 ) * beta_2 ** alpha_2 * np.exp( -beta_2 * t ))/gamma( alpha_2 ) ) )
+    t = np.arange(0,33,tr)
+    
+    hrf = ( ( ( t ** (alpha_1) * beta_1 ** alpha_1 * np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
+            ( ( t ** (alpha_2) * beta_2 ** alpha_2 * np.exp( -beta_2 * t )) /gamma( alpha_2 )) )
     
     if integrator:
         hrf /= integrator(hrf)
@@ -491,7 +552,10 @@ def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, 
               repeat(auto_fit,num_voxels),
               repeat(verbose,num_voxels))
     
-    shuffle(dat)
+    # return randomized order
+    np.random.seed(12345)
+    idx = np.argsort(np.random.rand(len(dat)))
+    dat = [dat[i] for i in idx]
     
     return dat
 
@@ -555,131 +619,229 @@ def parallel_fit(args):
               verbose)
     return fit
 
-def find(name, path):
-    for root, dirs, files in os.walk(path):
-        if name in files:
-            return os.path.join(root, name)
+def cartes_to_polar(cartes):
+    
+    """
+    Assumes that the 0th and 1st parameters are cartesian `x` and `y`
+    """
+    polar = cartes.copy()
+    polar[...,0] = np.mod(np.arctan2(cartes[...,1], cartes[...,0]),2*np.pi)
+    polar[...,1] = np.sqrt(cartes[...,0]**2 + cartes[...,1]**2)
+    return polar
+    
+    
+def find_files(directory, pattern):
+    names = []
+    for root, dirs, files in os.walk(directory):
+        for basename in files:
+            if fnmatch.fnmatch(basename, pattern):
+                filename = os.path.join(root, basename)
+                names.append(filename)
+    return names
 
-class ols:
+def binner(signal, times, bins):
+    binned_response = np.zeros(len(bins)-2)
+    bin_width = bins[1] - bins[0]
+    for t in xrange(1,len(bins)):
+        the_bin = bins[t]
+        binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
+        binned_response[t-2] = np.sum(binned_signal)
+    return binned_response
+
+import sys
+from numpy import NaN, Inf, arange, isscalar, asarray, array
+
+def peakdet(v, delta, x = None):
     """
-    Author: Vincent Nijs (+ ?)
-    Email: v-nijs at kellogg.northwestern.edu
-    Last Modified: Mon Jan 15 17:56:17 CST 2007
-    """
+    Converted from MATLAB script at http://billauer.co.il/peakdet.html
     
-    def __init__(self,y,x,y_varnm = 'y',x_varnm = ''):
+    Returns two arrays
+    
+    function [maxtab, mintab]=peakdet(v, delta, x)
+    #PEAKDET Detect peaks in a vector
+    #        [MAXTAB, MINTAB] = PEAKDET(V, DELTA) finds the local
+    #        maxima and minima ("peaks") in the vector V.
+    #        MAXTAB and MINTAB consists of two columns. Column 1
+    #        contains indices in V, and column 2 the found values.
+    #      
+    #        With [MAXTAB, MINTAB] = PEAKDET(V, DELTA, X) the indices
+    #        in MAXTAB and MINTAB are replaced with the corresponding
+    #        X-values.
+    #
+    #        A point is considered a maximum peak if it has the maximal
+    #        value, and was preceded (to the left) by a value lower by
+    #        DELTA.
+    #
+    # Eli Billauer, 3.4.05 (Explicitly not copyrighted).
+    # This function is released to the public domain; Any use is allowed.
+    
+    """
+    maxtab = []
+    mintab = []
+       
+    if x is None:
+        x = arange(len(v))
+    
+    v = asarray(v)
+    
+    if len(v) != len(x):
+        sys.exit('Input vectors v and x must have same length')
+    
+    if not isscalar(delta):
+        sys.exit('Input argument delta must be a scalar')
+    
+    if delta <= 0:
+        sys.exit('Input argument delta must be positive')
+    
+    mn, mx = Inf, -Inf
+    mnpos, mxpos = NaN, NaN
+    
+    lookformax = True
+    
+    for i in arange(len(v)):
+        this = v[i]
+        if this > mx:
+            mx = this
+            mxpos = x[i]
+        if this < mn:
+            mn = this
+            mnpos = x[i]
         
-        self.y = y
-        self.x = c_[ones(x.shape[0]),x]
-        self.y_varnm = y_varnm  
-        if not isinstance(x_varnm,list): 
-            self.x_varnm = ['const'] + list(x_varnm)
+        if lookformax:
+            if this < mx-delta:
+                maxtab.append((mxpos, mx))
+                mn = this
+                mnpos = x[i]
+                lookformax = False
         else:
-            self.x_varnm = ['const'] + x_varnm
-            
-        # Estimate model using OLS
-        self.estimate()
-        
-    def estimate(self):
-        
-        # estimating coefficients, and basic stats
-        self.inv_xx = inv(dot(self.x.T,self.x))
-        xy = dot(self.x.T,self.y)
-        self.b = dot(self.inv_xx,xy)                    # estimate coefficients
-        
-        self.nobs = self.y.shape[0]                     # number of observations
-        self.ncoef = self.x.shape[1]                    # number of coef.
-        self.df_e = self.nobs - self.ncoef              # degrees of freedom, error 
-        self.df_r = self.ncoef - 1                      # degrees of freedom, regression 
-        
-        self.e = self.y - dot(self.x,self.b)            # residuals
-        self.sse = dot(self.e,self.e)/self.df_e         # SSE
-        self.se = sqrt(diagonal(self.sse*self.inv_xx))  # coef. standard errors
-        self.t = self.b / self.se                       # coef. t-statistics
-        self.p = (1-stats.t.cdf(abs(self.t), self.df_e)) * 2    # coef. p-values
-        
-        self.R2 = 1 - self.e.var()/self.y.var()         # model R-squared
-        self.R2adj = 1-(1-self.R2)*((self.nobs-1)/(self.nobs-self.ncoef))   # adjusted R-square
-        
-        self.F = (self.R2/self.df_r) / ((1-self.R2)/self.df_e)  # model F-statistic
-        self.Fpv = 1-stats.f.cdf(self.F, self.df_r, self.df_e)  # F-statistic p-value
-        
-    def dw(self):
-        """
-        Calculates the Durbin-Waston statistic
-        """
-        de = diff(self.e,1)
-        dw = dot(de,de) / dot(self.e,self.e);
-        
-        return dw
-        
-    def omni(self):
-        """
-        Omnibus test for normality
-        """
-        return stats.normaltest(self.e) 
-        
-    def JB(self):
-        """
-        Calculate residual skewness, kurtosis, and do the JB test for normality
-        """
-        
-        # Calculate residual skewness and kurtosis
-        skew = stats.skew(self.e) 
-        kurtosis = 3 + stats.kurtosis(self.e) 
-        
-        # Calculate the Jarque-Bera test for normality
-        JB = (self.nobs/6) * (square(skew) + (1/4)*square(kurtosis-3))
-        JBpv = 1-stats.chi2.cdf(JB,2);
-        
-        return JB, JBpv, skew, kurtosis
-        
-    def ll(self):
-        """
-        Calculate model log-likelihood and two information criteria
-        """
-        
-        # Model log-likelihood, AIC, and BIC criterion values 
-        ll = -(self.nobs*1/2)*(1+log(2*pi)) - (self.nobs/2)*log(dot(self.e,self.e)/self.nobs)
-        aic = -2*ll/self.nobs + (2*self.ncoef/self.nobs)
-        bic = -2*ll/self.nobs + (self.ncoef*log(self.nobs))/self.nobs
-        
-        return ll, aic, bic
-    
-    def summary(self):
-        """
-        Printing model output to screen
-        """
-        
-        # local time & date
-        t = time.localtime()
-        
-        # extra stats
-        ll, aic, bic = self.ll()
-        JB, JBpv, skew, kurtosis = self.JB()
-        omni, omnipv = self.omni()
-        
-        # printing output to screen
-        print '\n=============================================================================='
-        print "Dependent Variable: " + self.y_varnm
-        print "Method: Least Squares"
-        print "Date: ", time.strftime("%a, %d %b %Y",t)
-        print "Time: ", time.strftime("%H:%M:%S",t)
-        print '# obs:               %5.0f' % self.nobs
-        print '# variables:     %5.0f' % self.ncoef 
-        print '=============================================================================='
-        print 'variable     coefficient     std. Error      t-statistic     prob.'
-        print '=============================================================================='
-        for i in range(len(self.x_varnm)):
-            print '''% -5s          % -5.6f     % -5.6f     % -5.6f     % -5.6f''' % tuple([self.x_varnm[i],self.b[i],self.se[i],self.t[i],self.p[i]]) 
-        print '=============================================================================='
-        print 'Models stats                         Residual stats'
-        print '=============================================================================='
-        print 'R-squared            % -5.6f         Durbin-Watson stat  % -5.6f' % tuple([self.R2, self.dw()])
-        print 'Adjusted R-squared   % -5.6f         Omnibus stat        % -5.6f' % tuple([self.R2adj, omni])
-        print 'F-statistic          % -5.6f         Prob(Omnibus stat)  % -5.6f' % tuple([self.F, omnipv])
-        print 'Prob (F-statistic)   % -5.6f			JB stat             % -5.6f' % tuple([self.Fpv, JB])
-        print 'Log likelihood       % -5.6f			Prob(JB)            % -5.6f' % tuple([ll, JBpv])
-        print 'AIC criterion        % -5.6f         Skew                % -5.6f' % tuple([aic, skew])
-        print 'BIC criterion        % -5.6f         Kurtosis            % -5.6f' % tuple([bic, kurtosis])
-        print '=============================================================================='    
+            if this > mn+delta:
+                mintab.append((mnpos, mn))
+                mx = this
+                mxpos = x[i]
+                lookformax = True
+                
+    return array(maxtab), array(mintab)
+
+# class ols:
+#     """
+#     Author: Vincent Nijs (+ ?)
+#     Email: v-nijs at kellogg.northwestern.edu
+#     Last Modified: Mon Jan 15 17:56:17 CST 2007
+#     """
+#     
+#     def __init__(self,y,x,y_varnm = 'y',x_varnm = ''):
+#         
+#         self.y = y
+#         self.x = c_[ones(x.shape[0]),x]
+#         self.y_varnm = y_varnm  
+#         if not isinstance(x_varnm,list): 
+#             self.x_varnm = ['const'] + list(x_varnm)
+#         else:
+#             self.x_varnm = ['const'] + x_varnm
+#             
+#         # Estimate model using OLS
+#         self.estimate()
+#         
+#     def estimate(self):
+#         
+#         # estimating coefficients, and basic stats
+#         self.inv_xx = inv(dot(self.x.T,self.x))
+#         xy = dot(self.x.T,self.y)
+#         self.b = dot(self.inv_xx,xy)                    # estimate coefficients
+#         
+#         self.nobs = self.y.shape[0]                     # number of observations
+#         self.ncoef = self.x.shape[1]                    # number of coef.
+#         self.df_e = self.nobs - self.ncoef              # degrees of freedom, error 
+#         self.df_r = self.ncoef - 1                      # degrees of freedom, regression 
+#         
+#         self.e = self.y - dot(self.x,self.b)            # residuals
+#         self.sse = dot(self.e,self.e)/self.df_e         # SSE
+#         self.se = sqrt(diagonal(self.sse*self.inv_xx))  # coef. standard errors
+#         self.t = self.b / self.se                       # coef. t-statistics
+#         self.p = (1-stats.t.cdf(abs(self.t), self.df_e)) * 2    # coef. p-values
+#         
+#         self.R2 = 1 - self.e.var()/self.y.var()         # model R-squared
+#         self.R2adj = 1-(1-self.R2)*((self.nobs-1)/(self.nobs-self.ncoef))   # adjusted R-square
+#         
+#         self.F = (self.R2/self.df_r) / ((1-self.R2)/self.df_e)  # model F-statistic
+#         self.Fpv = 1-stats.f.cdf(self.F, self.df_r, self.df_e)  # F-statistic p-value
+#         
+#     def dw(self):
+#         """
+#         Calculates the Durbin-Waston statistic
+#         """
+#         de = diff(self.e,1)
+#         dw = dot(de,de) / dot(self.e,self.e);
+#         
+#         return dw
+#         
+#     def omni(self):
+#         """
+#         Omnibus test for normality
+#         """
+#         return stats.normaltest(self.e) 
+#         
+#     def JB(self):
+#         """
+#         Calculate residual skewness, kurtosis, and do the JB test for normality
+#         """
+#         
+#         # Calculate residual skewness and kurtosis
+#         skew = stats.skew(self.e) 
+#         kurtosis = 3 + stats.kurtosis(self.e) 
+#         
+#         # Calculate the Jarque-Bera test for normality
+#         JB = (self.nobs/6) * (square(skew) + (1/4)*square(kurtosis-3))
+#         JBpv = 1-stats.chi2.cdf(JB,2);
+#         
+#         return JB, JBpv, skew, kurtosis
+#         
+#     def ll(self):
+#         """
+#         Calculate model log-likelihood and two information criteria
+#         """
+#         
+#         # Model log-likelihood, AIC, and BIC criterion values 
+#         ll = -(self.nobs*1/2)*(1+log(2*pi)) - (self.nobs/2)*log(dot(self.e,self.e)/self.nobs)
+#         aic = -2*ll/self.nobs + (2*self.ncoef/self.nobs)
+#         bic = -2*ll/self.nobs + (self.ncoef*log(self.nobs))/self.nobs
+#         
+#         return ll, aic, bic
+#     
+#     def summary(self):
+#         """
+#         Printing model output to screen
+#         """
+#         
+#         # local time & date
+#         t = time.localtime()
+#         
+#         # extra stats
+#         ll, aic, bic = self.ll()
+#         JB, JBpv, skew, kurtosis = self.JB()
+#         omni, omnipv = self.omni()
+#         
+#         # printing output to screen
+#         print '\n=============================================================================='
+#         print "Dependent Variable: " + self.y_varnm
+#         print "Method: Least Squares"
+#         print "Date: ", time.strftime("%a, %d %b %Y",t)
+#         print "Time: ", time.strftime("%H:%M:%S",t)
+#         print '# obs:               %5.0f' % self.nobs
+#         print '# variables:     %5.0f' % self.ncoef 
+#         print '=============================================================================='
+#         print 'variable     coefficient     std. Error      t-statistic     prob.'
+#         print '=============================================================================='
+#         for i in range(len(self.x_varnm)):
+#             print '''% -5s          % -5.6f     % -5.6f     % -5.6f     % -5.6f''' % tuple([self.x_varnm[i],self.b[i],self.se[i],self.t[i],self.p[i]]) 
+#         print '=============================================================================='
+#         print 'Models stats                         Residual stats'
+#         print '=============================================================================='
+#         print 'R-squared            % -5.6f         Durbin-Watson stat  % -5.6f' % tuple([self.R2, self.dw()])
+#         print 'Adjusted R-squared   % -5.6f         Omnibus stat        % -5.6f' % tuple([self.R2adj, omni])
+#         print 'F-statistic          % -5.6f         Prob(Omnibus stat)  % -5.6f' % tuple([self.F, omnipv])
+#         print 'Prob (F-statistic)   % -5.6f           JB stat             % -5.6f' % tuple([self.Fpv, JB])
+#         print 'Log likelihood       % -5.6f           Prob(JB)            % -5.6f' % tuple([ll, JBpv])
+#         print 'AIC criterion        % -5.6f         Skew                % -5.6f' % tuple([aic, skew])
+#         print 'BIC criterion        % -5.6f         Kurtosis            % -5.6f' % tuple([bic, kurtosis])
+#         print '=============================================================================='    

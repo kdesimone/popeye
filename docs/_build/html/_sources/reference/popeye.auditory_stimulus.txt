@@ -11,7 +11,6 @@
    StimulusModel
    auto_attr
    generate_spectrogram
-   imresize
    specgram
 
 
@@ -49,11 +48,6 @@ generate_spectrogram
 ~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: generate_spectrogram
-
-imresize
-~~~~~~~~
-
-.. autofunction:: imresize
 
 specgram
 ~~~~~~~~

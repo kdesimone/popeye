@@ -7,7 +7,6 @@
 .. currentmodule:: popeye.utilities
 .. autosummary::
 
-   ols
    repeat
    Array
    arange
@@ -29,7 +28,6 @@
    gaussian_2D
    generate_shared_array
    gradient_descent_search
-   imresize
    inv
    isscalar
    make_nifti
@@ -45,23 +43,12 @@
    seed
    shuffle
    solve
+   spm_hrf
    trapz
    zscore
 
 
 .. currentmodule:: popeye.utilities
-
-:class:`ols`
-~~~~~~~~~~~~
-
-
-.. autoclass:: ols
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-  .. automethod:: __init__
-
 
 :class:`repeat`
 ~~~~~~~~~~~~~~~
@@ -174,11 +161,6 @@ gradient_descent_search
 
 .. autofunction:: gradient_descent_search
 
-imresize
-~~~~~~~~
-
-.. autofunction:: imresize
-
 inv
 ~~~
 
@@ -253,6 +235,11 @@ solve
 ~~~~~
 
 .. autofunction:: solve
+
+spm_hrf
+~~~~~~~
+
+.. autofunction:: spm_hrf
 
 trapz
 ~~~~~

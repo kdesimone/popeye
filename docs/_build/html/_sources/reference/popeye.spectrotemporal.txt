@@ -21,7 +21,6 @@
    gaussian_1D
    gaussian_2D
    generate_rf_timeseries_1D
-   imresize
    linregress
    median_filter
    parallel_fit
@@ -135,11 +134,6 @@ generate_rf_timeseries_1D
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: generate_rf_timeseries_1D
-
-imresize
-~~~~~~~~
-
-.. autofunction:: imresize
 
 linregress
 ~~~~~~~~~~

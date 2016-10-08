@@ -18,7 +18,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask
 
 class DifferenceOfGaussiansModel(PopulationModel):
     
@@ -54,12 +54,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
         
         
-    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
-        
-        # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma*sigma_ratio)**2] = 1
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
         
         # extract the center response
         rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
@@ -72,22 +67,17 @@ class DifferenceOfGaussiansModel(PopulationModel):
         rf = rf_center - np.sqrt(volume_ratio)*rf_surround
         
         # extract the response
-        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
         
         # generate the hrf
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         return model
-
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, hrf_delay):
         
-        # create mask for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma*sigma_ratio)**2] = 1
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
         
         # extract the center response
         rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -100,13 +90,13 @@ class DifferenceOfGaussiansModel(PopulationModel):
         rf = rf_center - np.sqrt(volume_ratio)*rf_surround
         
         # extract the response
-        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
         
         # generate the hrf
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
         
         # convolve it
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         return model
     
@@ -201,10 +191,6 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def vr0(self):
         return self.ballpark[4]
-                
-    @auto_attr
-    def h0(self):
-        return self.ballpark[5]
         
     @auto_attr
     def x(self):
@@ -225,10 +211,6 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def volume_ratio(self):
         return self.estimate[4]
-        
-    @auto_attr
-    def hrf_delay(self):
-        return self.estimate[5]
     
     @auto_attr
     def rho(self):

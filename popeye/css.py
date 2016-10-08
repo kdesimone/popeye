@@ -13,7 +13,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask
 
 class CompressiveSpatialSummationModel(PopulationModel):
     
@@ -22,7 +22,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, nuissance=None):
         
         r"""
         A Compressive Spatial Summation population receptive field model [1]_.
@@ -46,67 +46,64 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model)
+        PopulationModel.__init__(self, stimulus, hrf_model, nuissance)
         
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, n, beta, hrf_delay):
-        
-        # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+    def generate_ballpark_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,
-                                         self.stimulus.deg_x_coarse,
-                                         self.stimulus.deg_y_coarse)
+        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
         
         # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
-        
-        # raise the gaussian to then n
-        rf **= n
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
+        
+        # compression
+        response **= n
         
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # scale it by beta
         model *= beta
         
+        # offset
+        model += baseline
+        
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, n, beta, hrf_delay):
-        
-        # create mask for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+    def generate_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         
         # normalize by the integral
-        rf /= (2 * np.pi * sigma**2)
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
+        
+        # compression
+        response **= n
         
         # convolve with the HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf, 'same')
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # scale it by beta
         model *= beta
+        
+        # offset
+        model += baseline
         
         return model
         
@@ -181,7 +178,11 @@ class CompressiveSpatialSummationFit(PopulationFit):
         
         PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
                                voxel_index, auto_fit, verbose)
-                               
+   
+    @auto_attr
+    def overloaded_estimate(self):
+        return [self.theta,self.rho,self.sigma_size,self.n,self.beta,self.baseline,self.hrf_delay]
+    
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -193,7 +194,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def s0(self):
         return self.ballpark[2]
-    
+        
     @auto_attr
     def n0(self):
         return self.ballpark[3]
@@ -201,10 +202,14 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def beta0(self):
         return self.ballpark[4]
+    
+    @auto_attr
+    def baseline0(self):
+        return self.ballpark[5]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark[5]
+        return self.ballpark[6]
     
     @auto_attr
     def x(self):
@@ -225,10 +230,14 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[4]
-    
+        
+    @auto_attr
+    def baseline(self):
+        return self.estimate[5]
+        
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[5]
+        return self.estimate[6]
         
     @auto_attr
     def rho(self):
@@ -237,3 +246,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
+    
+    @auto_attr
+    def sigma_size(self):
+        return self.sigma / np.sqrt(self.n)

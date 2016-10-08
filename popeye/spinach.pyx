@@ -18,6 +18,30 @@ from libc.math cimport sin, cos, exp, sqrt
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def binner(np.ndarray[DTYPE2_t, ndim=1] signal,
+           np.ndarray[DTYPE2_t, ndim=1] times,
+           np.ndarray[DTYPE2_t, ndim=1] bins):
+    
+    # type defs
+    cdef int t, t_lim
+    cdef DTYPE2_t bin_width
+    
+    # vars
+    t_lim = len(bins)
+    bin_width = bins[1] - bins[0]
+    
+    # output
+    cdef np.ndarray[DTYPE2_t, ndim=1, mode='c'] binned_response = np.zeros((t_lim)-2)
+    
+    for t in xrange(1,t_lim):
+        the_bin = bins[t]
+        binned_signal = signal[(times >= the_bin-bin_width) & (times <= the_bin)]
+        binned_response[t-2] = np.sum(binned_signal)
+    
+    return binned_response
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                        np.ndarray[DTYPE2_t, ndim=2] deg_y,
                        DTYPE2_t x,
@@ -66,6 +90,30 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                             np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                             np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                             np.ndarray[DTYPE_t, ndim=1] flicker_vec):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+        
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] m_ts = np.zeros(slim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] p_ts = np.zeros(slim,dtype=DTYPE2)
+    
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):
+                m_ts[s] += m_resp[t,flicker_vec[s]-1] * amp
+                p_ts[s] += p_resp[t,flicker_vec[s]-1] * amp
+                
+    return m_ts, p_ts
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_strf_betas_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
                                     np.ndarray[DTYPE2_t, ndim=2] m_resp,
                                     np.ndarray[DTYPE2_t, ndim=2] p_resp,
@@ -85,6 +133,30 @@ def generate_strf_betas_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
         amp = stim_ts[s]
         for t in xrange(tlim):   
                 stim[s] += m_resp[t,flicker_vec[s]-1] * m_beta * amp + p_resp[t,flicker_vec[s]-1] * p_beta * amp
+    
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_strf_beta_ratio_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
+                                        np.ndarray[DTYPE2_t, ndim=2] m_resp,
+                                        np.ndarray[DTYPE2_t, ndim=2] p_resp,
+                                        np.ndarray[DTYPE_t, ndim=1] flicker_vec,
+                                        DTYPE2_t beta, DTYPE2_t beta_ratio):
+    # cdef's
+    cdef int s,t
+    cdef int slim = stim_ts.shape[0]
+    cdef int tlim = m_resp.shape[0]
+    cdef DTYPE2_t beta_2 = beta_ratio/beta
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(slim,dtype=DTYPE2)
+    
+    # the loop
+    for s in xrange(slim):
+        amp = stim_ts[s]
+        for t in xrange(tlim):   
+                stim[s] += m_resp[t,flicker_vec[s]-1] * beta * amp + p_resp[t,flicker_vec[s]-1] * beta_2 * amp
     
     return stim
 
@@ -110,6 +182,28 @@ def generate_strf_weight_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
         for t in xrange(tlim):   
                 stim[s] += m_resp[t,flicker_vec[s]-1] * (1-weight) * amp + p_resp[t,flicker_vec[s]-1] * weight * amp
     
+    return stim
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_rf_timeseries_nomask(np.ndarray[DTYPE3_t, ndim=3] stim_arr, 
+                                  np.ndarray[DTYPE2_t, ndim=2] rf):
+    
+    # cdef's
+    cdef int i,j,k
+    cdef int xlim = stim_arr.shape[0]
+    cdef int ylim = stim_arr.shape[1]
+    cdef int zlim = stim_arr.shape[2]
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            for k in xrange(zlim):
+                stim[k] += stim_arr[i,j,k]*rf[i,j]
+                
     return stim
 
 @cython.boundscheck(False)
@@ -361,7 +455,7 @@ def generate_spectrotemporal_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
     for i in xrange(xlim):
         
         d = (freqs[i]-center_freq)**2
-
+        
         for j in xrange(ylim):
             
             if d <= s_factor3:
@@ -427,14 +521,14 @@ def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_gabor_receptive_field(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                   np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                   DTYPE2_t x0,
+def generate_gabor_receptive_field(DTYPE2_t x0,
                                    DTYPE2_t y0,
                                    DTYPE2_t s0,
                                    DTYPE2_t theta,
                                    DTYPE2_t phi,
-                                   DTYPE2_t cpd):
+                                   DTYPE2_t cpd,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_y):
                   
     # cdef's
     cdef int i,j,k
@@ -486,8 +580,7 @@ def generate_gabor_receptive_field(DTYPE2_t x0,
                                    DTYPE2_t phi,
                                    DTYPE2_t cpd,
                                    np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                   np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                                   np.ndarray[DTYPE_t, ndim=3] stim_arr):
+                                   np.ndarray[DTYPE2_t, ndim=2] deg_y):
                   
     # cdef's
     cdef int i,j,k
@@ -495,7 +588,6 @@ def generate_gabor_receptive_field(DTYPE2_t x0,
     cdef DTYPE2_t s_factor3 = (3.0*s0)**2
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_y.shape[1]
-    cdef int zlim = stim_arr.shape[-1]
     cdef DTYPE2_t pi_180 = np.pi/180
     cdef DTYPE2_t theta_rad = theta * pi_180
     cdef DTYPE2_t phi_rad = phi * pi_180
@@ -598,13 +690,13 @@ def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                  np.ndarray[DTYPE2_t, ndim=2] deg_y,
                                  np.ndarray[DTYPE2_t, ndim=1] xs,
                                  np.ndarray[DTYPE2_t, ndim=1] ys,
-                                 DTYPE2_t s):
+                                 np.ndarray[DTYPE2_t, ndim=1] ss,):
     # cdef's
     cdef int i,j,k
-    cdef DTYPE2_t s_factor2 = (2.0*s**2)
     cdef int xlim = deg_x.shape[0]
     cdef int ylim = deg_x.shape[1]
     cdef int zlim = len(xs)
+    cdef DTYPE2_t s_factor2 = (2.0*ss[0]**2)
     
     # initilize the output variable
     cdef np.ndarray[DTYPE2_t, ndim=3, mode='c'] rfs = np.zeros((xlim,ylim,zlim),dtype=DTYPE2)
@@ -612,119 +704,8 @@ def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
     for i in xrange(xlim):
         for j in xrange(ylim):
             for k in xrange(zlim):
+                s_factor2 = (2.0*ss[k]**2)
                 d = (deg_x[i,j]-xs[k])**2 + (deg_y[i,j]-ys[k])**2
                 rfs[i,j,k] += exp(-d/s_factor2)
                 
     return rfs
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def MakeFastAudioPrediction(np.ndarray[DTYPE2_t, ndim=2] spectrogram,
-                            np.ndarray[DTYPE2_t, ndim=2] gaussian,
-                            np.ndarray[DTYPE2_t, ndim=2] time_coord,
-                            np.ndarray[DTYPE2_t, ndim=2] freq_coord,
-                            DTYPE2_t freq_center,
-                            DTYPE2_t freq_sigma,
-                            DTYPE_t num_timepoints):
-    
-    # iterators
-    cdef int t, f, tr_num, from_slice, to_slice, conv_i, conv_j
-    cdef DTYPE2_t conv_sum
-    
-    # limit our computations to meaningful portions of the gaussian
-    s_factor_3 = (3.0*freq_sigma)**2
-    
-    # loop limiters
-    cdef int t_lim = spectrogram.shape[1]
-    cdef int f_lim = spectrogram.shape[0]
-    cdef int frames_per_tr = t_lim/num_timepoints
-    
-    # initialize arrays for the loops
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] g_vector = np.zeros(frames_per_tr, dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] f_vector = np.zeros(frames_per_tr, dtype=DTYPE2)
-    
-    # loop over each TR
-    for tr in np.arange(frames_per_tr, t_lim,t_lim/num_timepoints):
-        
-        tr_num = tr/(t_lim/num_timepoints)
-        from_slice = tr - frames_per_tr/2
-        to_slice = tr + frames_per_tr/2
-                
-        # grab the sound frame an normalize it to 1
-        sound_frame = spectrogram[:,from_slice:to_slice]
-        
-        conv_sum = 0.0
-        
-        # loop over each frequency and convolve
-        for f in range(f_lim):
-            
-            f_vector = sound_frame[f,:]
-            g_vector = gaussian[f,:]
-            
-            # the hard way
-            for conv_i in np.arange(frames_per_tr):
-                d = (time_coord[f,conv_i]-time_coord[f,conv_i])**2 + (freq_coord[f,conv_i]-freq_center)**2
-                if d <= s_factor_3:
-                    for conv_j in np.arange(frames_per_tr):
-                        conv_sum += f_vector[conv_i] * g_vector[conv_i-conv_j+1]
-            
-            # the easy way
-            # conv_sum += np.sum(ss.fftconvolve(g_vector,f_vector))
-            
-        stim[tr_num] = np.mean(conv_sum)
-        
-    return stim
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def MakeFast_1D_Audio_Prediction(DTYPE_t freq_center, DTYPE_t freq_sigma,
-                                 np.ndarray[DTYPE2_t, ndim=2] spectrogram,
-                                 np.ndarray[DTYPE2_t, ndim=1] gaussian,
-                                 np.ndarray[DTYPE2_t, ndim=1] times,
-                                 np.ndarray[DTYPE2_t, ndim=1] freqs,
-                                 DTYPE_t num_timepoints):
-    
-    # typedef counters etc
-    cdef int t_ind, f_ind, tr
-    cdef int f_lim = spectrogram.shape[0]
-    cdef int t_lim = spectrogram.shape[1]
-    
-    # output stuff
-    cdef DTYPE2_t gauss_sum = 0.0
-    cdef DTYPE2_t counter = 0.0
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(num_timepoints, dtype=DTYPE2)
-    cdef np.ndarray[long,ndim=1,mode='c'] ind
-    
-    # censoring calculatings
-    cdef DTYPE2_t s_factor2, d
-    s_factor3 = (3.0*freq_sigma)**2
-    
-    # main loop
-    for tr in xrange(num_timepoints-1):
-        
-        # empty the tally
-        gauss_sum = 0.0
-        counter = 0.0
-        
-        ind = np.nonzero((times <= tr+1) & (times>tr))[0]
-        
-        # time loop
-        for t_ind in xrange(len(ind)):
-            
-            # freq loop
-            for f_ind in xrange(f_lim):
-                
-                # don't compute points outside 3 sigmas
-                d = sqrt((freqs[f_ind] - freq_center)**2)
-                if d <= s_factor3:
-                    
-                    # multiply that by the spectrogram at our time and freq bin
-                    gauss_sum += gaussian[f_ind] * spectrogram[f_ind,ind[t_ind]]
-                    counter += 1
-                
-        stim[tr] = gauss_sum
-    
-    return stim

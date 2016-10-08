@@ -14,7 +14,8 @@
    auto_attr
    fftconvolve
    generate_og_receptive_field
-   generate_rf_timeseries
+   generate_rf_timeseries_nomask
+   generate_strf_timeseries
    linregress
    simps
    trapz
@@ -84,10 +85,15 @@ generate_og_receptive_field
 
 .. autofunction:: generate_og_receptive_field
 
-generate_rf_timeseries
-~~~~~~~~~~~~~~~~~~~~~~
+generate_rf_timeseries_nomask
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: generate_rf_timeseries
+.. autofunction:: generate_rf_timeseries_nomask
+
+generate_strf_timeseries
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: generate_strf_timeseries
 
 linregress
 ~~~~~~~~~~

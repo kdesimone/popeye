@@ -4,8 +4,8 @@ Base-classes for poulation encoding models and fits.
 
 
 """
-import time
-import ctypes
+import time, ctypes
+import statsmodels.api as sm 
 import numpy as np
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
@@ -42,7 +42,7 @@ class PopulationModel(object):
     
     r""" Base class for all pRF models."""
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, nuissance=None):
         
         r"""Base class for all pRF models.
         
@@ -56,12 +56,20 @@ class PopulationModel(object):
         
         hrf_model : callable
             A function that generates an HRF model given an HRF delay.
-            For more information, see `popeye.utilties.double_gamma_hrf_hrf`
+            For more information, see `popeye.utilties.double_gamma_hrf_hrf
+            and `popeye.utilities.spm_hrf`
+            
+        nuissance : ndarray
+            A nuissance regressor for removing effects of non-interest.
+            You can regress out any nuissance effects from you data prior to fitting
+            the model of interest. The nuissance model is a statsmodels.OLS compatible
+            design matrix, and the user is expected to have already added any constants.
         
         """
         
         self.stimulus = stimulus
         self.hrf_model = hrf_model
+        self.nuissance = nuissance
     
     def generate_ballpark_prediction(self):
         raise NotImplementedError("Each pRF model must implement its own prediction generation!")
@@ -144,41 +152,44 @@ class PopulationFit(object):
         self.data = data
         self.verbose, self.very_verbose = set_verbose(verbose)
         
+        # regress out any nuissance
+        if self.model.nuissance is not None:
+            self.model.nuissance_model = sm.OLS(self.data,self.model.nuissance)
+            self.model.results = self.model.nuissance_model.fit()
+            self.original_data = self.data
+            self.data = self.model.results.resid
+        
         # automatic fitting
         if self.auto_fit:
             
-            try:
-                # start
-                self.start = time.clock()
-                
-                # init
-                self.ballpark
-                
-                # final
-                self.estimate
-                
-                # performance
-                self.OLS
-                self.rss
-                self.rsquared
-                
-                # finish
-                self.finish = time.clock()
-                
-                # print
-                if self.verbose:
-                    print(self.msg)
+            # start
+            self.start = time.time()
             
-            except:
-                self.finish = time.clock()
-                self.rsquared = np.nan
-                self.rss = np.nan
-                self.rsquared = np.nan
-                self.ballpark = np.nan
-                self.estimate = np.nan
-                print('Voxel %s failed.' %(str(self.voxel_index)))
+            # init
+            self.brute_force
+            self.ballpark
             
-    
+            # final
+            self.gradient_descent
+            self.estimate
+            self.overloaded_estimate 
+            
+            # finish
+            self.finish = time.time()
+            
+            # performance
+            self.rss
+            self.rsquared
+            
+            # flush if not testing
+            if self.very_verbose == False:
+                self.gradient_descent = [None]*6
+                self.brute_force =[None,]*4
+            
+            # print
+            if self.verbose:
+                print(self.msg)
+                                                                              
     # the brute search
     @auto_attr
     def brute_force(self):
@@ -194,24 +205,8 @@ class PopulationFit(object):
     @auto_attr
     def ballpark(self):
         return self.brute_force[0]
-        
-    @auto_attr
-    def hrf0(self):
-        return self.brute_force[4]
     
-    @auto_attr
-    def fval(self):
-        return self.brute_force[1]
-    
-    @auto_attr
-    def grid(self):
-        return self.brute_force[2]
-    
-    @auto_attr
-    def Jout(self):
-        return self.brute_force[3]
-    
-    # the gradient search                                  
+    # the gradient search
     @auto_attr
     def gradient_descent(self):
         return utils.gradient_descent_search(self.ballpark,
@@ -220,50 +215,22 @@ class PopulationFit(object):
                                              utils.error_function,
                                              self.model.generate_prediction,
                                              self.very_verbose)
-                                             
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return None
+        
     @auto_attr
     def estimate(self):
         return self.gradient_descent[0]
-    
-    @auto_attr
-    def fopt(self):
-        return self.gradient_descent[1]
-    
-    @auto_attr
-    def direc(self):
-        return self.gradient_descent[2]
-    
-    @auto_attr
-    def iter(self):
-        return self.gradient_descent[3]
-    
-    @auto_attr
-    def funcalls(self):
-        return self.gradient_descent[4]
-    
-    @auto_attr
-    def allvecs(self):
-        return self.gradient_descent[6]
     
     @auto_attr
     def prediction(self):
         return self.model.generate_prediction(*self.estimate)
     
     @auto_attr
-    def OLS(self):
-        return utils.ols(self.data,self.prediction)
-    
-    @auto_attr
-    def coefficient(self):
-        return self.OLS.b[1]
-    
-    @auto_attr
     def rsquared(self):
-        return self.OLS.R2adj
-    
-    @auto_attr
-    def stderr(self):
-        return self.OLS.se[1]
+        return np.corrcoef(self.data,self.prediction)[1][0]**2
     
     @auto_attr
     def rss(self):
@@ -271,21 +238,29 @@ class PopulationFit(object):
     
     @auto_attr
     def msg(self):
-        if self.auto_fit:
+        if self.auto_fit is True and self.overloaded_estimate is not None:
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
                   self.finish-self.start,
                   self.rsquared,
-                  np.round(self.estimate,2)))
+                  np.round(self.overloaded_estimate,4)))
+        elif self.auto_fit is True:
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+                %(self.voxel_index[0],
+                  self.voxel_index[1],
+                  self.voxel_index[2],
+                  self.finish-self.start,
+                  self.rsquared,
+                  np.round(self.estimate,4)))
         else:
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
                   self.rsquared,
-                  np.round(self.estimate,2)))            
+                  np.round(self.estimate,4)))
         return txt
     
 class StimulusModel(object):
