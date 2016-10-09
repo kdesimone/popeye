@@ -57,10 +57,6 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
-        # clean up nan
-        m_ts[np.isnan(m_ts)] = 0
-        p_ts[np.isnan(p_ts)] = 0
-        
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
         p_ts = utils.normalize(p_ts,0,1)
@@ -93,9 +89,38 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
-        # clean up nan
-        m_ts[np.isnan(m_ts)] = 0
-        p_ts[np.isnan(p_ts)] = 0
+        # normalize each timeseries
+        m_ts = utils.normalize(m_ts,0,1)
+        p_ts = utils.normalize(p_ts,0,1)
+        
+        # mix them
+        mp_ts = (1-weight) * m_ts + weight * p_ts 
+        
+        # convolve with HRF
+        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
+        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
+        
+        # scale
+        model *= beta
+         
+        # offset
+        model += baseline
+        
+        return model
+    
+    
+    # for the final solution, we use spatiotemporal
+    def generate_prediction_tau(self, x, y, sigma, weight, beta, baseline, tau):
+        
+        # generate the RF
+        spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
+        
+        # spatial response
+        rf_ts = generate_rf_timeseries_nomask(self.stimulus.stim_arr, spatial_rf)
+        
+        # temporal response
+        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp_tau(tau),self.p_resp_tau(tau),self.stimulus.flicker_vec)
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
@@ -182,6 +207,34 @@ class SpatioTemporalModel(PopulationModel):
         m_resp_norm = utils.normalize(m_resp_rs,0,1)
         m_resp_final = np.reshape(m_resp_norm,m_resp.shape,order='F')
         
+        return m_resp_final
+    
+    def p_resp_tau(self, tau):
+        ts = self.t.shape[-1]
+        fs = int(np.max(self.stimulus.flicker_vec))
+        p_resp = np.zeros((ts,fs))
+        p_rf = self.p_rf(tau)
+        for f in xrange(1,fs+1):
+            p_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1], p_rf))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
+            
+        p_resp_rs = np.reshape(p_resp,(np.prod(p_resp.shape)),order='F')
+        p_resp_norm = utils.normalize(p_resp_rs,0,1)
+        p_resp_final = np.reshape(p_resp_norm,p_resp.shape,order='F')
+        
+        return p_resp_final
+        
+    def m_resp_tau(self, tau):
+        ts = self.t.shape[-1]
+        fs = int(np.max(self.stimulus.flicker_vec))
+        m_resp = np.zeros((ts,fs))
+        m_rf = self.m_rf(tau)
+        for f in xrange(1,fs+1):
+            m_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1], m_rf))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
+            
+        m_resp_rs = np.reshape(m_resp,(np.prod(m_resp.shape)),order='F')
+        m_resp_norm = utils.normalize(m_resp_rs,0,1)
+        m_resp_final = np.reshape(m_resp_norm,m_resp.shape,order='F')
+
         return m_resp_final
         
 class SpatioTemporalFit(PopulationFit):
