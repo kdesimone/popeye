@@ -57,6 +57,10 @@ class SpatioTemporalModel(PopulationModel):
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
         
+        # clean up nan
+        m_ts[np.isnan(m_ts)] = 0
+        p_ts[np.isnan(p_ts)] = 0
+        
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
         p_ts = utils.normalize(p_ts,0,1)
@@ -88,6 +92,10 @@ class SpatioTemporalModel(PopulationModel):
         
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
+        
+        # clean up nan
+        m_ts[np.isnan(m_ts)] = 0
+        p_ts[np.isnan(p_ts)] = 0
         
         # normalize each timeseries
         m_ts = utils.normalize(m_ts,0,1)
