@@ -5,23 +5,22 @@ tags:
   - fMRI
   - neuroscience
 authors:
- - name: Ariel Rokem
-   orcid: 0000-0003-0679-1985
-   affiliation: 1
- - name: Keith Schneider
-   orcid: 0000-0001-7120-3380
-   affiliation: 2
  - name: Kevin DeSimone
    orcid: 0000-0003-4254-9408
+   affiliation: 1
+ - name: Ariel Rokem
+   orcid: 0000-0003-0679-1985
+   affiliation: 2
+ - name: Keith Schneider
+   orcid: 0000-0001-7120-3380
    affiliation: 3
 affiliations:
- - name: University of Washington
+- name: New York University
    index: 1
- - name: University of Delaware
+ - name: University of Washington
    index: 2
- - name: New York University
+ - name: University of Delaware
    index: 3
-
 date: 11 October 2016
 ---
 
@@ -34,7 +33,7 @@ within a single fMRI voxel [1]. The pRF model allows neuroscientists to
 interpret and predict the response of a single voxel to various stimuli [2]
 and cognitive demands [3], both in cortex and in subcortical nuclei [4].
 
-https://kdesimone.github.io/popeye/
+https://kdesimone.github.io/popeye
 
 # References
 [1] Dumoulin SO, Wandell BA (2008) Population receptive field estimates in human visual cortex. NeuroImage 39:647-660.
