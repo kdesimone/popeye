@@ -284,8 +284,4 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[4]
-    
-    @auto_attr
-    def receptive_field(self):
-        return np.exp(-((self.model.stimulus.freqs-self.center_freq)**2)/(2*self.sigma**2)) * 1/(self.sigma * np.sqrt(2*np.pi))
-    
+        
