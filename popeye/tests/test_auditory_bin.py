@@ -5,6 +5,7 @@ from matplotlib.pyplot import specgram
 
 import numpy as np
 import nose.tools as nt
+import numpy.testing as npt
 from scipy.signal import chirp
 
 import popeye.utilities as utils
@@ -77,4 +78,8 @@ def test_auditory_fit():
     nt.assert_equal(np.round(fit.center_freq), center_freq)
     nt.assert_equal(np.round(fit.sigma), sigma)
     nt.assert_almost_equal(fit.beta, beta, 2)
+    nt.assert_almost_equal(fit.baseline, baseline, 2)
     nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    
+    npt.assert_almost_equal((fit.center_freq0,fit.sigma0,fit.beta0,fit.baseline0,fit.hrf0),
+                            (9050.0, 200.0, 0.77500000000000002, -1.5, 0.0))

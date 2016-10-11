@@ -10,7 +10,7 @@ from scipy.signal import fftconvolve
 import popeye.utilities as utils
 import popeye.ogb as ogb
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus
-
+from popeye.spinach import generate_og_receptive_field
 def test_ogb_fit():
     
     # stimulus features
@@ -76,9 +76,25 @@ def test_ogb_fit():
     # fit the response
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
-    # assert equivalence
+    # test ballpark
+    nt.assert_almost_equal(fit.x0, 0, 1)
+    nt.assert_almost_equal(fit.y0, 0, 1)
+    nt.assert_almost_equal(fit.s0, 2.8, 1)
+    nt.assert_almost_equal(fit.beta0, 100, 1)
+    nt.assert_almost_equal(fit.baseline0, -1, 1)
+    nt.assert_almost_equal(fit.hrf0, 0, 1)
+    
+    # test final estimate
     nt.assert_almost_equal(fit.x, x, 1)
     nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(np.round(fit.beta), beta, 1)
     nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 1)
+    
+    # test receptive field
+    rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
+    nt.assert_almost_equal(rf.sum(), fit.receptive_field.sum())
+    
+    # test HRF
+    nt.assert_almost_equal(fit.hemodynamic_response.sum(), fit.model.hrf_model(fit.hrf_delay, fit.model.stimulus.tr_length).sum())
+    

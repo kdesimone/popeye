@@ -11,6 +11,7 @@ import statsmodels.api as sm
 import popeye.utilities as utils
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
+from popeye.spinach import generate_og_receptive_field
 
 def test_og_fit():
     
@@ -73,13 +74,22 @@ def test_og_fit():
     # fit the response
     fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
+    # coarse fit
+    nt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.beta0,fit.hrf0),(-10.0, 0.0, 2.75, 1.0, 0.0))
+    
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)
     nt.assert_almost_equal(fit.y, y, 2)
     nt.assert_almost_equal(fit.sigma, sigma, 2)
     nt.assert_almost_equal(fit.beta, beta, 2)
     nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
-
+    
+    # test receptive field
+    rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
+    nt.assert_almost_equal(rf.sum(), fit.receptive_field.sum()) 
+    
+    # test model == fit RF
+    nt.assert_almost_equal(fit.model.generate_receptive_field(x,y,sigma).sum(), fit.receptive_field.sum()) 
 
 def test_og_nuissance_fit():
     
@@ -133,7 +143,6 @@ def test_og_nuissance_fit():
     
     # recreate model with nuissance
     model = og.GaussianModel(stimulus, utils.spm_hrf, nuissance)
-    
     
     # set search grid
     x_grid = (-10,10)
