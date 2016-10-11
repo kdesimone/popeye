@@ -5,7 +5,7 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time, fnmatch, copy
+import sys, os, time, fnmatch, copy, types
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
@@ -196,8 +196,7 @@ def normalize(array, imin=-1, imax=1, axis=-1):
     
 
 # generic gradient descent
-def gradient_descent_search(parameters, bounds, data,
-                            error_function, objective_function, verbose):
+def gradient_descent_search(data, error_function, objective_function, parameters, bounds, verbose):
     
     r"""A generic gradient-descent error minimization function.
     
@@ -262,8 +261,7 @@ def gradient_descent_search(parameters, bounds, data,
     
     return output
 
-def brute_force_search(grids, bounds, Ns, data,
-                       error_function, objective_function, verbose):
+def brute_force_search(data, error_function, objective_function, grids, bounds, Ns=None, verbose=False):
                        
     r"""A generic brute-force grid-search error minimization function.
     
@@ -328,14 +326,26 @@ def brute_force_search(grids, bounds, Ns, data,
     
     """
     
-    output = brute(error_function,
-                   args=(bounds, data, objective_function, verbose),
-                   ranges=grids,
-                   Ns=Ns,
-                   finish=None,
-                   full_output=True,
-                   disp=False)
-                   
+    # if user provides their own grids
+    if isinstance(grids[0],types.SliceType):
+        output = brute(error_function,
+                       args=(bounds, data, objective_function, verbose),
+                       ranges=grids,
+                       finish=None,
+                       full_output=True,
+                       disp=False)
+    
+    # otherwise specify (min,max) and Ns for each dimension
+    else:
+        output = brute(error_function,
+               args=(bounds, data, objective_function, verbose),
+               ranges=grids,
+               Ns=Ns,
+               finish=None,
+               full_output=True,
+               disp=False)
+
+               
     return output
 
 # generic error function

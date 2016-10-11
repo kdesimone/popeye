@@ -83,7 +83,8 @@ class PopulationFit(object):
     r""" Base class for all pRF model fits."""
     
     
-    def __init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose):
+    def __init__(self, model, data, grids, bounds, 
+                 Ns=None, voxel_index=(1,2,3), auto_fit=True, verbose=False):
         
         r"""A class containing tools for fitting pRF models.
         
@@ -193,12 +194,12 @@ class PopulationFit(object):
     # the brute search
     @auto_attr
     def brute_force(self):
-        return utils.brute_force_search(self.grids,
-                                        self.bounds,
-                                        self.Ns,
-                                        self.data,
+        return utils.brute_force_search(self.data,
                                         utils.error_function,
                                         self.model.generate_ballpark_prediction,
+                                        self.grids,
+                                        self.bounds,
+                                        self.Ns,
                                         self.very_verbose)
      
      
@@ -209,11 +210,11 @@ class PopulationFit(object):
     # the gradient search
     @auto_attr
     def gradient_descent(self):
-        return utils.gradient_descent_search(self.ballpark,
-                                             self.bounds,
-                                             self.data,
+        return utils.gradient_descent_search(self.data,
                                              utils.error_function,
                                              self.model.generate_prediction,
+                                             self.ballpark,
+                                             self.bounds,
                                              self.very_verbose)
     
     @auto_attr
