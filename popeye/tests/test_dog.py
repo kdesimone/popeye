@@ -69,7 +69,10 @@ def test_dog():
     # fit it
     fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, voxel_index)
     
-    # assert equivalence
+    # coarse fit
+    nt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0),(-1.0, 2.0, 0.72833937882323319, 1.0, 0.01))
+    
+    # fine fit
     nt.assert_almost_equal(fit.x, x)
     nt.assert_almost_equal(fit.y, y)
     nt.assert_almost_equal(fit.sigma, sigma)
@@ -83,19 +86,8 @@ def test_dog():
     rf_new = fit.model.receptive_field(*est)
     value_1 = np.sqrt(simps(simps(rf))) 
     value_2 = np.sqrt(simps(simps(rf_new)))
-    npt.assert_almost_equal(value_2/value_1,sigma_ratio,1)
+    nt.assert_almost_equal(value_2/value_1,sigma_ratio,1)
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    # polar coordinates
+    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)])
     

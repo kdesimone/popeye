@@ -74,12 +74,23 @@ def test_css_fit():
     bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound,)
     
     # fit the response
-    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 2)
+    fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, 1)
     
-    # assert equivalence
+    # fine
     nt.assert_almost_equal(fit.x, x, 1)
     nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(fit.n, n, 1)
     nt.assert_almost_equal(fit.beta, beta, 1)
     nt.assert_almost_equal(fit.baseline, baseline, 1)
+    
+    # coarse
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.n0,fit.beta0,fit.baseline0),(2.0, -0.5, 0.72833937882323319, 0.10000000000000001, 1.0, 0.0))
+    
+    # overloaded
+    npt.assert_almost_equal(fit.overloaded_estimate,[2.5272803327899305,
+                                                     2.7411676344232436,
+                                                     1.2965338406630695,
+                                                     0.89999999997351177,
+                                                     0.99999999998062961,
+                                                     3.5926082629195817e-13])

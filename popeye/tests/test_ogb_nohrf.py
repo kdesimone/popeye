@@ -89,6 +89,13 @@ def test_ogb_manual_grids():
     nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
     nt.assert_almost_equal(np.round(fit.beta), beta, 1)
+    
+    npt.assert_almost_equal(fit.overloaded_estimate,[2.2730532583028005,
+                                                     3.4058772731826976,
+                                                     0.79999999999807414,
+                                                     84.999999999997371,
+                                                     0.50000000000040556])
+
 
 def test_ogb_fit():
     
@@ -163,8 +170,12 @@ def test_ogb_fit():
     # fit the response
     fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
     
+    # coarse
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.beta0,fit.baseline0),(0.0, 0.0, 2.9891696894116166, 50.5, 1.0))
+    
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 1)
     nt.assert_almost_equal(fit.y, y, 1)
     nt.assert_almost_equal(fit.sigma, sigma, 1)
-    nt.assert_almost_equal(np.round(fit.beta), beta, 1)
+    nt.assert_almost_equal(fit.beta, beta, 1)
+    

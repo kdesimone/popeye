@@ -301,16 +301,16 @@ def test_spm_hrf():
     npt.assert_almost_equal(diff_1, diff_2, 2)
 
 def test_double_gamma_hrf():
-
+    
     # set the TR length ... this affects the HRF sampling rate ...
     tr_length = 1.0
-
+    
     # compute the difference in area under curve for hrf_delays of -1 and 0
     diff_1 = np.abs(np.sum(utils.spm_hrf(-1, tr_length))-np.sum(utils.spm_hrf(0, tr_length)))
-
+    
     # compute the difference in area under curver for hrf_delays of 0 and 1
     diff_2 = np.abs(np.sum(utils.spm_hrf(1, tr_length))-np.sum(utils.spm_hrf(0, tr_length)))
-
+    
     npt.assert_almost_equal(diff_1, diff_2, 2)
 
 
@@ -466,6 +466,79 @@ def test_parallel_fit_Ns():
         nt.assert_almost_equal(fit.beta, beta, 2)
         nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
 
+def test_parallel_fit():
+
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,45)
+    num_blank_steps = 0
+    num_bar_steps = 30
+    ecc = 10
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 0.10
+    pixels_down = 100
+    pixels_across = 100
+    dtype = ctypes.c_int16
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    hrf_delay = -0.25
+    
+    # create the "data"
+    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+    
+    # set search grid
+    x_grid = slice(-5,4,5)
+    y_grid = slice(-5,7,5)
+    s_grid = slice(1/stimulus.ppd,5.25,5)
+    b_grid = slice(0.1,4.0,5)
+    h_grid = slice(-4.0,4.0,5)
+    
+    # set search bounds
+    x_bound = (-12.0,12.0)
+    y_bound = (-12.0,12.0)
+    s_bound = (1/stimulus.ppd,12.0)
+    b_bound = (1e-8,1e2)
+    h_bound = (-5.0,5.0)
+    
+    # loop over each voxel and set up a GaussianFit object
+    grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
+    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
+    
+    # make 3 voxels
+    all_data = np.array([data,data,data])
+    num_voxels = data.shape[0]
+    indices = [(1,2,3)]*3
+    
+    # bundle the voxels
+    bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, indices)
+    
+    fit = utils.parallel_fit(bundle[0])
+        
+    # assert equivalence
+    nt.assert_almost_equal(fit.x, x, 2)
+    nt.assert_almost_equal(fit.y, y, 2)
+    nt.assert_almost_equal(fit.sigma, sigma, 2)
+    nt.assert_almost_equal(fit.beta, beta, 2)
+
 def test_parallel_fit_manual_grids():
 
     # stimulus features
@@ -620,8 +693,10 @@ def test_peakdet():
     nt.assert_true(np.all(b[:,0] == troughs))
     nt.assert_true(np.all(a[:,1] == 1))
     nt.assert_true(np.all(b[:,1] == -1))
-
-
+    
+    
+    a,b = utils.peakdet(ts,0.5)
+    
 # def test_OLS():
 #     
 #     o = utils.ols(np.arange(100),np.arange(100))
