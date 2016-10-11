@@ -1,11 +1,9 @@
-import os
-from itertools import repeat
-import ctypes
+import os, ctypes
 
 import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
-from scipy.signal import fftconvolve
+from scipy.integrate import simps
 
 import popeye.utilities as utils
 from popeye import dog
@@ -26,7 +24,6 @@ def test_dog():
     pixels_down = 50
     pixels_across = 50
     dtype = ctypes.c_int16
-    Ns = 5
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -45,20 +42,20 @@ def test_dog():
     # set the pRF params
     x = -1.4
     y = 1.5
-    sigma = 1.3
-    sigma_ratio = 2.2
-    volume_ratio = 0.6
+    sigma = 1.0
+    sigma_ratio = 2.0
+    volume_ratio = 0.5
     hrf_delay = -0.2
     
     # create "data"
     data = model.generate_prediction(x, y, sigma, sigma_ratio, volume_ratio,)
     
     # set up the grids
-    x_grid = (-10,10)
-    y_grid = (-10,10)
-    s_grid = (1/stimulus.ppd,5)
-    sr_grid = (1.0,5.0)
-    vr_grid = (0.01,0.99)
+    x_grid = slice(-10,10,3)
+    y_grid = slice(-10,10,3)
+    s_grid = slice(1/stimulus.ppd,5,3)
+    sr_grid = slice(1.0,5.0,3)
+    vr_grid = slice(0.01,0.99,3)
     grids = (x_grid, y_grid, s_grid, sr_grid, vr_grid,)
     
     # set up the bounds
@@ -70,7 +67,7 @@ def test_dog():
     bounds = (x_bound, y_bound, s_bound, sr_bound, vr_bound,)
     
     # fit it
-    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, voxel_index)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x)
@@ -78,3 +75,27 @@ def test_dog():
     nt.assert_almost_equal(fit.sigma, sigma)
     nt.assert_almost_equal(fit.sigma_ratio, sigma_ratio)
     nt.assert_almost_equal(fit.volume_ratio, volume_ratio)
+    
+    # test the RF
+    rf = fit.model.receptive_field(*fit.estimate)
+    est = fit.estimate.copy()
+    est[2] *= 2
+    rf_new = fit.model.receptive_field(*est)
+    value_1 = np.sqrt(simps(simps(rf))) 
+    value_2 = np.sqrt(simps(simps(rf_new)))
+    npt.assert_almost_equal(value_2/value_1,sigma_ratio,1)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
