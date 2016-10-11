@@ -34,6 +34,8 @@ within a single fMRI voxel [1]. The pRF model allows neuroscientists to
 interpret and predict the response of a single voxel to various stimuli [2]
 and cognitive demands [3], both in cortex and in subcortical nuclei [4].
 
+https://kdesimone.github.io/popeye/
+
 # References
 [1] Dumoulin SO, Wandell BA (2008) Population receptive field estimates in human visual cortex. NeuroImage 39:647-660.
 
