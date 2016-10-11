@@ -694,15 +694,6 @@ def peakdet(v, delta, x = None):
     
     v = asarray(v)
     
-    if len(v) != len(x):
-        sys.exit('Input vectors v and x must have same length')
-    
-    if not isscalar(delta):
-        sys.exit('Input argument delta must be a scalar')
-    
-    if delta <= 0:
-        sys.exit('Input argument delta must be positive')
-    
     mn, mx = Inf, -Inf
     mnpos, mxpos = NaN, NaN
     
