@@ -15,7 +15,7 @@ authors:
    orcid: 0000-0001-7120-3380
    affiliation: 3
 affiliations:
-- name: New York University
+ - name: New York University
    index: 1
  - name: University of Washington
    index: 2
