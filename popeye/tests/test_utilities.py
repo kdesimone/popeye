@@ -212,10 +212,36 @@ def test_gradient_descent_search():
     response = func(*params)
     
     # get the fine estimate
-    phat = utils.gradient_descent_search((8,8), bounds, response, utils.error_function, func, verbose)
+    phat = utils.gradient_descent_search(response, utils.error_function, func, (8,8), bounds, verbose)
     
     # assert that the estimate is equal to the parameter
     npt.assert_almost_equal(params, phat[0])
+
+def test_brute_force_search_manual_grids():
+    
+    # create a parameter to estimate
+    params = (10,10)
+    
+    # we need to define some search bounds
+    grid_1 = slice(0,20,5)
+    grid_2 = slice(5,15,5)
+    grids = (grid_1,grid_2,)
+    bounds = ()
+    
+    # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
+    verbose = 0
+    
+    # create a simple function to transform the parameters
+    func = lambda freq, offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
+    
+    # create a "response"
+    response = func(*params)
+    
+    # get the ball-park estimate
+    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
+                                        
+    # assert that the estimate is equal to the parameter
+    npt.assert_equal(params, p0[0])
 
 def test_brute_force_search():
     
@@ -241,7 +267,7 @@ def test_brute_force_search():
     response = func(*params)
     
     # get the ball-park estimate
-    p0 = utils.brute_force_search(grids, bounds, Ns, response, utils.error_function, func, verbose)
+    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds, Ns=3)
                                         
     # assert that the estimate is equal to the parameter
     npt.assert_equal(params, p0[0])
