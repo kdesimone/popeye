@@ -542,7 +542,7 @@ def zscore(time_series, axis=-1):
 
     return zt
 
-def multiprocess_bundle(Fit, model, data, grids, bounds, Ns, indices, auto_fit, verbose):
+def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
     
     # num voxels
     num_voxels = np.shape(data)[0]
