@@ -23,23 +23,13 @@ def test_ogb_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.10
-    pixels_down = 50
-    pixels_across = 50
+    pixels_down = 100
+    pixels_across = 100
     dtype = ctypes.c_int16
     Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
-    
-    # insert blanks
-    thetas = list(thetas)
-    thetas.insert(0,-1)
-    thetas.insert(2,-1)
-    thetas.insert(5,-1)
-    thetas.insert(8,-1)
-    thetas.insert(11,-1)
-    thetas.append(-1)
-    thetas = np.array(thetas)
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
