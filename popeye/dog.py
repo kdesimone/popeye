@@ -100,6 +100,13 @@ class DifferenceOfGaussiansModel(PopulationModel):
         
         return model
     
+    # DoG receptive field
+    def receptive_field(self, x, y, sigma, sigma_ratio, volume_ratio):
+            rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+            rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, self.stimulus.deg_x, self.stimulus.deg_y) * 1.0/sigma_ratio**2                                    
+            rf = rf_center - np.sqrt(volume_ratio)*rf_surround
+            return rf
+    
 class DifferenceOfGaussiansFit(PopulationFit):
     
     r"""
@@ -219,17 +226,3 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def theta(self):
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
-        
-    @auto_attr
-    def receptive_field(self):
-            rf_center = generate_og_receptive_field(self.x, self.y, self.sigma,
-                                                    self.model.stimulus.deg_x, 
-                                                    self.model.stimulus.deg_y)
-                                                    
-            rf_surround = generate_og_receptive_field(self.x, self.y, self.sigma*self.sigma_ratio,
-                                                      self.model.stimulus.deg_x, 
-                                                      self.model.stimulus.deg_y) * 1.0/self.sigma_ratio**2
-            
-            rf = rf_center - np.sqrt(self.volume_ratio)*rf_surround
-            
-            return rf
