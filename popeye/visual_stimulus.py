@@ -205,8 +205,8 @@ def simulate_sinflicker_bar(pixels_across, pixels_down,
                 sigma_x = bar_width/2
                 sigma_y = 500
             else:
-                sigma_x = 500
-                sigma_y = bar_width/2
+                sigma_x = 500 # pragma: no cover
+                sigma_y = bar_width/2 # pragma: no cover
             
             # step through each position along the trajectory
             for step in np.arange(0,sweep_steps):

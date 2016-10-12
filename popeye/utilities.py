@@ -402,7 +402,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
     
     # if nan, return inf
     if np.any(np.isnan(prediction)):
-        return np.inf
+        return np.inf # pragma: no cover
     
     # else, return RSS
     error = np.sum((data-prediction)**2)

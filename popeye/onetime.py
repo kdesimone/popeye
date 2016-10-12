@@ -148,11 +148,11 @@ class OneTimeProperty(object):
     """
     def __init__(self, func):
         """Create a OneTimeProperty instance.
-
+        
         Parameters
         ----------
           func : method
-
+          
           The method that will be called the first time to compute a value.
           Afterwards, the method's name will be a standard attribute holding
           the value of this computation.
@@ -167,7 +167,7 @@ class OneTimeProperty(object):
             # Being called on the class, return the original function. This
             # way, introspection works on the class.
             # return func
-            return self.getter
+            return self.getter # pragma: no cover   
 
         # Errors in the following line are errors in setting a
         # OneTimeProperty
