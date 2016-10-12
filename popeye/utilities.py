@@ -63,7 +63,7 @@ p: list with parameters of the two gamma functions:
     hrf = hrf/np.sum(hrf);
     return hrf
 
-def brute_slice(start, stop, Ns):
+def grid_slice(start, stop, Ns):
     step = (stop-start) / Ns
     return slice(start, stop, step)
     
