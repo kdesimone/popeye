@@ -14,12 +14,12 @@ import popeye.ogb_nohrf as ogb
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
 
-def test_brute_slice():
+def test_grid_slice():
     
     start = 0
     stop = 1
     Ns = 4
-    sl = utils.brute_slice(start,stop,Ns)
+    sl = utils.grid_slice(start,stop,Ns)
     npt.assert_equal(stop/Ns,sl.step)
 
 def test_recast_estimation_results():
