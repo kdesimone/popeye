@@ -72,10 +72,10 @@ class PopulationModel(object):
         self.nuissance = nuissance
     
     def generate_ballpark_prediction(self):
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!")
+        raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
     
     def generate_prediction(self):
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!")
+        raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
     
 class PopulationFit(object):
     
@@ -256,7 +256,7 @@ class PopulationFit(object):
                   self.rsquared,
                   np.round(self.estimate,4)))
         else:
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s"
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s" # pragma: no cover
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
