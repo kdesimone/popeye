@@ -63,6 +63,11 @@ p: list with parameters of the two gamma functions:
     hrf = hrf/np.sum(hrf);
     return hrf
 
+def brute_slice(start, stop, Ns):
+    step = (stop-start) / Ns
+    return slice(start, stop, step)
+    
+
 def recast_estimation_results(output, grid_parent, overloaded=False):
     
     # load the gridParent
