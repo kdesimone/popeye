@@ -1,3 +1,4 @@
+from __future__ import division
 import ctypes, sharedmem, sys
 from StringIO import StringIO
 
@@ -12,6 +13,14 @@ import popeye.spinach as spin
 import popeye.ogb_nohrf as ogb
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
+
+def test_brute_slice():
+    
+    start = 0
+    stop = 1
+    Ns = 4
+    sl = utils.brute_slice(start,stop,Ns)
+    npt.assert_equal(stop/Ns,sl.step)
 
 def test_recast_estimation_results():
 
