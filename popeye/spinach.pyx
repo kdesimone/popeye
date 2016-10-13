@@ -686,11 +686,13 @@ def generate_gabor_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                                 np.ndarray[DTYPE2_t, ndim=2] deg_y,
+def generate_og_receptive_fields(
                                  np.ndarray[DTYPE2_t, ndim=1] xs,
                                  np.ndarray[DTYPE2_t, ndim=1] ys,
-                                 np.ndarray[DTYPE2_t, ndim=1] ss,):
+                                 np.ndarray[DTYPE2_t, ndim=1] ss,
+                                 np.ndarray[DTYPE2_t, ndim=1] amps,
+                                 np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                 np.ndarray[DTYPE2_t, ndim=2] deg_y):
     # cdef's
     cdef int i,j,k
     cdef int xlim = deg_x.shape[0]
@@ -706,6 +708,6 @@ def generate_og_receptive_fields(np.ndarray[DTYPE2_t, ndim=2] deg_x,
             for k in xrange(zlim):
                 s_factor2 = (2.0*ss[k]**2)
                 d = (deg_x[i,j]-xs[k])**2 + (deg_y[i,j]-ys[k])**2
-                rfs[i,j,k] += exp(-d/s_factor2)
+                rfs[i,j,k] += exp(-d/s_factor2) * amps[k]
                 
     return rfs
