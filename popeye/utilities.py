@@ -66,8 +66,14 @@ p: list with parameters of the two gamma functions:
 def grid_slice(start, stop, Ns):
     step = (stop-start) / Ns
     return slice(start, stop, step)
-    
 
+def distance_mask(x, y, sigma, deg_x, deg_y):
+    
+    distance = (deg_x - x)**2 + (deg_y - y)**2
+    mask = np.zeros_like(distance, dtype='uint8')
+    mask[distance < sigma**2] = 1
+    return mask
+    
 def recast_estimation_results(output, grid_parent, overloaded=False):
     
     # load the gridParent
