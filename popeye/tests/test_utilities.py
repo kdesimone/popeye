@@ -19,9 +19,14 @@ def test_distance_mask():
     x = 0
     y = 0
     sigma = 1
+    amplitude=100
     dx,dy = np.meshgrid(np.linspace(-50,50,100),np.linspace(-50,50,100))
     mask = utils.distance_mask(x,y,sigma,dx,dy)
     nt.assert_true(np.sqrt(np.sum(mask))==2)
+    nt.assert_true(np.max(mask)==1)
+    mask = utils.distance_mask(x,y,sigma,dx,dy,amplitude)
+    nt.assert_true(np.max(mask)==amplitude)
+
     
 def test_grid_slice():
     
