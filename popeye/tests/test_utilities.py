@@ -14,6 +14,15 @@ import popeye.ogb_nohrf as ogb
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
 
+def test_distance_mask():
+    
+    x = 0
+    y = 0
+    sigma = 1
+    dx,dy = np.meshgrid(np.linspace(-50,50,100),np.linspace(-50,50,100))
+    mask = utils.distance_mask(x,y,sigma,dx,dy)
+    nt.assert_true(np.sqrt(np.sum(mask))==2)
+    
 def test_grid_slice():
     
     start = 0
