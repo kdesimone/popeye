@@ -20,6 +20,10 @@ from scipy.signal import square
 from popeye.base import StimulusModel
 import popeye.utilities as utils
 
+def pixels_per_degree(pixels_across, screen_width, viewing_distance):
+
+    return np.pi*pixels_across/np.arctan(screen_width/viewing_distance/2.0)/360.0
+    
 def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1):
     
     """Creates coordinate matrices for representing the visual field in terms
@@ -414,7 +418,7 @@ class VisualStimulus(StimulusModel):
         self.pixels_across = self.stim_arr.shape[1]
         self.pixels_down = self.stim_arr.shape[0]
         self.run_length = self.stim_arr.shape[2]
-        self.ppd = np.pi*self.pixels_across/np.arctan(self.screen_width/self.viewing_distance/2.0)/360.0 # degrees of visual angle
+        self.ppd = pixels_per_degree(self.pixels_across, self.screen_width, self.viewing_distance)
         
         # generate coordinate matrices
         deg_x, deg_y = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd)
