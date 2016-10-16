@@ -8,9 +8,15 @@ import numpy.testing as npt
 
 import nose.tools as nt
 
-from popeye.visual_stimulus import generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus, VisualStimulus
+from popeye.visual_stimulus import pixels_per_degree, generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus, VisualStimulus
 
-
+def test_pixels_per_degree():
+    
+    pixels_across = 1
+    screen_width = 1
+    viewing_distance = 1
+    ppd = pixels_per_degree(pixels_across, screen_width, viewing_distance)
+    
 def test_generate_coordinate_matrices():
     
     # set some dummy display parameters
