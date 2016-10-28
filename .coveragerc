@@ -13,6 +13,7 @@ omit =
     popeye/strf.py
     
 [report]
+show_missing = True
 omit =
     */setup.py
     */popeye/plotting.py
