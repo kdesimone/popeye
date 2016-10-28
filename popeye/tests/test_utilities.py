@@ -30,11 +30,79 @@ def test_distance_mask():
     
 def test_grid_slice():
     
-    start = 0
-    stop = 1
-    Ns = 4
-    sl = utils.grid_slice(start,stop,Ns)
-    npt.assert_equal(stop/Ns,sl.step)
+    # test this case
+    from_1 = 0
+    to_1 = 20
+    from_2 = 0
+    to_2 = 2
+    Ns=5
+    
+    # set a parameter to estimate
+    params = (10,1)
+    
+    # see if we properly tile the parameter space for Ns=2
+    grid_1 = utils.grid_slice(from_1, to_1, Ns)
+    grid_2 = utils.grid_slice(from_2, to_2, Ns)
+    grids = (grid_1, grid_2)
+    
+    # unbounded
+    bounds = ()
+    
+    # create a simple function to generate a response from the parameter
+    func = lambda freq,offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
+    
+    # create a "response"
+    response = func(*params)
+    
+    # get the ball-park estimate
+    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
+    
+    # make sure we fit right
+    npt.assert_equal(params, p0[0])
+    
+    # make sure we sliced it right
+    npt.assert_equal(p0[2][0].min(),from_1)
+    npt.assert_equal(p0[2][0].max(),to_1)
+    npt.assert_equal(p0[2][1].min(),from_2)
+    npt.assert_equal(p0[2][1].max(),to_2)
+    
+    # test this case
+    from_1 = 0
+    to_1 = 20
+    from_2 = 1
+    to_2 = 2
+    Ns=2
+    
+    # set a parameter to estimate
+    params = (0,1)
+    
+    # see if we properly tile the parameter space for Ns=2
+    grid_1 = utils.grid_slice(from_1, to_1, Ns)
+    grid_2 = utils.grid_slice(from_2, to_2, Ns)
+    grids = (grid_1, grid_2)
+    
+    # unbounded
+    bounds = ()
+    
+    # create a simple function to generate a response from the parameter
+    func = lambda freq,offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
+    
+    # create a "response"
+    response = func(*params)
+    
+    # get the ball-park estimate
+    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
+    
+    # make sure we fit right
+    npt.assert_equal(params, p0[0])
+    
+    # make sure we sliced it right
+    npt.assert_equal(p0[2][0].min(),from_1)
+    npt.assert_equal(p0[2][0].max(),to_1)
+    npt.assert_equal(p0[2][1].min(),from_2)
+    npt.assert_equal(p0[2][1].max(),to_2)
+    
+    
 
 def test_recast_estimation_results():
 
@@ -101,7 +169,7 @@ def test_recast_estimation_results():
     bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, indices)
     
     # run analysis
-    with sharedmem.Pool(np=sharedmem.cpu_count()-1) as pool:
+    with sharedmem.Pool(np=3) as pool:
         output = pool.map(utils.parallel_fit, bundle)
     
     # create grid parent
@@ -247,8 +315,8 @@ def test_brute_force_search_manual_grids():
     params = (10,10)
     
     # we need to define some search bounds
-    grid_1 = slice(0,20,5)
-    grid_2 = slice(5,15,5)
+    grid_1 = utils.grid_slice(0,20,5)
+    grid_2 = utils.grid_slice(5,15,5)
     grids = (grid_1,grid_2,)
     bounds = ()
     
@@ -263,7 +331,7 @@ def test_brute_force_search_manual_grids():
     
     # get the ball-park estimate
     p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
-                                        
+    
     # assert that the estimate is equal to the parameter
     npt.assert_equal(params, p0[0])
 
@@ -291,7 +359,7 @@ def test_brute_force_search():
     response = func(*params)
     
     # get the ball-park estimate
-    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds, Ns=3)
+    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds, Ns=Ns)
                                         
     # assert that the estimate is equal to the parameter
     npt.assert_equal(params, p0[0])
@@ -478,7 +546,7 @@ def test_parallel_fit_Ns():
     bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, indices, Ns=3)
     
     # run analysis
-    with sharedmem.Pool(np=sharedmem.cpu_count()-1) as pool:
+    with sharedmem.Pool(np=3) as pool:
         output = pool.map(utils.parallel_fit, bundle)
     
     # assert equivalence
