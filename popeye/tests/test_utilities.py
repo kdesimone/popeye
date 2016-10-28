@@ -370,13 +370,20 @@ def test_double_gamma_hrf():
     # set the TR length ... this affects the HRF sampling rate ...
     tr_length = 1.0
     
-    # compute the difference in area under curve for hrf_delays of -1 and 0
-    diff_1 = np.abs(np.sum(utils.double_gamma_hrf(-1, tr_length))-np.sum(utils.double_gamma_hrf(0, tr_length)))
+    hrf_0 = utils.double_gamma_hrf(-1, tr_length)
+    hrf_1 = utils.double_gamma_hrf(0, tr_length)
+    hrf_2 = utils.double_gamma_hrf(1, tr_length)
+    npt.assert_almost_equal(hrf_0.sum(), hrf_1.sum(), 3)
+    npt.assert_almost_equal(hrf_0.sum(), hrf_2.sum(), 3)
+    npt.assert_almost_equal(hrf_1.sum(), hrf_2.sum(), 3)
     
-    # compute the difference in area under curver for hrf_delays of 0 and 1
-    diff_2 = np.abs(np.sum(utils.double_gamma_hrf(1, tr_length))-np.sum(utils.double_gamma_hrf(0, tr_length)))
+    hrf_0 = utils.double_gamma_hrf(-1, tr_length, integrator=None)
+    hrf_1 = utils.double_gamma_hrf(0, tr_length, integrator=None)
+    hrf_2 = utils.double_gamma_hrf(1, tr_length, integrator=None)
+    nt.assert_true(hrf_0.sum()<hrf_1.sum())
+    nt.assert_true(hrf_1.sum()<hrf_2.sum())
+    nt.assert_true(hrf_0.sum()<hrf_2.sum())
     
-    npt.assert_almost_equal(diff_1, diff_2, 2)
     
 def test_spm_hrf():
     
