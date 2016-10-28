@@ -73,8 +73,8 @@ def grid_slice(start, stop, Ns, dryrun=False):
         step = (stop-start) / (Ns-1)
     
     # if true, this return the ndarray rather than slice object.
-    if dryrun:
-        return arange(start, stop+step, step)
+    if dryrun: # pragma: no cover
+        return arange(start, stop+step, step) # pragma: no cover
     else:
         return slice(start, stop+step, step)
 
@@ -104,7 +104,7 @@ def recast_estimation_results(output, grid_parent, overloaded=False):
     # extract the prf model estimates from the results queue output
     for fit in output:
         
-        if not np.isnan(fit.rsquared):
+        if not np.isnan(fit.rsquared): # pragma: no cover
         
             # gather the estimate + stats
             if overloaded == True and fit.overloaded_estimate is not None:
@@ -490,7 +490,7 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     hrf = ( ( ( t ** (alpha_1) * beta_1 ** alpha_1 * np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
             ( ( t ** (alpha_2) * beta_2 ** alpha_2 * np.exp( -beta_2 * t )) /gamma( alpha_2 )) )
     
-    if integrator:
+    if integrator: # pragma: no cover
         hrf /= integrator(hrf)
     
     return hrf
@@ -713,7 +713,7 @@ def peakdet(v, delta, x = None):
     maxtab = []
     mintab = []
        
-    if x is None:
+    if x is None: # pragma: no cover
         x = arange(len(v))
     
     v = asarray(v)
