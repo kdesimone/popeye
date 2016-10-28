@@ -63,9 +63,20 @@ p: list with parameters of the two gamma functions:
     hrf = hrf/np.sum(hrf);
     return hrf
 
-def grid_slice(start, stop, Ns):
-    step = (stop-start) / Ns
-    return slice(start, stop, step)
+def grid_slice(start, stop, Ns, dryrun=False):
+    
+    # special case
+    if Ns == 2:
+        step = stop-start
+    # all others
+    else:
+        step = (stop-start) / (Ns-1)
+    
+    # if true, this return the ndarray rather than slice object.
+    if dryrun:
+        return arange(start, stop+step, step)
+    else:
+        return slice(start, stop+step, step)
 
 def distance_mask(x, y, sigma, deg_x, deg_y, amplitude=1):
     
