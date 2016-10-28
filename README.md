@@ -20,8 +20,7 @@ Dependencies
 
 popeye is tested to work under Python 2.7.
 
-The required dependencies to build the software are NumPy &gt;= 1.6.2,
-SciPy &gt;= 0.9, Nibabel &gt;= 1.3.0, and Cython &gt;= 0.18.
+The required dependencies to build the software are NumPy &gt;= 1.6.2, SciPy &gt;= 0.9, Nibabel &gt;= 1.3.0, Cython &gt;= 0.18, sharedmem &gt;= 0.3, and statsmodels &gt;= 0.6.
 
 For running the tests you need nose &gt;= 1.1.2.
 
