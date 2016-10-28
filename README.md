@@ -1,9 +1,6 @@
 [![Build Status](https://api.travis-ci.org/kdesimone/popeye.svg?branch=master)](https://travis-ci.org/kdesimone/popeye/)
-
 [![image](https://circleci.com/gh/kdesimone/popeye.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/kdesimone/popeye)
-
 [![image](https://coveralls.io/repos/github/kdesimone/popeye/badge.svg?branch=master)](https://coveralls.io/github/kdesimone/popeye?branch=master)
-
 [![status](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786/status.svg)](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786)
 
 
