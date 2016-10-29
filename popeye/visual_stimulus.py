@@ -431,20 +431,20 @@ class VisualStimulus(StimulusModel):
         if self.scale_factor == 1.0:
             
             
-            self.stim_arr_coarse = self.stim_arr
-            self.deg_x_coarse = self.deg_x
-            self.deg_y_coarse = self.deg_y
+            self.stim_arr0 = self.stim_arr
+            self.deg_x0 = self.deg_x
+            self.deg_y0 = self.deg_y
             
         else:
             
             # create downsampled stimulus
-            stim_arr_coarse = resample_stimulus(self.stim_arr, self.scale_factor)
+            stim_arr0 = resample_stimulus(self.stim_arr, self.scale_factor)
             
             # generate the coordinate matrices
-            deg_x_coarse, deg_y_coarse = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
+            deg_x0, deg_y0 = generate_coordinate_matrices(self.pixels_across, self.pixels_down, self.ppd, self.scale_factor)
             
             # share the arrays
-            self.deg_x_coarse = utils.generate_shared_array(deg_x_coarse, ctypes.c_double)
-            self.deg_y_coarse = utils.generate_shared_array(deg_y_coarse, ctypes.c_double)
-            self.stim_arr_coarse = utils.generate_shared_array(stim_arr_coarse, dtype)
+            self.deg_x0 = utils.generate_shared_array(deg_x0, ctypes.c_double)
+            self.deg_y0 = utils.generate_shared_array(deg_y0, ctypes.c_double)
+            self.stim_arr0 = utils.generate_shared_array(stim_arr0, dtype)
         

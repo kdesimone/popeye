@@ -53,13 +53,13 @@ class CompressiveSpatialSummationModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x0, self.stimulus.deg_y0)
         
         # normalize by the integral
-        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
+        rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr0, rf)
         
         # compression
         response **= n

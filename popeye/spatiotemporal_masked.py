@@ -51,11 +51,11 @@ class SpatioTemporalModel(PopulationModel):
         mask = self.distance_mask_coarse(x, y, sigma*6)
         
         # generate the RF
-        spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2)
+        spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
+        spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2)
         
         # spatial_response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr_coarse, spatial_rf, mask)
+        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr0, spatial_rf, mask)
         
         # temporal response
         m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
@@ -191,7 +191,7 @@ class SpatioTemporalModel(PopulationModel):
         return m_resp_final
     
     def distance_mask_coarse(self, x, y, sigma):
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < sigma**2] = 1
         return mask
