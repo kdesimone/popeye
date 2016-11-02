@@ -35,17 +35,17 @@ class GaborModel(PopulationModel):
         phi = np.mod(theta, 2*np.pi)
         
         # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
         rf = generate_gabor_receptive_field(x, y, sigma, theta, phi, cpd,
-                                            self.stimulus.deg_x_coarse,
-                                            self.stimulus.deg_y_coarse)
+                                            self.stimulus.deg_x0,
+                                            self.stimulus.deg_y0)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
         # convolve with the HRF
         hrf = self.hrf_model(0, self.stimulus.tr_length)

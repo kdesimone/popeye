@@ -47,16 +47,16 @@ class GaussianModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, beta, hrf_delay):
         
         # create mask for speed
-        distance = (self.stimulus.deg_x_coarse - x)**2 + (self.stimulus.deg_y_coarse - y)**2
+        distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
         mask = np.zeros_like(distance, dtype='uint8')
         mask[distance < (5*sigma)**2] = 1
         
         # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x_coarse[0,0:2])**2
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2
                 
         # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr_coarse, rf, mask)
+        response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
         # generate HRF
         hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)

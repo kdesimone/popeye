@@ -57,17 +57,17 @@ class DifferenceOfGaussiansModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
         
         # extract the center response
-        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x_coarse, self.stimulus.deg_y_coarse)
+        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
         
         # extract surround response
         rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, 
-                                                  self.stimulus.deg_x_coarse, self.stimulus.deg_x_coarse) * 1/sigma_ratio**2
+                                                  self.stimulus.deg_x0, self.stimulus.deg_x0) * 1/sigma_ratio**2
         
         # difference
         rf = rf_center - np.sqrt(volume_ratio)*rf_surround
         
         # extract the response
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr_coarse, rf)
+        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr0, rf)
         
         # generate the hrf
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
