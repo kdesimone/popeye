@@ -81,9 +81,9 @@ def test_noresample_stimulus():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # stimulus
-    npt.assert_equal(stimulus.stim_arr.shape[0:2],stimulus.stim_arr_coarse.shape[0:2])
-    npt.assert_equal(stimulus.deg_x.shape,stimulus.deg_x_coarse.shape)
-    npt.assert_equal(stimulus.deg_y.shape,stimulus.deg_y_coarse.shape)
+    npt.assert_equal(stimulus.stim_arr.shape[0:2],stimulus.stim_arr0.shape[0:2])
+    npt.assert_equal(stimulus.deg_x.shape,stimulus.deg_x0.shape)
+    npt.assert_equal(stimulus.deg_y.shape,stimulus.deg_y0.shape)
 
 def test_resample_stimulus():
     
