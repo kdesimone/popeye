@@ -91,7 +91,7 @@ def test_og_fit():
     # test model == fit RF
     nt.assert_almost_equal(fit.model.generate_receptive_field(x,y,sigma).sum(), fit.receptive_field.sum()) 
 
-def test_og_nuissance_fit():
+def test_og_nuisance_fit():
     
     # stimulus features
     viewing_distance = 38
@@ -131,7 +131,7 @@ def test_og_nuissance_fit():
     # create the "data"
     data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
     
-    # create nuissance signal
+    # create nuisance signal
     step = np.zeros(len(data))
     step[30:-30] = 1
     
@@ -139,10 +139,10 @@ def test_og_nuissance_fit():
     data += step
     
     # create design matrix
-    nuissance = sm.add_constant(step)
+    nuisance = sm.add_constant(step)
     
-    # recreate model with nuissance
-    model = og.GaussianModel(stimulus, utils.spm_hrf, nuissance)
+    # recreate model with nuisance
+    model = og.GaussianModel(stimulus, utils.spm_hrf, nuisance)
     
     # set search grid
     x_grid = (-10,10)

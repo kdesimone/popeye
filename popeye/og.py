@@ -17,7 +17,7 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    def __init__(self, stimulus, hrf_model, nuissance=None):
+    def __init__(self, stimulus, hrf_model, nuisance=None):
         
         r"""A 2D Gaussian population receptive field model [1]_.
         
@@ -41,7 +41,7 @@ class GaussianModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model, nuissance)
+        PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
     
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, hrf_delay):
