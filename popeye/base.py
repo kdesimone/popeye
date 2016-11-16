@@ -42,7 +42,7 @@ class PopulationModel(object):
     
     r""" Base class for all pRF models."""
     
-    def __init__(self, stimulus, hrf_model, nuissance=None):
+    def __init__(self, stimulus, hrf_model, nuisance=None):
         
         r"""Base class for all pRF models.
         
@@ -59,17 +59,17 @@ class PopulationModel(object):
             For more information, see `popeye.utilties.double_gamma_hrf_hrf
             and `popeye.utilities.spm_hrf`
             
-        nuissance : ndarray
-            A nuissance regressor for removing effects of non-interest.
-            You can regress out any nuissance effects from you data prior to fitting
-            the model of interest. The nuissance model is a statsmodels.OLS compatible
+        nuisance : ndarray
+            A nuisance regressor for removing effects of non-interest.
+            You can regress out any nuisance effects from you data prior to fitting
+            the model of interest. The nuisance model is a statsmodels.OLS compatible
             design matrix, and the user is expected to have already added any constants.
         
         """
         
         self.stimulus = stimulus
         self.hrf_model = hrf_model
-        self.nuissance = nuissance
+        self.nuisance = nuisance
     
     def generate_ballpark_prediction(self):
         raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
@@ -153,10 +153,10 @@ class PopulationFit(object):
         self.data = data
         self.verbose, self.very_verbose = set_verbose(verbose)
         
-        # regress out any nuissance
-        if self.model.nuissance is not None:
-            self.model.nuissance_model = sm.OLS(self.data,self.model.nuissance)
-            self.model.results = self.model.nuissance_model.fit()
+        # regress out any nuisance
+        if self.model.nuisance is not None:
+            self.model.nuisance_model = sm.OLS(self.data,self.model.nuisance)
+            self.model.results = self.model.nuisance_model.fit()
             self.original_data = self.data
             self.data = self.model.results.resid
         
