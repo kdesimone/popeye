@@ -90,6 +90,33 @@ def two_dimensional_og(np.ndarray[DTYPE2_t, ndim=2] deg_x,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_mp_timeseries(np.ndarray[DTYPE2_t, ndim=1] spatial_ts,
+                           np.ndarray[DTYPE2_t, ndim=1] m_amp,
+                           np.ndarray[DTYPE2_t, ndim=1] p_amp,
+                           np.ndarray[DTYPE_t, ndim=1] flicker_vec):
+    # cdef's
+    cdef int t
+    cdef int tlim = spatial_ts.shape[0]
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] m_ts = np.zeros(tlim,dtype=DTYPE2)
+    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] p_ts = np.zeros(tlim,dtype=DTYPE2)
+    
+    # the loop
+    for t in xrange(tlim):
+        amp = spatial_ts[t]
+        flicker = flicker_vec[t]
+        if flicker == 1:
+            m_ts[t] = m_amp[0] * amp
+            p_ts[t] = p_amp[0] * amp
+        if flicker == 2:
+            m_ts[t] = m_amp[1] * amp
+            p_ts[t] = p_amp[1] * amp
+            
+    return m_ts, p_ts
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_strf_timeseries(np.ndarray[DTYPE2_t, ndim=1] stim_ts,
                              np.ndarray[DTYPE2_t, ndim=2] m_resp,
                              np.ndarray[DTYPE2_t, ndim=2] p_resp,
@@ -622,67 +649,6 @@ def generate_gabor_receptive_field(DTYPE2_t x0,
                 gabor[i,j] = gauss[i,j] * grating[i,j]
                 
     return gabor
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def generate_gabor_timeseries(np.ndarray[DTYPE2_t, ndim=2] deg_x,
-                              np.ndarray[DTYPE2_t, ndim=2] deg_y,
-                              np.ndarray[DTYPE_t, ndim=3] stim_arr,
-                              DTYPE2_t x0,
-                              DTYPE2_t y0,
-                              DTYPE2_t s0,
-                              DTYPE2_t theta,
-                              DTYPE2_t phi,
-                              DTYPE2_t cpd):
-                  
-    # cdef's
-    cdef int i,j,k
-    cdef DTYPE2_t s_factor2 = (2.0*s0**2)                                 
-    cdef DTYPE2_t s_factor3 = (3.0*s0)**2
-    cdef int xlim = deg_x.shape[0]
-    cdef int ylim = deg_y.shape[1]
-    cdef int zlim = stim_arr.shape[-1]
-    cdef DTYPE2_t pi_180 = np.pi/180
-    cdef DTYPE2_t theta_rad = theta * pi_180
-    cdef DTYPE2_t phi_rad = phi * pi_180
-    cdef DTYPE2_t pi_2 = np.pi * 2
-    cdef DTYPE2_t d
-    
-    # fodder
-    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYt = np.zeros((xlim,ylim),dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] XYf = np.zeros((xlim,ylim),dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] grating = np.zeros((xlim,ylim),dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gauss = np.zeros((xlim,ylim),dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] gabor = np.zeros((xlim,ylim),dtype=DTYPE2)
-    cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] stim = np.zeros(zlim,dtype=DTYPE2)
-    
-    # the loop
-    for i in xrange(xlim):
-        for j in xrange(ylim):
-            
-            # only compute inside the sigma*3
-            d = (deg_x[i,j]-x0)**2 + (deg_y[i,j]-y0)**2
-            
-            if d <= s_factor3:
-                
-                # creating the grating
-                XYt[i,j] =  (deg_x[i,j] * cos(theta_rad)) + (deg_y[i,j] * sin(theta_rad))
-                XYf[i,j] = XYt[i,j] * cpd * pi_2
-                grating[i,j] = sin(XYf[i,j] + phi_rad)
-                
-                # create the gaussian
-                gauss[i,j] =  exp(-d/s_factor2)
-                
-                # create the gabor
-                gabor[i,j] = gauss[i,j] * grating[i,j]
-                
-                # for each TR in the stimulus
-                for k in xrange(zlim):
-                    stim[k] += stim_arr[i,j,k]*gabor[i,j]
-                
-    return stim
-    
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
