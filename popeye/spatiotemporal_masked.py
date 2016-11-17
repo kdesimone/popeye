@@ -48,7 +48,7 @@ class SpatioTemporalModel(PopulationModel):
     def generate_ballpark_prediction(self, x, y, sigma, weight, beta, baseline):
         
         # mask for speed
-        mask = self.distance_mask_coarse(x, y, sigma*6)
+        mask = self.distance_mask_coarse(x, y, sigma*self.mask_size)
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -79,7 +79,7 @@ class SpatioTemporalModel(PopulationModel):
     def generate_prediction(self, x, y, sigma, weight, beta, baseline):
         
         # mask for speed
-        mask = self.distance_mask(x, y, sigma*6)
+        mask = self.distance_mask(x, y, sigma*self.mask_size)
         
         # generate the RF
         spatial_rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
