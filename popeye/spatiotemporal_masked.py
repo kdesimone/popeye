@@ -86,7 +86,7 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # spatial response
-        spatial_ts = generate_rf_timeseries(self.stimulus.stim_arr0, spatial_rf, mask)
+        spatial_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
         
         # temporal response
         m_ts, p_ts = generate_mp_timeseries(spatial_ts, self.m_amp, self.p_amp, self.stimulus.flicker_vec)
