@@ -12,6 +12,7 @@ import numpy as np
 from scipy.stats import linregress
 from scipy.signal import fftconvolve
 from scipy.integrate import trapz, simps
+from scipy.optimize import fmin
 import nibabel
 
 from popeye.onetime import auto_attr
@@ -142,16 +143,28 @@ class SpatioTemporalModel(PopulationModel):
         return np.sin(2 * np.pi * np.single(self.stimulus.flicker_hz) * self.t[:,np.newaxis])
     
     @auto_attr
+    def m_resp(self):
+        m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
+        m_resp /= m_resp.shape[0]
+        return m_resp
+    
+    def generate_m_resp(self, tau):
+        m_rf = self.m_rf(tau)
+        m_resp = fftconvolve(self.flickers,m_rf[:,np.newaxis])
+        m_resp /= m_resp.shape[0]
+        return m_resp
+        
+    @auto_attr
     def p_resp(self):
         p_resp = fftconvolve(self.flickers,self.p[:,np.newaxis])
         p_resp /= p_resp.shape[0]
         return p_resp
     
-    @auto_attr
-    def m_resp(self):
-        m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
-        m_resp /= m_resp.shape[0]
-        return m_resp
+    def generate_p_resp(self, tau):
+        p_rf = self.p_rf(tau)
+        p_resp = fftconvolve(self.flickers,p_rf[:,np.newaxis])
+        p_resp /= p_resp.shape[0]
+        return p_resp
     
     @auto_attr
     def m_amp(self):
