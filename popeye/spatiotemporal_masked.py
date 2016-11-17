@@ -17,7 +17,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_strf_timeseries, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_mp_timeseries, generate_rf_timeseries
 
 class SpatioTemporalModel(PopulationModel):
     
@@ -55,18 +55,10 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2)
         
         # spatial_response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr0, spatial_rf, mask)
+        spatial_ts = generate_rf_timeseries(self.stimulus.stim_arr0, spatial_rf, mask)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
-        
-        # clean up nan
-        m_ts[np.isnan(m_ts)] = 0
-        p_ts[np.isnan(p_ts)] = 0
-        
-        # normalize each timeseries
-        m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0,1)
+        m_ts, p_ts = generate_mp_timeseries(spatial_ts, self.m_amp, self.p_amp, self.stimulus.flicker_vec)
         
         # mix them
         mp_ts = (1-weight) * m_ts + weight * p_ts
@@ -94,18 +86,10 @@ class SpatioTemporalModel(PopulationModel):
         spatial_rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # spatial response
-        rf_ts = generate_rf_timeseries(self.stimulus.stim_arr, spatial_rf, mask)
+        spatial_ts = generate_rf_timeseries(self.stimulus.stim_arr0, spatial_rf, mask)
         
         # temporal response
-        m_ts,p_ts = generate_strf_timeseries(rf_ts,self.m_resp,self.p_resp,self.stimulus.flicker_vec)
-        
-        # clean up nan
-        m_ts[np.isnan(m_ts)] = 0
-        p_ts[np.isnan(p_ts)] = 0
-        
-        # normalize each timeseries
-        m_ts = utils.normalize(m_ts,0,1)
-        p_ts = utils.normalize(p_ts,0,1)
+        m_ts, p_ts = generate_mp_timeseries(spatial_ts, self.m_amp, self.p_amp, self.stimulus.flicker_vec)
         
         # mix them
         mp_ts = (1-weight) * m_ts + weight * p_ts 
@@ -155,40 +139,27 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def flickers(self):
-        ts = self.t.shape[-1]
-        fs = int(np.max(self.stimulus.flicker_vec))
-        flickers = np.zeros((ts,fs))
-        for f in xrange(1,fs+1):
-            flickers[:,f-1] = np.sin(2 * np.pi * self.stimulus.flicker_hz[f-1] * self.t)
-        return flickers
+        return np.sin(2 * np.pi * np.single(self.stimulus.flicker_hz) * self.t[:,np.newaxis])
     
     @auto_attr
     def p_resp(self):
-        ts = self.t.shape[-1]
-        fs = int(np.max(self.stimulus.flicker_vec))
-        p_resp = np.zeros((ts,fs))
-        for f in xrange(1,fs+1):
-            p_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.p))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
-        
-        p_resp_rs = np.reshape(p_resp,(np.prod(p_resp.shape)),order='F')
-        p_resp_norm = utils.normalize(p_resp_rs,0,1)
-        p_resp_final = np.reshape(p_resp_norm,p_resp.shape,order='F')
-        
-        return p_resp_final
+        p_resp = fftconvolve(self.flickers,self.p[:,np.newaxis])
+        p_resp /= p_resp.shape[0]
+        return p_resp
     
     @auto_attr
     def m_resp(self):
-        ts = self.t.shape[-1]
-        fs = int(np.max(self.stimulus.flicker_vec))
-        m_resp = np.zeros((ts,fs))
-        for f in xrange(1,fs+1):
-            m_resp[:,f-1] = np.abs(fftconvolve(self.flickers[:,f-1],self.m))[0:len(self.flickers[:,f-1])] / len(self.flickers[:,f-1])
-        
-        m_resp_rs = np.reshape(m_resp,(np.prod(m_resp.shape)),order='F')
-        m_resp_norm = utils.normalize(m_resp_rs,0,1)
-        m_resp_final = np.reshape(m_resp_norm,m_resp.shape,order='F')
-        
-        return m_resp_final
+        m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
+        m_resp /= m_resp.shape[0]
+        return m_resp
+    
+    @auto_attr
+    def m_amp(self):
+        return self.m_resp.max(0)
+    
+    @auto_attr
+    def p_amp(self):
+        return self.p_resp.max(0)
     
     def distance_mask_coarse(self, x, y, sigma):
         distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
