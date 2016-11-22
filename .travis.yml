@@ -17,6 +17,8 @@ matrix:
     - python: 2.7
       env:
         - COVERAGE=1
+    - python: 3.5
+
 before_install:
     - virtualenv --python=python venv
     - source venv/bin/activate
