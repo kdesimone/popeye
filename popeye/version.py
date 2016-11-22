@@ -44,7 +44,7 @@ for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
 All trademarks referenced herein are property of their respective holders.
 
-Copyright (c) 2013, Kevin Desimone
+Copyright (c) 2013, Kevin DeSimone
 All rights reserved.
 """
 
