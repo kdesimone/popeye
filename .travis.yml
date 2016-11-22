@@ -25,7 +25,7 @@ before_install:
     - python --version # just to check
     - pip install nose # always
     - pip install pillow
-    - pip install --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
+    - pip install $DEPENDS
     - pip install sharedmem
     - pip install statsmodels
     - if [ "${COVERAGE}" == "1" ]; then
