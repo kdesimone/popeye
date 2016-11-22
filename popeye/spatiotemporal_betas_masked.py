@@ -171,11 +171,11 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def m_amp(self):
-        return self.m_resp.max(0)
+        return np.sum(np.abs(self.m_resp))
     
     @auto_attr
     def p_amp(self):
-        return self.p_resp.max(0)
+        return np.sum(np.abs(self.p_resp))
     
     def distance_mask_coarse(self, x, y, sigma):
         distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
