@@ -4,6 +4,7 @@
 *.pyc
 .coverage
 
+dist
 build
 _build
 _static
