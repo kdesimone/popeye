@@ -70,7 +70,7 @@ class SpatioTemporalModel(PopulationModel):
         
         # scale
         model *= beta
-         
+        
         # offset
         model += baseline
         
@@ -145,34 +145,34 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def m_resp(self):
         m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
-        m_resp /= m_resp.shape[0]
+        m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
-    
+        
     def generate_m_resp(self, tau):
         m_rf = self.m_rf(tau)
         m_resp = fftconvolve(self.flickers,m_rf[:,np.newaxis])
-        m_resp /= m_resp.shape[0]
+        m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
+        
+    @auto_attr
+    def m_amp(self):
+        return np.sum(np.abs(self.m_resp),0)
         
     @auto_attr
     def p_resp(self):
         p_resp = fftconvolve(self.flickers,self.p[:,np.newaxis])
-        p_resp /= p_resp.shape[0]
+        p_resp = utils.normalize(p_resp,-1,1)
         return p_resp
-    
+        
     def generate_p_resp(self, tau):
         p_rf = self.p_rf(tau)
         p_resp = fftconvolve(self.flickers,p_rf[:,np.newaxis])
-        p_resp /= p_resp.shape[0]
+        p_resp = utils.normalize(p_resp,-1,1)
         return p_resp
-    
-    @auto_attr
-    def m_amp(self):
-        return np.sum(np.abs(self.m_resp))
-    
+        
     @auto_attr
     def p_amp(self):
-        return np.sum(np.abs(self.p_resp))
+        return np.sum(np.abs(self.p_resp),0)
     
     def distance_mask_coarse(self, x, y, sigma):
         distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
