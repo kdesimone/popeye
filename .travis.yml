@@ -1,42 +1,37 @@
-# vim ft=yaml
-# Multiple lines can be made a single "virtual line" because of the way that
-# Travis munges each line before executing it to print out the exit status.
-# It's okay for it to be on multiple physical lines, so long as you remember:
-# - There can't be any leading "-"s - All newlines will be removed, so use
-# ";"s
-
-
-rvm: 1.9.3
 sudo: false
-language: python
+
 env:
-    global:
-        - DEPENDS="cython numpy scipy matplotlib nibabel"
+  global:
+    - PIP_DEPS="numpy cython scipy matplotlib nibabel sharedmem statsmodels nose python-coveralls coverage"
+
 matrix:
   include:
-    - python: 2.7
+    - os: linux
       env:
-        - COVERAGE=1
+         - PYTHON_VERSION=2.7
+         - MINICONDA_URL="http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh"
+         - COVERAGE=1
+    - os: linux
+      env:
+         - PYTHON_VERSION=3.5
+         - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+
 before_install:
-    - virtualenv --python=python venv
-    - source venv/bin/activate
-    - python --version # just to check
-    - pip install nose # always
-    - pip install pillow
-    - pip install --no-index -f http://travis-wheels.scikit-image.org $DEPENDS
-    - pip install sharedmem
-    - pip install statsmodels
-    - if [ "${COVERAGE}" == "1" ]; then
-      pip install coverage;
-      pip install coveralls;
-      fi
+  - export MINICONDA=$HOME/miniconda
+  - export PATH="$MINICONDA/bin:$PATH"
+  - hash -r
+  - echo $MINICONDA_URL
+  - wget $MINICONDA_URL -O miniconda.sh;
+  - bash miniconda.sh -b -f -p $MINICONDA;
+  - conda config --set always_yes yes
+  - conda update conda
+  - conda info -a
+  - conda install python=$PYTHON_VERSION
+  - pip install $PIP_DEPS
+
 
 install:
-  - python setup.py install build_ext
-  - pip install python-coveralls
-  - pip install coverage       # Add me to install coverage.py
-  - pip install nose           # Add me to install nose
-  # command to run tests, e.g. python setup.py test
+  - python setup.py install
 script:
     # Change into an innocuous directory and find tests from installation
     - mkdir for_testing
