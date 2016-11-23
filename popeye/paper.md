@@ -37,10 +37,11 @@ nuclei [4].
 https://kdesimone.github.io/popeye
 
 # References
-[1] Dumoulin SO, Wandell BA (2008) Population receptive field estimates in human visual cortex. NeuroImage 39:647-660.
 
-[2] Thomas JM, Huber E, Stecker E, Boynton G, Saenz M, Fine I (2014) Population receptive field estimates in human auditory cortex. NeuroImage 109:428:439.
+[1] Dumoulin SO, Wandell BA (2008) Population receptive field estimates in human visual cortex. NeuroImage 39:647-660. doi:10.1016/j.neuroimage.2007.09.034
 
-[3] Harvey BM, Klein BP, Petridou N, Dumoulin SO (2013) Topographic organization of numerosity in the human parietal cortex. Science 341:1123-1126.
+[2] Thomas JM, Huber E, Stecker E, Boynton G, Saenz M, Fine I (2014) Population receptive field estimates in human auditory cortex. NeuroImage 109:428:439. doi:10.1016/j.neuroimage.2014.10.060
 
-[4] DeSimone K, Viviano JD, Schneider KA (2015) Population receptive field estimation reveals two new maps in human subcortex. Journal of Neuroscience 35:9836-9847.
+[3] Harvey BM, Klein BP, Petridou N, Dumoulin SO (2013) Topographic organization of numerosity in the human parietal cortex. Science 341:1123-1126. doi:10.1126/science.1239052
+
+[4] DeSimone K, Viviano JD, Schneider KA (2015) Population receptive field estimation reveals two new maps in human subcortex. Journal of Neuroscience 35:9836-9847. doi:10.1523/jneurosci.3840-14.2015.
