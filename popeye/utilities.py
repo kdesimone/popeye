@@ -655,8 +655,8 @@ def parallel_fit(args):
     data = args[2]
     grids = args[3]
     bounds = args[4]
-    Ns = args[5]
-    voxel_index = args[6]
+    voxel_index = args[5]
+    Ns = args[6]
     auto_fit = args[7]
     verbose = args[8]
 
