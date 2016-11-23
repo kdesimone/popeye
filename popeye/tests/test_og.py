@@ -28,10 +28,6 @@ def test_og_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 3
-    voxel_index = (1,2,3)
-    auto_fit = True
-    verbose = 1
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -72,10 +68,14 @@ def test_og_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
     
     # coarse fit
-    nt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.beta0,fit.hrf0),(-10.0, 0.0, 2.75, 1.0, 0.0))
+    nt.assert_almost_equal(fit.x0,-10.0)
+    nt.assert_almost_equal(fit.y0,0.0)
+    nt.assert_almost_equal(fit.s0, 5.25)
+    nt.assert_almost_equal(fit.beta0, 1.0)
+    nt.assert_almost_equal(fit.hrf0,0.0)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)
@@ -106,10 +106,6 @@ def test_og_nuisance_fit():
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
-    Ns = 3
-    voxel_index = (1,2,3)
-    auto_fit = True
-    verbose = 1
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -163,7 +159,7 @@ def test_og_nuisance_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)
