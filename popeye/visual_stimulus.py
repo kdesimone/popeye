@@ -329,7 +329,7 @@ def simulate_bar_stimulus(pixels_across, pixels_down,
     # main loop
     for theta in thetas:
         
-        if theta != -1:
+        if theta != -1:  # pragma: no cover
             
             # convert to radians
             theta_rad = theta * np.pi / 180
@@ -359,7 +359,7 @@ def simulate_bar_stimulus(pixels_across, pixels_down,
                 bar_stimulus[:,:,tr_num] = Z
                 tr_num += 1
                 
-        else:
+        else:  # pragma: no cover
             for step in np.arange(0,num_blank_steps):
                 tr_num += 1
                 
