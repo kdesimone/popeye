@@ -22,19 +22,19 @@ from numpy.random import randn, seed
 import sharedmem
 
 # Python 3 compatibility below:
-try:
+try:  # pragma: no cover
     import cPickle
-except ImportError:
+except ImportError:  # pragma: no cover
     import _pickle as cPickle
 
-try:
+try:  # pragma: no cover
     from types import SliceType
-except ImportError:
+except ImportError:  # pragma: no cover
     SliceType = slice
 
-try:
+try: # pragma: no cover
     xrange
-except NameError:  # python3
+except NameError:  # pragma: no cover
     xrange = range
 
 

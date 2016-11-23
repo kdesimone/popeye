@@ -26,13 +26,13 @@ def set_verbose(verbose):
     """
     
     # set verbose
-    if verbose == 0:
+    if verbose == 0: # pragma: no cover
         verbose = False
         very_verbose = False
-    if verbose == 1:
+    if verbose == 1: # pragma: no cover
         verbose = True
         very_verbose = False
-    if verbose == 2:
+    if verbose == 2: # pragma: no cover
         verbose = True
         very_verbose = True
     
@@ -71,30 +71,30 @@ class PopulationModel(object):
         self.hrf_model = hrf_model
         self.nuisance = nuisance
     
-    def generate_ballpark_prediction(self):
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
+    def generate_ballpark_prediction(self): # pragma: no cover
+        raise NotImplementedError("Each pRF model must implement its own prediction generation!") 
     
-    def generate_prediction(self):
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
+    def generate_prediction(self): # pragma: no cover
+        raise NotImplementedError("Each pRF model must implement its own prediction generation!")
     
     def distance_mask_coarse(self, x, y, sigma):
         
-        if hasattr(self, 'mask_size'):
+        if hasattr(self, 'mask_size'): # pragma: no cover
             distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
             mask = np.zeros_like(distance, dtype='uint8')
             mask[distance < self.mask_size*sigma**2] = 1
-        else:
+        else: # pragma: no cover
             mask = np.ones_like(self.stimulus.deg_x0, dtype='uint8')
             
         return mask
         
     def distance_mask(self, x, y, sigma):
         
-        if hasattr(self, 'mask_size'):
+        if hasattr(self, 'mask_size'): # pragma: no cover
             distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
             mask = np.zeros_like(distance, dtype='uint8')
             mask[distance < self.mask_size*sigma**2] = 1
-        else:
+        else: # pragma: no cover
             mask = np.ones_like(self.stimulus.deg_x, dtype='uint8')
             
         return mask
@@ -205,12 +205,12 @@ class PopulationFit(object):
             self.rsquared
             
             # flush if not testing
-            if self.very_verbose == False:
+            if self.very_verbose == False: # pragma: no cover
                 self.gradient_descent = [None]*6
                 self.brute_force =[None,]*4
             
             # print
-            if self.verbose:
+            if self.verbose: # pragma: no cover
                 print(self.msg)
                                                                               
     # the brute search
@@ -261,7 +261,7 @@ class PopulationFit(object):
     
     @auto_attr
     def msg(self):
-        if self.auto_fit is True and self.overloaded_estimate is not None:
+        if self.auto_fit is True and self.overloaded_estimate is not None: # pragma: no cover
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
@@ -269,7 +269,7 @@ class PopulationFit(object):
                   self.finish-self.start,
                   self.rsquared,
                   np.round(self.overloaded_estimate,4)))
-        elif self.auto_fit is True:
+        elif self.auto_fit is True: # pragma: no cover
             txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
@@ -277,8 +277,8 @@ class PopulationFit(object):
                   self.finish-self.start,
                   self.rsquared,
                   np.round(self.estimate,4)))
-        else:
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s" # pragma: no cover
+        else: # pragma: no cover
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   RSQ=%.02f  EST=%s" 
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
