@@ -29,7 +29,11 @@ For running the tests you need nose &gt;= 1.1.2.
 Install
 =======
 
-To install in your home directory, use:
+You can install popeye and its dependencies through PyPi:
+
+    pip install popeye
+
+Or you can install from the source. To install in your home directory, use:
 
     python setup.py install --user
 
