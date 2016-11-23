@@ -74,7 +74,7 @@ def test_ogb_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound, h_bound)
     
     # fit the response
-    fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = ogb.GaussianFit(model, data, grids, bounds, Ns=Ns)
     
     # test ballpark
     nt.assert_almost_equal(fit.x0, 0, 1)

@@ -33,7 +33,7 @@ def test_kfold_xval_repeated_runs():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,90)
+    thetas = np.arange(0,360,45)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 10
@@ -76,7 +76,7 @@ def test_kfold_xval_repeated_runs():
     hrf_delay = -0.25
     
     # create the args context for calling the Fit class
-    fit_args = [grids, bounds, Ns, [0,0,0]]
+    fit_args = [grids, bounds, [0,0,0], Ns]
     fit_kwargs = {'auto_fit': False, 'verbose' : 0}
     
     # create a series of "runs"
