@@ -7,7 +7,7 @@
 popeye
 ======
 
-![popeye](/images/lgn.png)
+![popeye](/docs/images/lgn.png)
 
 popeye is a Python module for estimating population receptive fields
 from from fMRI data built on top of SciPy and distributed under the
