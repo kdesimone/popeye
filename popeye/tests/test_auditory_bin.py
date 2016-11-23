@@ -51,7 +51,7 @@ def test_auditory_fit():
     hrf_delay = -0.25
     
     # create the "data"
-    data = model.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
+    data = model.generate_prediction(center_freq, sigma, beta, hrf_delay)
     
     # set search grid
     c_grid = (lo_freq,hi_freq)
@@ -68,18 +68,17 @@ def test_auditory_fit():
     h_bound = (-4.0,4.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (c_grid, s_grid, b_grid, bl_grid, h_grid,)
-    bounds = (c_bound, s_bound, b_bound, bl_bound, h_bound,)
+    grids = (c_grid, s_grid, b_grid, h_grid,)
+    bounds = (c_bound, s_bound, b_bound, h_bound,)
     
     # fit the response
-    fit = aud.AuditoryFit(model, data, grids, bounds, Ns, voxel_index, auto_fit=True, verbose=1)
+    fit = aud.AuditoryFit(model, data, grids, bounds, Ns=Ns)
     
     # assert equivalence
     nt.assert_equal(np.round(fit.center_freq), center_freq)
     nt.assert_equal(np.round(fit.sigma), sigma)
     nt.assert_almost_equal(fit.beta, beta, 2)
-    nt.assert_almost_equal(fit.baseline, baseline, 2)
     nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
     
-    npt.assert_almost_equal((fit.center_freq0,fit.sigma0,fit.beta0,fit.baseline0,fit.hrf0),
-                            (9050.0, 200.0, 0.77500000000000002, -1.5, 0.0))
+    npt.assert_almost_equal((fit.center_freq0,fit.sigma0,fit.beta0,fit.hrf0),
+                            (9050.0, 200.0, 0.77500000000000002, 0.0))

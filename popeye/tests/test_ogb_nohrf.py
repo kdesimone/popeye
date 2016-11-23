@@ -82,7 +82,7 @@ def test_ogb_manual_grids():
     bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound,)
     
     # fit the response
-    fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = ogb.GaussianFit(model, data, grids, bounds, Ns=Ns)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 1)
@@ -168,7 +168,7 @@ def test_ogb_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, bl_bound,)
     
     # fit the response
-    fit = ogb.GaussianFit(model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
+    fit = ogb.GaussianFit(model, data, grids, bounds, Ns=Ns)
     
     # coarse
     npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.beta0,fit.baseline0),(0.0, 0.0, 2.9891696894116166, 50.5, 1.0))

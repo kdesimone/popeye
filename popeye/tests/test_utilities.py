@@ -148,11 +148,11 @@ def test_recast_estimation_results():
     data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
 
     # set search grid
-    x_grid = slice(-5,4,5)
-    y_grid = slice(-5,7,5)
-    s_grid = slice(1/stimulus.ppd,5.25,5)
-    b_grid = slice(0.1,4.0,5)
-    h_grid = slice(-4.0,4.0,5)
+    x_grid = utils.grid_slice(-5,4,5)
+    y_grid = utils.grid_slice(-5,7,5)
+    s_grid = utils.grid_slice(1/stimulus.ppd,5.25,5)
+    b_grid = utils.grid_slice(0.1,4.0,5)
+    h_grid = utils.grid_slice(-4.0,4.0,5)
 
     # set search bounds
     x_bound = (-12.0,12.0)
