@@ -77,6 +77,28 @@ class PopulationModel(object):
     def generate_prediction(self):
         raise NotImplementedError("Each pRF model must implement its own prediction generation!") # pragma: no cover
     
+    def distance_mask_coarse(self, x, y, sigma):
+        
+        if hasattr(self, 'mask_size'):
+            distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
+            mask = np.zeros_like(distance, dtype='uint8')
+            mask[distance < self.mask_size*sigma**2] = 1
+        else:
+            mask = np.ones_like(self.stimulus.deg_x0, dtype='uint8')
+            
+        return mask
+        
+    def distance_mask(self, x, y, sigma):
+        
+        if hasattr(self, 'mask_size'):
+            distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
+            mask = np.zeros_like(distance, dtype='uint8')
+            mask[distance < self.mask_size*sigma**2] = 1
+        else:
+            mask = np.ones_like(self.stimulus.deg_x, dtype='uint8')
+            
+        return mask
+    
 class PopulationFit(object):
     
     
@@ -84,7 +106,7 @@ class PopulationFit(object):
     
     
     def __init__(self, model, data, grids, bounds, 
-                 Ns=None, voxel_index=(1,2,3), auto_fit=True, verbose=False):
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=False):
         
         r"""A class containing tools for fitting pRF models.
         
@@ -173,7 +195,7 @@ class PopulationFit(object):
             # final
             self.gradient_descent
             self.estimate
-            self.overloaded_estimate 
+            self.overloaded_estimate
             
             # finish
             self.finish = time.time()
