@@ -46,10 +46,8 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, beta, hrf_delay):
         
-        # create mask for speed
-        distance = (self.stimulus.deg_x0 - x)**2 + (self.stimulus.deg_y0 - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        # mask for speed
+        mask = self.distance_mask_coarse(x, y, sigma)
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -64,6 +62,9 @@ class GaussianModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
         
+        # convert units
+        model = (model-np.mean(model)) / np.mean(model)
+        
         # scale it by beta
         model *= beta
         
@@ -72,10 +73,8 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, hrf_delay):
         
-        # create mask of central 5 sigmas for speed
-        distance = (self.stimulus.deg_x - x)**2 + (self.stimulus.deg_y - y)**2
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)**2] = 1
+        # mask for speed
+        mask = self.distance_mask(x, y, sigma)
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -89,6 +88,9 @@ class GaussianModel(PopulationModel):
         
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
+        
+        # convert units
+        model = (model-np.mean(model)) / np.mean(model)
         
         # scale it by beta
         model *= beta
