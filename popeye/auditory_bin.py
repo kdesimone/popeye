@@ -46,7 +46,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
+    def generate_prediction(self, center_freq, sigma, beta, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -99,15 +99,15 @@ class AuditoryModel(PopulationModel):
         # pad and convolve
         model = fftconvolve(rolled_response, hrf)[0:len(rolled_response)]
         
+        # convert units
+        model = (model - np.mean(model))/np.mean(model)
+        
         # scale by beta
         model *= beta
         
-        # add the offset
-        model += baseline
-        
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
+    def generate_ballpark_prediction(self, center_freq, sigma, beta, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -135,7 +135,7 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
+        return self.generate_prediction(center_freq, sigma, beta, hrf_delay)
         
     # seconds
     @auto_attr
@@ -181,11 +181,11 @@ class AuditoryModel(PopulationModel):
         
 class AuditoryFit(PopulationFit):
     
-    def __init__(self, model, data, grids, bounds, Ns,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
+    def __init__(self, model, data, grids, bounds, 
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               voxel_index, auto_fit, verbose)
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
         
         r"""
         
@@ -257,14 +257,10 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def beta0(self):
         return self.ballpark[2]
-    
     @auto_attr
-    def baseline0(self):
-        return self.ballpark[3]
     
-    @auto_attr
     def hrf0(self):
-        return self.ballpark[4]
+        return self.ballpark[3]
     
     @auto_attr
     def center_freq(self):
@@ -277,12 +273,8 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[2]
-    
-    @auto_attr
-    def baseline(self):
-        return self.estimate[3]
-    
+
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[4]
+        return self.estimate[3]
         
