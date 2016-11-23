@@ -141,8 +141,8 @@ class AuditoryModel(PopulationModel):
 
 class AuditoryFit(PopulationFit):
     
-    def __init__(self, model, data, grids, bounds, Ns,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
+    def __init__(self, model, data, grids, bounds,
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
         r"""
         A class containing tools for fitting the 1D Gaussian pRF model.
@@ -203,8 +203,9 @@ class AuditoryFit(PopulationFit):
         """
         
         # invoke the base class
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, voxel_index, auto_fit, verbose)
-
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
+                               
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]

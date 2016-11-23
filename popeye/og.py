@@ -109,8 +109,8 @@ class GaussianFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
+    def __init__(self, model, data, grids, bounds,
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
         r"""
         A class containing tools for fitting the 2D Gaussian pRF model.
@@ -147,10 +147,6 @@ class GaussianFit(PopulationFit):
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
         
-        Ns : int
-            Number of samples per stimulus dimension to sample during the ballpark search.
-            
-            For more information, see `scipy.optimize.brute`.
         
         voxel_index : tuple
             A tuple containing the index of the voxel being modeled. The 
@@ -158,6 +154,11 @@ class GaussianFit(PopulationFit):
             collating the results across many voxels will does require voxel
             indices. With voxel indices, the brain volume can be reconstructed 
             using the newly computed model estimates.
+        
+        Ns : int
+            Number of samples per stimulus dimension to sample during the ballpark search.
+            
+            For more information, see `scipy.optimize.brute`.
         
         auto_fit : bool
             A flag for automatically running the fitting procedures once the 
@@ -170,8 +171,8 @@ class GaussianFit(PopulationFit):
         
         """
         
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               voxel_index, auto_fit, verbose)
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
     
     @auto_attr
     def overloaded_estimate(self):

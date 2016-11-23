@@ -114,8 +114,9 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
+    def __init__(self, model, data, grids, bounds, 
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
+        
         
         r"""
         A class containing tools for fitting the CSS pRF model.
@@ -176,8 +177,8 @@ class CompressiveSpatialSummationFit(PopulationFit):
         
         """
         
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               voxel_index, auto_fit, verbose)
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
    
     @auto_attr
     def overloaded_estimate(self):
