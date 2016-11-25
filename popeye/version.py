@@ -6,7 +6,7 @@ _version_major = 0
 _version_minor = 1
 _version_micro = 0
 # _version_extra = '.dev'
-#_version_extra = ''
+_version_extra = ''
 
 # Construct full version string from these.
 __version__ = "%s.%s.%s%s" % (_version_major,
