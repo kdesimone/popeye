@@ -50,7 +50,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, n):
+    def generate_ballpark_prediction(self, x, y, sigma, n, beta):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -71,7 +71,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # convert units
-        model = (model = np.mean(model)) / np.mean(model)
+        model = (model - np.mean(model)) / np.mean(model)
         
         # scale it by beta
         model *= beta
@@ -100,7 +100,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # convert units
-        model = (model = np.mean(model)) / np.mean(model)
+        model = (model - np.mean(model)) / np.mean(model)
         
         # scale it by beta
         model *= beta
@@ -182,7 +182,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta,self.rho,self.sigma_size,self.n,self.beta,self.baseline]
+        return [self.theta, self.rho, self.sigma_size, self.n, self.beta]
     
     @auto_attr
     def x0(self):

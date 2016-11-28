@@ -71,7 +71,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # convert units
-        model = (model = np.mean(model)) / np.mean(model)
+        model = (model - np.mean(model)) / np.mean(model)
         
         # scale it by beta
         model *= beta
@@ -100,7 +100,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # convert units
-        model = (model = np.mean(model)) / np.mean(model)
+        model = (model - np.mean(model)) / np.mean(model)
         
         # scale it by beta
         model *= beta
@@ -182,7 +182,7 @@ class CompressiveSpatialSummationFit(PopulationFit):
    
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta,self.rho,self.sigma_size,self.n,self.beta,self.baseline,self.hrf_delay]
+        return [self.theta, self.rho, self.sigma_size, self.n, self.beta, self.hrf_delay]
     
     @auto_attr
     def x0(self):
