@@ -65,8 +65,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
-        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf)[0:len(mp_ts)]
         
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
@@ -96,8 +95,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts 
         
         # convolve with HRF
-        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf)[0:len(mp_ts)]
         
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
