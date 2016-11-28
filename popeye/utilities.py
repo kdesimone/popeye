@@ -76,7 +76,7 @@ p: list with parameters of the two gamma functions:
     good_pts=np.array(range(np.int(p[6]/TR)))*fMRI_T
     hrf=hrf[list(good_pts)]
     # hrf = hrf([0:(p(7)/RT)]*fMRI_T + 1);
-    hrf = hrf/np.sum(hrf);
+    hrf /= trapz(hrf)
     return hrf
 
 def grid_slice(start, stop, Ns, dryrun=False):
