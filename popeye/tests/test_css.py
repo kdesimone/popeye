@@ -46,11 +46,10 @@ def test_css_fit():
     sigma = 1.23
     n = 0.90
     beta = 1.0
-    baseline = 0.0
     hrf_delay = 0.25
     
     # create the "data"
-    data =  model.generate_prediction(x, y, sigma, n, beta, baseline, hrf_delay)
+    data =  model.generate_prediction(x, y, sigma, n, beta, hrf_delay)
     
     # set search grid
     x_grid = (-3,2)
@@ -58,7 +57,6 @@ def test_css_fit():
     s_grid = (1/stimulus.ppd,2.75)
     n_grid = (0.1,0.90)
     b_grid = (0.01,1)
-    bl_grid = (-2,2)
     h_grid = (-2.0,2.0)
     
     # set search bounds
@@ -67,32 +65,29 @@ def test_css_fit():
     s_bound = (1/stimulus.ppd,10)
     n_bound = (1e-8,1.0)
     b_bound = (1e-8,1e5)
-    bl_bound = (None,None)
     h_bound = (-3.0,3.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, bl_grid, h_grid,)
-    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, bl_bound, h_bound,)
+    grids = (x_grid, y_grid, s_grid, n_grid, b_grid, h_grid,)
+    bounds = (x_bound, y_bound, s_bound, n_bound, b_bound, h_bound,)
     
     # fit the response
     fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns=Ns)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.n0,fit.beta0,fit.baseline0,fit.hrf0),(-3,2,1.73916969,0.9,1,0,0))
+    npt.assert_almost_equal(fit.ballpark,[-3.        ,  2.        ,  1.73916969,  0.9       ,  1.        ,  0.        ])
     
     # fine fit
-    nt.assert_almost_equal(fit.x, x, 1)
-    nt.assert_almost_equal(fit.y, y, 1)
-    nt.assert_almost_equal(fit.sigma, sigma, 1)
-    nt.assert_almost_equal(fit.n, n, 1)
-    nt.assert_almost_equal(fit.beta, beta, 1)
-    nt.assert_almost_equal(fit.baseline, baseline, 1)
+    npt.assert_almost_equal(fit.x, x, 1)
+    npt.assert_almost_equal(fit.y, y, 1)
+    npt.assert_almost_equal(fit.sigma, sigma, 1)
+    npt.assert_almost_equal(fit.n, n, 1)
+    npt.assert_almost_equal(fit.beta, beta, 1)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327894771,
-                                                      2.7411676344231712,
-                                                      1.2965338406779203,
-                                                      0.90000000001863634,
-                                                      1.0000000000134506,
-                                                      -3.1447271423025735e-12,
-                                                      0.25000000000379219])
+    npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327899709,
+                                                      2.7411676344231513,
+                                                      1.2965338406811484,
+                                                      0.90000000004358183,
+                                                      1.0000000000047753,
+                                                      0.25000000000426364])
