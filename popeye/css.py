@@ -50,7 +50,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
+    def generate_ballpark_prediction(self, x, y, sigma, n, beta, hrf_delay):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -70,16 +70,16 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
         
+        # convert units
+        model = (model = np.mean(model)) / np.mean(model)
+        
         # scale it by beta
         model *= beta
-        
-        # offset
-        model += baseline
         
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, n, beta, baseline, hrf_delay):
+    def generate_prediction(self, x, y, sigma, n, beta, hrf_delay):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -99,11 +99,11 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, hrf)[0:len(response)]
         
+        # convert units
+        model = (model = np.mean(model)) / np.mean(model)
+        
         # scale it by beta
         model *= beta
-        
-        # offset
-        model += baseline
         
         return model
         
@@ -203,14 +203,10 @@ class CompressiveSpatialSummationFit(PopulationFit):
     @auto_attr
     def beta0(self):
         return self.ballpark[4]
-    
-    @auto_attr
-    def baseline0(self):
-        return self.ballpark[5]
         
     @auto_attr
     def hrf0(self):
-        return self.ballpark[6]
+        return self.ballpark[5]
     
     @auto_attr
     def x(self):
@@ -233,12 +229,8 @@ class CompressiveSpatialSummationFit(PopulationFit):
         return self.estimate[4]
         
     @auto_attr
-    def baseline(self):
-        return self.estimate[5]
-        
-    @auto_attr
     def hrf_delay(self):
-        return self.estimate[6]
+        return self.estimate[5]
         
     @auto_attr
     def rho(self):
