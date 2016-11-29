@@ -59,14 +59,15 @@ def test_kfold_xval_repeated_runs():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # set up bounds for the grid search
-    grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2),(-5,5))
-    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3),(-5,5))
+    grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2))
+    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3))
     
     # set the grid smaples
     Ns = 5
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model.hrf_delay = 0
     
     # generate a random pRF estimate
     x = -5.24
@@ -85,7 +86,7 @@ def test_kfold_xval_repeated_runs():
     for r in range(num_runs):
         
         # fill out the data list
-        data[r,:] = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+        data[r,:] = model.generate_prediction(x, y, sigma, beta)
     
     # get predictions out for each of the folds ...
     models = (model,)

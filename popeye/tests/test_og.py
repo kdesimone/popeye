@@ -38,34 +38,31 @@ def test_og_fit():
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model.hrf_delay = 0
     
     # generate a random pRF estimate
     x = -5.24
     y = 2.58
     sigma = 1.24
-    beta = 2.5
-    hrf_delay = -0.25
-    
+    beta = 2.5    
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+    data = model.generate_prediction(x, y, sigma, beta)
     
     # set search grid
     x_grid = (-10,10)
     y_grid = (-10,10)
     s_grid = (0.25,5.25)
     b_grid = (0.1,1.0)
-    h_grid = (-4.0,4.0)
     
     # set search bounds
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (0.001,12.0)
     b_bound = (1e-8,1e2)
-    h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
-    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
+    grids = (x_grid, y_grid, s_grid, b_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound,)
     
     # fit the response
     fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
@@ -75,14 +72,12 @@ def test_og_fit():
     nt.assert_almost_equal(fit.y0,0.0)
     nt.assert_almost_equal(fit.s0, 5.25)
     nt.assert_almost_equal(fit.beta0, 1.0)
-    nt.assert_almost_equal(fit.hrf0,0.0)
     
     # assert equivalence
     nt.assert_almost_equal(fit.x, x, 2)
     nt.assert_almost_equal(fit.y, y, 2)
     nt.assert_almost_equal(fit.sigma, sigma, 2)
     nt.assert_almost_equal(fit.beta, beta, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
@@ -116,16 +111,16 @@ def test_og_nuisance_fit():
     
     # initialize the gaussian model
     model = og.GaussianModel(stimulus, utils.spm_hrf)
+    model.hrf_delay = 0
     
     # generate a random pRF estimate
     x = -5.24
     y = 2.58
     sigma = 1.24
     beta = 2.5
-    hrf_delay = -0.25
     
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta, hrf_delay)
+    data = model.generate_prediction(x, y, sigma, beta)
     
     # create nuisance signal
     step = np.zeros(len(data))
@@ -139,24 +134,23 @@ def test_og_nuisance_fit():
     
     # recreate model with nuisance
     model = og.GaussianModel(stimulus, utils.spm_hrf, nuisance)
+    model.hrf_delay = 0
     
     # set search grid
     x_grid = (-10,10)
     y_grid = (-10,10)
     s_grid = (0.25,5.25)
     b_grid = (0.1,1.0)
-    h_grid = (-4.0,4.0)
     
     # set search bounds
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (0.001,12.0)
     b_bound = (1e-8,1e2)
-    h_bound = (-5.0,5.0)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid, h_grid)
-    bounds = (x_bound, y_bound, s_bound, b_bound, h_bound)
+    grids = (x_grid, y_grid, s_grid, b_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound,)
     
     # fit the response
     fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
@@ -166,4 +160,4 @@ def test_og_nuisance_fit():
     nt.assert_almost_equal(fit.y, y, 2)
     nt.assert_almost_equal(fit.sigma, sigma, 2)
     nt.assert_almost_equal(fit.beta, beta, 2)
-    nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+    
