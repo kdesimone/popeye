@@ -74,8 +74,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
-        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
@@ -108,8 +107,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
-        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(mp_ts, hrf)[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
@@ -157,12 +155,16 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def m_resp(self):
         m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
+        # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
+        # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
         m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
         
     def generate_m_resp(self, tau):
         m_rf = self.m_rf(tau)
         m_resp = fftconvolve(self.flickers,m_rf[:,np.newaxis])
+        # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
+        # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
         m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
         
