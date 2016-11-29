@@ -75,7 +75,7 @@ def test_css_fit():
     fit = css.CompressiveSpatialSummationFit(model, data, grids, bounds, Ns=Ns)
     
     # coarse fit
-    npt.assert_almost_equal(fit.ballpark,[-3.        ,  2.        ,  1.73916969,  0.9       ,  1.        ,  0.        ])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.n0,fit.beta0,fit.hrf0),[-3.        ,  2.        ,  1.73916969,  0.9       ,  1.        ,  0.        ])
     
     # fine fit
     npt.assert_almost_equal(fit.x, x, 1)
