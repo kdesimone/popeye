@@ -60,7 +60,7 @@ p: list with parameters of the two gamma functions:
 
 """
     # default settings
-    p=[6,16,1,1,6,0,32]
+    p=[5,15,1,1,6,0,32]
     p=[float(x) for x in p]
 
     # delay variation
@@ -501,7 +501,7 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     alpha_2 = 15.0/tr+delay/tr
     beta_2 = 1.0
 
-    t = np.arange(0,33,tr)
+    t = np.arange(0,32,tr)
 
     hrf = ( ( ( t ** (alpha_1) * beta_1 ** alpha_1 * np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
             ( ( t ** (alpha_2) * beta_2 ** alpha_2 * np.exp( -beta_2 * t )) /gamma( alpha_2 )) )
