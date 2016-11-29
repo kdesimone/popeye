@@ -2,7 +2,7 @@ sudo: false
 
 env:
   global:
-    - PIP_DEPS="numpy cython scipy matplotlib nibabel sharedmem statsmodels nose python-coveralls coverage"
+    - PIP_DEPS="numpy cython scipy matplotlib nibabel sharedmem statsmodels pytest coveralls pytest-cov python-coveralls"
 
 matrix:
   include:
@@ -29,7 +29,6 @@ before_install:
   - conda install python=$PYTHON_VERSION
   - pip install $PIP_DEPS
 
-
 install:
   - python setup.py install
 script:
@@ -38,8 +37,8 @@ script:
     - cd for_testing
     - if [ "${COVERAGE}" == "1" ]; then
       cp ../.coveragerc .;
-      COVER_ARGS="--with-coverage --cover-package popeye";
+      COVER_ARGS="--cov-report term-missing --cov=popeye";
       fi
-    - nosetests --with-doctest --verbose $COVER_ARGS popeye
+    - py.test --pyargs popeye $COVER_ARGS
 after_success:
     - coveralls

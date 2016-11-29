@@ -7,7 +7,6 @@ except ImportError:
     from io import StringIO
 
 import numpy as np
-import nose.tools as nt
 import numpy.testing as npt
 
 import nibabel
@@ -26,10 +25,10 @@ def test_distance_mask():
     amplitude=100
     dx,dy = np.meshgrid(np.linspace(-50,50,100),np.linspace(-50,50,100))
     mask = utils.distance_mask(x,y,sigma,dx,dy)
-    nt.assert_true(np.sqrt(np.sum(mask))==2)
-    nt.assert_true(np.max(mask)==1)
+    npt.assert_(np.sqrt(np.sum(mask))==2)
+    npt.assert_(np.max(mask)==1)
     mask = utils.distance_mask(x,y,sigma,dx,dy,amplitude)
-    nt.assert_true(np.max(mask)==amplitude)
+    npt.assert_(np.max(mask)==amplitude)
 
 
 def test_grid_slice():
@@ -270,7 +269,7 @@ def test_error_function():
 
     # assert parameter outside of bounds return inf
     params = (30.0,)
-    nt.assert_true(utils.error_function(params, bounds, response, func, verbose) == np.inf)
+    npt.assert_(utils.error_function(params, bounds, response, func, verbose) == np.inf)
 
     # # assert print is param and 0 error
     # params = (10.0,)
@@ -278,13 +277,13 @@ def test_error_function():
     # sys.stdout = out
     # x = utils.error_function(params, bounds, response, func, verbose)
     # output = out.getvalue().strip()
-    # nt.assert_true(output == '((10.0,), 0.0)')
+    # npt.assert_(output == '((10.0,), 0.0)')
 
     # test nan returns inf
     response = func(params)
     response[0] = np.nan
     err = utils.error_function(params, bounds, response, func, verbose)
-    nt.assert_equal(err,np.inf)
+    npt.assert_equal(err,np.inf)
 
 def test_gradient_descent_search():
 
@@ -384,9 +383,9 @@ def test_double_gamma_hrf():
     hrf_0 = utils.double_gamma_hrf(-1, tr_length, integrator=None)
     hrf_1 = utils.double_gamma_hrf(0, tr_length, integrator=None)
     hrf_2 = utils.double_gamma_hrf(1, tr_length, integrator=None)
-    nt.assert_true(hrf_0.sum()<hrf_1.sum())
-    nt.assert_true(hrf_1.sum()<hrf_2.sum())
-    nt.assert_true(hrf_0.sum()<hrf_2.sum())
+    npt.assert_(hrf_0.sum()<hrf_1.sum())
+    npt.assert_(hrf_1.sum()<hrf_2.sum())
+    npt.assert_(hrf_0.sum()<hrf_2.sum())
 
 
 def test_spm_hrf():
@@ -435,9 +434,9 @@ def test_randomize_voxels():
     rand_xi, rand_yi, rand_zi = xi[rand_ind], yi[rand_ind], zi[rand_ind]
 
     # assert that all members of the original and resorted indices are equal
-    nt.assert_true(set(xi) == set(rand_xi))
-    nt.assert_true(set(yi) == set(rand_yi))
-    nt.assert_true(set(zi) == set(rand_zi))
+    npt.assert_(set(xi) == set(rand_xi))
+    npt.assert_(set(yi) == set(rand_yi))
+    npt.assert_(set(zi) == set(rand_zi))
 
 def test_zscore():
 
@@ -465,8 +464,8 @@ def test_percent_change():
     x = np.array([[99, 100, 101], [4, 5, 6]])
     p = utils.percent_change(x)
 
-    nt.assert_equal(x.shape, p.shape)
-    nt.assert_almost_equal(p[0, 2], 1.0)
+    npt.assert_equal(x.shape, p.shape)
+    npt.assert_almost_equal(p[0, 2], 1.0)
 
     ts = np.arange(4 * 5).reshape(4, 5)
     ax = 0
@@ -562,11 +561,11 @@ def test_parallel_fit_Ns():
 
     # assert equivalence
     for fit in output:
-        nt.assert_almost_equal(fit.x, x, 2)
-        nt.assert_almost_equal(fit.y, y, 2)
-        nt.assert_almost_equal(fit.sigma, sigma, 2)
-        nt.assert_almost_equal(fit.beta, beta, 2)
-        nt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
+        npt.assert_almost_equal(fit.x, x, 2)
+        npt.assert_almost_equal(fit.y, y, 2)
+        npt.assert_almost_equal(fit.sigma, sigma, 2)
+        npt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
 
 def test_parallel_fit():
 
@@ -636,10 +635,10 @@ def test_parallel_fit():
     fit = utils.parallel_fit(bundle[0])
 
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
-    nt.assert_almost_equal(fit.sigma, sigma, 2)
-    nt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
 
 def test_parallel_fit_manual_grids():
 
@@ -712,10 +711,10 @@ def test_parallel_fit_manual_grids():
 
     # assert equivalence
     for fit in output:
-        nt.assert_almost_equal(fit.x, x, 2)
-        nt.assert_almost_equal(fit.y, y, 2)
-        nt.assert_almost_equal(fit.sigma, sigma, 2)
-        nt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.x, x, 2)
+        npt.assert_almost_equal(fit.y, y, 2)
+        npt.assert_almost_equal(fit.sigma, sigma, 2)
+        npt.assert_almost_equal(fit.beta, beta, 2)
 
 def test_gaussian_2D():
 
@@ -736,29 +735,29 @@ def test_gaussian_2D():
     gy = np.exp(-((deg_y[:,0]-0)**2)/(2*10**2))
 
     # assertions
-    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gx,8)))
-    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gy,8)))
+    npt.assert_(np.all(np.round(G[:,50],8) == np.round(gx,8)))
+    npt.assert_(np.all(np.round(G[:,50],8) == np.round(gy,8)))
 
 def test_cartes_to_polar():
     cartes = np.array([5,0]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], 0)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], 0)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([-5,0]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([0,5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi/2)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi/2)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([0,-5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi*3/2)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi*3/2)
+    npt.assert_equal(polar[...,1], 5)
 
 def test_binner():
 
@@ -767,8 +766,8 @@ def test_binner():
     bins = np.arange(-0.5,1.5,0.5)
     binned_signal = utils.binner(signal, times, bins)
 
-    nt.assert_true(len(binned_signal), len(bins)-2)
-    nt.assert_true(np.all(binned_signal==[5,5]))
+    npt.assert_(len(binned_signal), len(bins)-2)
+    npt.assert_(np.all(binned_signal==[5,5]))
 
 def test_find_files():
 
@@ -777,7 +776,7 @@ def test_find_files():
 
     path = utils.find_files('/tmp/','test*.txt')
 
-    nt.assert_equal(path[0],'/tmp/test_abc.txt')
+    npt.assert_equal(path[0],'/tmp/test_abc.txt')
 
 def test_peakdet():
 
@@ -791,10 +790,10 @@ def test_peakdet():
 
     a,b = utils.peakdet(ts,0.5)
 
-    nt.assert_true(np.all(a[:,0] == peaks))
-    nt.assert_true(np.all(b[:,0] == troughs))
-    nt.assert_true(np.all(a[:,1] == 1))
-    nt.assert_true(np.all(b[:,1] == -1))
+    npt.assert_(np.all(a[:,0] == peaks))
+    npt.assert_(np.all(b[:,0] == troughs))
+    npt.assert_(np.all(a[:,1] == 1))
+    npt.assert_(np.all(b[:,1] == -1))
 
 
     a,b = utils.peakdet(ts,0.5)
@@ -803,19 +802,19 @@ def test_peakdet():
 #
 #     o = utils.ols(np.arange(100),np.arange(100))
 #
-#     nt.assert_equal(o.R2,1.0)
-#     nt.assert_almost_equal(np.sum(o.e),0.0)
-#     nt.assert_almost_equal(np.sum(o.se),0.0)
-#     nt.assert_true(o.F == np.inf)
-#     nt.assert_almost_equal(np.sum(o.b),1.0)
-#     nt.assert_true(o.df_e == len(np.arange(100-2)))
-#     nt.assert_almost_equal(o.p[1],0)
-#     nt.assert_true(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
-#     nt.assert_true(o.nobs == 100)
+#     npt.assert_equal(o.R2,1.0)
+#     npt.assert_almost_equal(np.sum(o.e),0.0)
+#     npt.assert_almost_equal(np.sum(o.se),0.0)
+#     npt.assert_(o.F == np.inf)
+#     npt.assert_almost_equal(np.sum(o.b),1.0)
+#     npt.assert_(o.df_e == len(np.arange(100-2)))
+#     npt.assert_almost_equal(o.p[1],0)
+#     npt.assert_(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
+#     npt.assert_(o.nobs == 100)
 #     omni_1 = o.omni()[0]
 #     omni_2 = o.omni()[1]
-#     nt.assert_almost_equal(omni_1,18.093297390235648)
-#     nt.assert_almost_equal(omni_2, 0.00011778511003501986)
-#     nt.assert_true(o.JB() == (5.0825725194665461,0.07876502232916649,0.16483617111543283,1.9458968022816807))
-#     nt.assert_true(o.dw() == 0.0051450432267976026)
+#     npt.assert_almost_equal(omni_1,18.093297390235648)
+#     npt.assert_almost_equal(omni_2, 0.00011778511003501986)
+#     npt.assert_(o.JB() == (5.0825725194665461,0.07876502232916649,0.16483617111543283,1.9458968022816807))
+#     npt.assert_(o.dw() == 0.0051450432267976026)
 #
