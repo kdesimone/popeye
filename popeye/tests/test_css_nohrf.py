@@ -80,7 +80,7 @@ def test_css_fit():
     npt.assert_almost_equal(fit.beta, beta, 1)
     
     # coarse
-    npt.assert_almost_equal(fit.ballpark,[-0.5       , -0.5       ,  0.72833938,  0.9       ,  0.505     ])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.n0,fit.beta0,),[-0.5       , -0.5       ,  0.72833938,  0.9       ,  0.505     ])
     
     # overloaded
     npt.assert_almost_equal(fit.overloaded_estimate,[2.5272803327911109,
