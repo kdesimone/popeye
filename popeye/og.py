@@ -44,7 +44,7 @@ class GaussianModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, beta, hrf_delay):
+    def generate_ballpark_prediction(self, x, y, sigma, beta):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -56,11 +56,8 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
-        # generate HRF
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-        
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf)[0:len(response)]
+        model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # convert units
         model = (model-np.mean(model)) / np.mean(model)
@@ -71,7 +68,7 @@ class GaussianModel(PopulationModel):
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, beta, hrf_delay):
+    def generate_prediction(self, x, y, sigma, beta):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -83,11 +80,8 @@ class GaussianModel(PopulationModel):
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
-        # convolve with the HRF
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-        
         # convolve it with the stimulus
-        model = fftconvolve(response, hrf)[0:len(response)]
+        model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # convert units
         model = (model-np.mean(model)) / np.mean(model)
@@ -176,7 +170,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta,self.rho,self.sigma,self.beta,self.hrf_delay+6]
+        return [self.theta, self.rho, self.sigma, self.beta]
     
     @auto_attr
     def x0(self):
@@ -195,10 +189,6 @@ class GaussianFit(PopulationFit):
         return self.ballpark[3]
     
     @auto_attr
-    def hrf0(self):
-        return self.ballpark[4]
-        
-    @auto_attr
     def x(self):
         return self.estimate[0]
         
@@ -213,11 +203,7 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[3]
-    
-    @auto_attr
-    def hrf_delay(self):
-        return self.estimate[4]
-    
+        
     @auto_attr
     def rho(self):
         return np.sqrt(self.x**2+self.y**2)
