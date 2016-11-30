@@ -9,6 +9,7 @@ import sys, os, time, fnmatch, copy
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
+import datetime
 
 import numpy as np
 import nibabel
@@ -37,6 +38,47 @@ try: # pragma: no cover
 except NameError:  # pragma: no cover
     xrange = range
 
+
+def regularizing_error_function(parameter, bundle, p_bounds, thr=0.10):
+    
+    # if out of bounds
+    if parameter < p_bounds[0] or parameter > p_bounds[1]:
+            return np.inf
+    
+    # execute
+    output = regularizing_objective_function(parameter, bundle)
+    
+    # what?
+    error = np.mean([o.rss for o in output if not np.isnan(o.rss) and o.rsquared > thr])
+    
+    # when?
+    now = str(datetime.datetime.now()).replace(" ","_").replace(".","_").replace(":","_").replace('-','_')
+    
+    # verbose!
+    print('parameter=%.05f    error=%.05f    now=%s' %(o.model.parameter, error, now))
+    
+    return error
+
+def regularizing_objective_function(parameter, bundle):
+    
+        # attach the guess for tau to each of the voxels in the bundle
+        for voxel in bundle:
+            model = voxel[1]
+            model.parameter = parameter
+            
+        # fit each of the voxels
+        num_cpus = sharedmem.cpu_count()-1
+        with sharedmem.Pool(np=num_cpus) as pool:
+            output = pool.map(parallel_fit, bundle)
+        
+        return output
+
+def regularizer(bundle, p_grid, p_bounds, Ns=None):
+    
+    p0 = brute(regularizing_error_function, (p_grid,), args=(bundle, p_bounds), Ns=Ns, finish=None, full_output=True)
+    phat = fmin_powell(regularizing_error_function, p0[0], args=(bundle, p_bounds), xtol=1e-4, ftol=1e-4, full_output=True, retall=True)
+    
+    return p0,phat
 
 def spm_hrf(delay, TR):
     """ An implementation of spm_hrf.m from the SPM distribution
