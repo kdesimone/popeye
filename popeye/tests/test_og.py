@@ -19,7 +19,9 @@ def test_og_fit():
     viewing_distance = 38
     screen_width = 25
     thetas = np.arange(0,360,90)
-    num_blank_steps = 0
+    thetas = np.insert(thetas,0,-1)
+    thetas = np.append(thetas,-1)
+    num_blank_steps = 30
     num_bar_steps = 30
     ecc = 12
     tr_length = 1.0
