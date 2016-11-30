@@ -30,6 +30,8 @@ ver_file = os.path.join('popeye', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
+install_requires=['scipy','numpy','matplotlib','statsmodels','nibabel','sharedmem','cython'],
+
 opts = dict(name=NAME,
             maintainer=MAINTAINER,
             maintainer_email=MAINTAINER_EMAIL,
