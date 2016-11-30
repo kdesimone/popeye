@@ -30,10 +30,10 @@ bibliography: paper.bib
 Popeye is a Python library for designing, estimating, and validating 
 population receptive field (pRF) models. The pRF model is a quantitative 
 model of the cumulative response of the population of neurons contained 
-within a single fMRI voxel [1]. The pRF model allows neuroscientists to
+within a single fMRI voxel [@Dumoulin2008]. The pRF model allows neuroscientists to
 interpret and predict the response of a voxel to various perceptual 
-stimuli [2] and cognitive demands [3], both in cortex and in subcortical 
-nuclei [4].
+stimuli [@Thomas2014] and cognitive demands [@Harvey2013], both in cortex and in subcortical 
+nuclei [@DeSimone2015].
 
 https://kdesimone.github.io/popeye
 
