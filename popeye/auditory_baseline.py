@@ -9,12 +9,13 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.signal import fftconvolve
 from scipy.interpolate import interp1d
+from scipy.stats import linregress
 import nibabel
 
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_rf_timeseries_1D, binner
+from popeye.spinach import generate_rf_timeseries_1D
 
 class AuditoryModel(PopulationModel):
     
@@ -46,7 +47,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_prediction(self, center_freq, sigma, beta, hrf_delay):
+    def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -73,41 +74,46 @@ class AuditoryModel(PopulationModel):
         """
         
         # generate stimulus time-series
-        rf = self.receptive_field(center_freq, sigma)
-        
-        # if the tuning curve is running off the edges of the frequency space
-        if self.compare_rf_volumes(rf):
-            return np.inf
+        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
+        rf /= (sigma*np.sqrt(2*np.pi))
         
         # create mask for speed
         distance = self.stimulus.freqs - center_freq
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)] = 1
+        mask[distance < (self.mask_size*sigma)] = 1
         
         # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
-        
-        # bin the response to the resolution of the BOLD data
-        binned_response = self.binned_response(response)
-        
-        # roll it forward to correct for the binning
-        rolled_response = np.roll(binned_response, 0)
+        response = generate_rf_timeseries_1D(self.stimulus.stim_arr, rf, mask)
         
         # generate the HRF
         hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
         
         # pad and convolve
-        model = fftconvolve(rolled_response, hrf)[0:len(rolled_response)]
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # convert units
-        model = (model - np.mean(model))/np.mean(model)
+        # model = (model - np.mean(model)) / np.mean(model)
         
-        # scale by beta
+        # scale it
         model *= beta
+        
+        # offset
+        model += baseline
+        
+        # # # regress to find beta and baseline
+        # # p = linregress(model, self.data)
+        # 
+        # # save beta and intercept
+        # self.beta = p[0]
+        # self.intercept = p[1]
+        # 
+        # # scale it
+        # model *= self.beta
+        # model += self.intercept
         
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, hrf_delay):
+    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -135,60 +141,14 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, hrf_delay)
-        
-    # seconds
-    @auto_attr
-    def length_in_seconds(self):
-        return np.ceil(self.stimulus.times[-1])
-    
-    # volumes
-    @auto_attr
-    def length_in_volumes(self):
-        return self.length_in_seconds / self.stimulus.tr_length
-    
-    # convenience function
-    def receptive_field(self, center_freq, sigma):
-        return np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2)) * 1/(sigma * np.sqrt(2*np.pi))
-    
-    # Reference RF.  We always compare the volume of the candidate RF with this one.
-    # If candidate RF volume is more than 50% smaller in volume, we return inf above ...
-    @auto_attr
-    def reference_rf(self):
-        return self.receptive_field(self.stimulus.freqs[-1]/4,self.stimulus.freqs[-1]/20)
-    
-    # convenience function
-    def compare_rf_volumes(self, rf):
-        if (1-np.sum(rf)/np.sum(self.reference_rf))*100 > 50:
-            return True
-        else:
-            return False
-    
-    # bin stimulus to BOLD
-    def binned_response(self, response):
-        
-        # initialize empty array
-        b = np.zeros(self.length_in_volumes)
-        
-        # bin it
-        counter = 0
-        for i in np.arange(0,self.length_in_seconds,self.stimulus.tr_length):
-            idx = np.nonzero((self.stimulus.times < i+1) & (self.stimulus.times > i))[0]
-            b[counter] = np.sum(response[idx[0]:idx[-1]])
-            counter += 1
-        
-        return b
-        
+        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
+
 class AuditoryFit(PopulationFit):
     
-    def __init__(self, model, data, grids, bounds, 
+    def __init__(self, model, data, grids, bounds,
                  voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
-        PopulationFit.__init__(self, model, data, grids, bounds, 
-                               voxel_index, Ns, auto_fit, verbose)
-        
         r"""
-        
         A class containing tools for fitting the 1D Gaussian pRF model.
         
         The `AuditoryFit` class houses all the fitting tool that are associated with 
@@ -245,7 +205,14 @@ class AuditoryFit(PopulationFit):
             2 = print each error-minimization step
         
         """
-            
+        
+        # # push down for linregress
+        # model.data = data
+        
+        # invoke the base class
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
+                               
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]
@@ -257,10 +224,14 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def beta0(self):
         return self.ballpark[2]
-    @auto_attr
     
-    def hrf0(self):
+    @auto_attr
+    def baseline0(self):
         return self.ballpark[3]
+    
+    @auto_attr
+    def hrf0(self):
+        return self.ballpark[4]
     
     @auto_attr
     def center_freq(self):
@@ -273,8 +244,12 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[2]
-
+    
     @auto_attr
-    def hrf_delay(self):
+    def baseline(self):
         return self.estimate[3]
         
+    @auto_attr
+    def hrf_delay(self):
+        return self.estimate[4]
+    

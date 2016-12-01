@@ -9,6 +9,7 @@ warnings.simplefilter("ignore")
 import numpy as np
 from scipy.signal import fftconvolve
 from scipy.interpolate import interp1d
+from scipy.stats import linregress
 import nibabel
 
 from popeye.onetime import auto_attr
@@ -46,7 +47,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
+    def generate_prediction(self, center_freq, sigma, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -76,40 +77,34 @@ class AuditoryModel(PopulationModel):
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
         
-        # if the tuning curve is falling off the edges of the frequency space
-        if ( rf[0] > 1e-5 or rf[-1] > 1e-5 ):
-            return np.inf
-        
         # create mask for speed
         distance = self.stimulus.freqs - center_freq
         mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (5*sigma)] = 1
+        mask[distance < (self.mask_size*sigma)] = 1
         
         # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
-        
-        # resample the model time-series to 10x Fs of the BOLD
-        source_times = np.linspace(0, 1, len(response), endpoint=True)
-        f = interp1d(source_times, response, kind='linear')
-        num_volumes = self.stimulus.stim_arr.shape[0]/self.stimulus.Fs/self.stimulus.tr_length
-        target_times = np.linspace(0, 1, num_volumes*self.stimulus.resample_factor, endpoint=True)
-        response = f(target_times)
+        response = generate_rf_timeseries_1D(self.stimulus.stim_arr, rf, mask)
         
         # generate the HRF
-        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length, fptr=self.stimulus.resample_factor*self.stimulus.tr_length)
+        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
         
         # pad and convolve
         model = fftconvolve(response, hrf)[0:len(response)]
         
-        # scale by beta
-        model *= beta
+        # regress to find beta and baseline
+        p = linregress(model, self.data)
         
-        # add the offset
-        model += baseline
+        # save beta and intercept
+        self.beta = p[0]
+        self.intercept = p[1]
+        
+        # scale it
+        model *= self.beta
+        model += self.intercept
         
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
+    def generate_ballpark_prediction(self, center_freq, sigma, hrf_delay):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -137,7 +132,7 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
+        return self.generate_prediction(center_freq, sigma, hrf_delay)
 
 class AuditoryFit(PopulationFit):
     
@@ -202,6 +197,9 @@ class AuditoryFit(PopulationFit):
         
         """
         
+        # push down for linregress
+        model.data = data
+        
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, 
                                voxel_index, Ns, auto_fit, verbose)
@@ -215,16 +213,8 @@ class AuditoryFit(PopulationFit):
         return self.ballpark[1]
     
     @auto_attr
-    def beta0(self):
-        return self.ballpark[2]
-    
-    @auto_attr
-    def baseline0(self):
-        return self.ballpark[3]
-    
-    @auto_attr
     def hrf0(self):
-        return self.ballpark[4]
+        return self.ballpark[2]
     
     @auto_attr
     def center_freq(self):
@@ -233,16 +223,8 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[1]
-    
-    @auto_attr
-    def beta(self):
-        return self.estimate[2]
-    
-    @auto_attr
-    def baseline(self):
-        return self.estimate[3]
-    
+        
     @auto_attr
     def hrf_delay(self):
-        return self.estimate[4]
+        return self.estimate[2]
     
