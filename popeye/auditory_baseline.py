@@ -83,7 +83,7 @@ class AuditoryModel(PopulationModel):
         mask[distance < (self.mask_size*sigma)] = 1
         
         # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.stim_arr, rf, mask)
+        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
         # generate the HRF
         hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
