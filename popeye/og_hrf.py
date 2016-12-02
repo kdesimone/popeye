@@ -165,7 +165,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta, self.rho, self.sigma, self.beta, self.hrf_delay + 6]
+        return [self.theta, self.rho, self.sigma, self.beta, self.hrf_delay + 5]
     
     @auto_attr
     def x0(self):
