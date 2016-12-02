@@ -16,7 +16,7 @@ from popeye.base import StimulusModel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 
-def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*20, min_freq = 20, logspace=True):
+def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*12, freq_min = 20, logspace=True):
     
     # window size is 1 TR x samples per seconds
     win = Fs*tr_length
@@ -25,34 +25,27 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*
     nfft=win
     
     # get spectrum
-    F,T,Sx = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
-    
+    freqs, times, spec = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
     
     if logspace:
         
         # Ratio between adjacent frequencies in log-f axis
-        fratio = 2**(1./octaves)
+        fratio = 2**(1/bins_per_octave)
         
-        # How many bins in log-f axis
-        nbins = floor( np.log10((Fs/2)/freq_min) / np.log10(fratio) )
+        # How manp.ny bins in log-f axis
+        nbins = np.floor( np.log((Fs/2)/freq_min) / np.log(fratio) )
         
         # Freqs corresponding to each bin in FFT
         fftfrqs = np.arange(nfft/2)*(Fs/nfft)
         nfftbins = nfft/2;
         
         # Freqs corresponding to each bin in log F output
-        logffrqs = freq_min * np.exp(np.log10(2)*np.arange(nbins)/octaves);
+        logffrqs = freq_min * np.exp(np.log(2)*np.arange(nbins)/bins_per_octave);
         
         # Bandwidths of each bin in log F
         logfbws = logffrqs * (fratio - 1)
         
-        # # .. but bandwidth cannot be less than FFT binwidth
-        # logfbws = np.max(logfbws, Fs/nfft,0)
-        
         ovfctr = 0.5475;   # Adjusted by hand to make sum(mx'*mx) close to 1.0
-        
-        
-        
         
         # Weighting matrix mapping energy in FFT bins to logF bins
         # is a set of Gaussian profiles depending on the difference in 
@@ -64,21 +57,23 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*
         
         
         # % Normalize rows by sqrt(E), so multiplying by mx' gets approx orig spectrum back
-        mx = exp( -0.5*freqdiff**2 );
+        mx = np.exp( -0.5*freqdiff**2 );
         D = np.sqrt(2*np.sum(mx**2,1))
         E = mx / np.tile(D, (nfftbins,1)).T
-        Px = np.matrix(Sx[1::])
+        Sx = spec.copy()
+        Px = np.matrix(spec[1::])
         spec = np.array(np.matrix(mx) * Px)
         
         # output
         times = np.arange(spec.shape[-1])
+        freqs = logffrqs
         
-        return spec, freqs, times
+    return spec, freqs, times
         
 class AuditoryStimulus(StimulusModel):
     
     
-    def __init__(self, signal, dtype, tr_length):
+    def __init__(self, signal, Fs, tr_length, dtype):
         
         r"""A child of the StimulusModel class for auditory stimuli.
         
@@ -95,15 +90,14 @@ class AuditoryStimulus(StimulusModel):
         """
         
         # this is a weird notation
-        StimulusModel.__init__(self, signal, Fs, tr_length, dtype)
+        StimulusModel.__init__(self, signal, dtype, tr_length)
         
         # absorb the vars
-        self.signal = utils.generate_shared_array(signal, ctypes.c_double)
         self.Fs = Fs
         self.tr_length = tr_length
         
         # # create spectrogram
-        specgram, freqs, times, = generate_spectrogram(signal, Fs, tr_length)
+        specgram, freqs, times, = generate_spectrogram(self.stim_arr, Fs, tr_length)
         
         # share them
         self.spectrogram = utils.generate_shared_array(specgram, ctypes.c_double)
