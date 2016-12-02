@@ -9,81 +9,82 @@ with an arbitrary number of dimensions (e.g., auditory stimuli).
 from __future__ import division
 import ctypes
 
-import matplotlib
-matplotlib.use('pdf')
-from matplotlib.mlab import specgram
-
+from scipy.signal import spectrogram
 import numpy as np
-from numpy.lib import stride_tricks
-import nibabel
 
 from popeye.base import StimulusModel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 
-def generate_spectrogram(signal, NFFT, Fs, noverlap):
+def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*20, min_freq = 20, logspace=True):
     
-    r""" Generation of spectrogram from a 1D audio signal.
+    # window size is 1 TR x samples per seconds
+    win = Fs*tr_length
     
-    Paramaters
-    ----------
+    # find num freqs
+    nfft=win
     
-    signal : ndarray
-        A 1D array containg the monophonic auditory stimulus.
-    
-    NFFT : integer
-      The number of data points used in each block for the FFT.
-      Must be even; a power 2 is most efficient.  The default value is 256.
-      This should *NOT* be used to get zero padding, or the scaling of the
-      result will be incorrect. Use *pad_to* for this instead.
-    
-     Fs : scalar
-      The sampling frequency (samples per time unit).  It is used
-      to calculate the Fourier frequencies, freqs, in cycles per time
-      unit. The default value is 2.
+    # get spectrum
+    F,T,Sx = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
     
     
-    noverlap : integer
-        The number of points of overlap between blocks.  The default value 
-        is 128.
-    
-    
-    For more information, see help of `mlab.specgram`.
-    
-    """
-    
-    
-    spectrogram, freqs, times = specgram(signal,NFFT=NFFT,Fs=Fs,noverlap=noverlap)
-    
-    return spectrogram, freqs, times
-
+    if logspace:
+        
+        # Ratio between adjacent frequencies in log-f axis
+        fratio = 2**(1./octaves)
+        
+        # How many bins in log-f axis
+        nbins = floor( np.log10((Fs/2)/freq_min) / np.log10(fratio) )
+        
+        # Freqs corresponding to each bin in FFT
+        fftfrqs = np.arange(nfft/2)*(Fs/nfft)
+        nfftbins = nfft/2;
+        
+        # Freqs corresponding to each bin in log F output
+        logffrqs = freq_min * np.exp(np.log10(2)*np.arange(nbins)/octaves);
+        
+        # Bandwidths of each bin in log F
+        logfbws = logffrqs * (fratio - 1)
+        
+        # # .. but bandwidth cannot be less than FFT binwidth
+        # logfbws = np.max(logfbws, Fs/nfft,0)
+        
+        ovfctr = 0.5475;   # Adjusted by hand to make sum(mx'*mx) close to 1.0
+        
+        
+        
+        
+        # Weighting matrix mapping energy in FFT bins to logF bins
+        # is a set of Gaussian profiles depending on the difference in 
+        # frequencies, scaled by the bandwidth of that bin
+        A = np.tile(logffrqs,(nfftbins,1)).T
+        B = np.tile(fftfrqs,(nbins,1))
+        C = np.tile(ovfctr*logfbws,(nfftbins,1)).T
+        freqdiff = ( A - B )/C;
+        
+        
+        # % Normalize rows by sqrt(E), so multiplying by mx' gets approx orig spectrum back
+        mx = exp( -0.5*freqdiff**2 );
+        D = np.sqrt(2*np.sum(mx**2,1))
+        E = mx / np.tile(D, (nfftbins,1)).T
+        Px = np.matrix(Sx[1::])
+        spec = np.array(np.matrix(mx) * Px)
+        
+        # output
+        times = np.arange(spec.shape[-1])
+        
+        return spec, freqs, times
+        
 class AuditoryStimulus(StimulusModel):
     
     
-    def __init__(self, stim_arr, NFFT, Fs, noverlap, resample_factor, dtype, tr_length):
+    def __init__(self, signal, dtype, tr_length):
         
         r"""A child of the StimulusModel class for auditory stimuli.
         
         Paramaters
         ----------
         
-        signal : ndarray
-            A 1D array containg the monophonic auditory stimulus.
-        
-        NFFT : integer
-          The number of data points used in each block for the FFT.
-          Must be even; a power 2 is most efficient.  The default value is 256.
-          This should *NOT* be used to get zero padding, or the scaling of the
-          result will be incorrect. Use *pad_to* for this instead.
-        
-         Fs : scalar
-          The sampling frequency (samples per time unit).  It is used
-          to calculate the Fourier frequencies, freqs, in cycles per time
-          unit. The default value is 2.
-        
-        noverlap : integer
-            The number of points of overlap between blocks.  The default value 
-            is 128.
         
         dtype : string
             Sets the data type the stimulus array is cast into.
@@ -94,21 +95,17 @@ class AuditoryStimulus(StimulusModel):
         """
         
         # this is a weird notation
-        StimulusModel.__init__(self, stim_arr, dtype, tr_length)
+        StimulusModel.__init__(self, signal, Fs, tr_length, dtype)
         
         # absorb the vars
-        self.NFFT = NFFT
+        self.signal = utils.generate_shared_array(signal, ctypes.c_double)
         self.Fs = Fs
-        self.noverlap = noverlap
-        self.resample_factor = resample_factor
+        self.tr_length = tr_length
         
-        # create the vars via matplotlib
-        spectrogram, freqs, times = generate_spectrogram(self.stim_arr, self.NFFT, self.Fs, self.noverlap)
+        # # create spectrogram
+        specgram, freqs, times, = generate_spectrogram(signal, Fs, tr_length)
         
         # share them
-        self.spectrogram = utils.generate_shared_array(spectrogram, ctypes.c_double)
+        self.spectrogram = utils.generate_shared_array(specgram, ctypes.c_double)
         self.freqs = utils.generate_shared_array(freqs, ctypes.c_double)
-        self.times = utils.generate_shared_array(times, ctypes.c_double)
-        
-        # # why don't the times returned from specgram start at 0? they are time bin centers?
-        # self.target_times = utils.generate_shared_array(target_times, ctypes.c_double)
+        self.times = utils.generate_shared_array(times, ctypes.c_int16)
