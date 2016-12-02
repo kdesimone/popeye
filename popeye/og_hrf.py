@@ -52,7 +52,7 @@ class GaussianModel(PopulationModel):
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
         rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2
-                
+        
         # extract the stimulus time-series
         response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
