@@ -205,7 +205,7 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def hrf_delay(self):
-        return self.estiamte[4]
+        return self.estimate[4]
         
     @auto_attr
     def rho(self):
