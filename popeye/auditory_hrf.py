@@ -47,6 +47,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
+    
     def generate_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
         
         r"""
@@ -73,47 +74,39 @@ class AuditoryModel(PopulationModel):
         
         """
         
+        # de-log the center and spread
+        center_freq = np.e ** center_freq
+        sigma = np.e ** sigma
+        
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
         
-        # create mask for speed
-        distance = self.stimulus.freqs - center_freq
-        mask = np.zeros_like(distance, dtype='uint8')
-        mask[distance < (self.mask_size*sigma)] = 1
+        # # create mask for speed
+        # distance = self.stimulus.freqs - center_freq
+        # mask = np.zeros_like(distance, dtype='uint8')
+        # mask[distance < (self.mask_size*sigma)] = 1
+        mask = np.ones_like(rf).astype('uint8')
         
         # extract the response
         response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
-        # generate the HRF
-        hrf = utils.double_gamma_hrf(hrf_delay, self.stimulus.tr_length)
+        # convolve it with the stimulus
+        self.hrf_delay = hrf_delay
+        model = fftconvolve(response, self.hrf())[0:len(response)]
         
-        # pad and convolve
-        model = fftconvolve(response, hrf)[0:len(response)]
-        
-        # convert units
-        # model = (model - np.mean(model)) / np.mean(model)
-        
-        # scale it
-        model *= beta
+        # units
+        model = (model - np.mean(model)) / np.mean(model)
         
         # offset
         model += baseline
         
-        # # # regress to find beta and baseline
-        # # p = linregress(model, self.data)
-        # 
-        # # save beta and intercept
-        # self.beta = p[0]
-        # self.intercept = p[1]
-        # 
-        # # scale it
-        # model *= self.beta
-        # model += self.intercept
+        # scale it
+        model *= beta
         
         return model
     
-    def generate_ballpark_prediction(self, center_freq, sigma, beta, baseline, hrf_delay):
+    def generate_ballpark_prediction(self, center_freq, sigma):
         
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -141,7 +134,65 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        return self.generate_prediction(center_freq, sigma, beta, baseline, hrf_delay)
+        # de-log the center and spread
+        center_freq = np.e ** center_freq
+        sigma = np.e ** sigma
+        
+        # generate stimulus time-series
+        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
+        rf /= (sigma*np.sqrt(2*np.pi))
+        
+        # # create mask for speed
+        # distance = self.stimulus.freqs - center_freq
+        # mask = np.zeros_like(distance, dtype='uint8')
+        # mask[distance < (self.mask_size*sigma)] = 1
+        mask = np.ones_like(rf).astype('uint8')
+        
+        # extract the response
+        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, self.hrf())[0:len(response)]
+        
+        # units
+        model = (model - np.mean(model)) / np.mean(model)
+        
+        # regress to find beta and baseline
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale it
+        model *= np.abs(p[0])
+        
+        return model
+    
+    def estimate_scaling(self, center_freq, sigma):
+        
+        # de-log the center and spread
+        center_freq = np.e ** center_freq
+        sigma = np.e ** sigma
+        
+        # generate stimulus time-series
+        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
+        rf /= (sigma*np.sqrt(2*np.pi))
+        
+        mask = np.ones_like(rf).astype('uint8')
+        
+        # extract the response
+        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, self.hrf())[0:len(response)]
+        
+        # units
+        model = (model - np.mean(model)) / np.mean(model)
+        
+        # regress to find beta and baseline
+        p = linregress(model, self.data)
+        
+        return p
 
 class AuditoryFit(PopulationFit):
     
@@ -206,13 +257,21 @@ class AuditoryFit(PopulationFit):
         
         """
         
-        # # push down for linregress
-        # model.data = data
-        
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, 
                                voxel_index, Ns, auto_fit, verbose)
                                
+    # overload ballpark
+    # with the linregress slope
+    # as a sub-stitute for beta
+    @auto_attr
+    def overloaded_ballpark(self):
+        return np.append(self.ballpark, (self.beta0, self.baseline0, self.hrf_delay0))
+    
+    @auto_attr
+    def overloaded_estimate(self):
+        return [np.e**self.center_freq, np.e**self.sigma, self.beta, self.baseline, self.hrf_delay + 5]
+    
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]
@@ -220,18 +279,20 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def sigma0(self):
         return self.ballpark[1]
-    
+        
     @auto_attr
     def beta0(self):
-        return self.ballpark[2]
-    
+        p = self.model.estimate_scaling(self.center_freq0, self.sigma0)
+        return np.abs(p[0]) # don't let slope flip negative
+        
     @auto_attr
     def baseline0(self):
-        return self.ballpark[3]
+        p = self.model.estimate_scaling(self.center_freq0, self.sigma0)
+        return p[1]
     
     @auto_attr
-    def hrf0(self):
-        return self.ballpark[4]
+    def hrf_delay0(self):
+        return self.model.hrf_delay
     
     @auto_attr
     def center_freq(self):
@@ -240,7 +301,7 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[1]
-    
+        
     @auto_attr
     def beta(self):
         return self.estimate[2]
@@ -248,8 +309,15 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def baseline(self):
         return self.estimate[3]
-        
+    
     @auto_attr
     def hrf_delay(self):
         return self.estimate[4]
     
+    @auto_attr
+    def receptive_field(self):
+        rf = np.exp(-((self.model.stimulus.freqs-self.center_freq)**2)/(2*self.sigma**2))
+        rf /= (self.sigma*np.sqrt(2*np.pi))
+        return rf
+    
+       
