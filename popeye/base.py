@@ -188,6 +188,14 @@ class PopulationFit(object):
             self.original_data = self.data
             self.data = self.model.results.resid
         
+        # push data down to model
+        # there is probably a better of exposing the data
+        # to the PopulationModel. the idea is that the we want
+        # compute beta and baseline via linear regression rather
+        # than estimate through descent. Thus, model needs to see
+        # the data. Since the data is in shared memory, no overhead
+        self.model.data = data
+        
         # automatic fitting
         if self.auto_fit:
             
@@ -211,7 +219,7 @@ class PopulationFit(object):
             self.rsquared
             
             # flush if not testing
-            if self.very_verbose == False: # pragma: no cover
+            if not hasattr(self.model, 'store_search_space'): # pragma: no cover
                 self.gradient_descent = [None]*6
                 self.brute_force =[None,]*4
             
@@ -238,17 +246,33 @@ class PopulationFit(object):
     # the gradient search
     @auto_attr
     def gradient_descent(self):
-        return utils.gradient_descent_search(self.data,
-                                             utils.error_function,
-                                             self.model.generate_prediction,
-                                             self.ballpark,
-                                             self.bounds,
-                                             self.very_verbose)
+        
+        # this is in case we want to compute baseline and beta
+        # parameters via linear regression rather than estimation
+        # this should only be used for a grid-search, not fmin
+        if self.overloaded_ballpark is not None:
+            return utils.gradient_descent_search(self.data,
+                                                 utils.error_function,
+                                                 self.model.generate_prediction,
+                                                 self.overloaded_ballpark,
+                                                 self.bounds,
+                                                 self.very_verbose)
+        else:
+            return utils.gradient_descent_search(self.data,
+                                                 utils.error_function,
+                                                 self.model.generate_prediction,
+                                                 self.ballpark,
+                                                 self.bounds,
+                                                 self.very_verbose)
     
     @auto_attr
     def overloaded_estimate(self):
         return None
-        
+    
+    @auto_attr
+    def overloaded_ballpark(self):
+        return None
+    
     @auto_attr
     def estimate(self):
         return self.gradient_descent[0]
