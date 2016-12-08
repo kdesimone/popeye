@@ -7,6 +7,7 @@ Base-classes for poulation encoding models and fits.
 import time, ctypes
 import statsmodels.api as sm 
 import numpy as np
+from scipy.stats import linregress
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 import numpy as np
@@ -276,6 +277,18 @@ class PopulationFit(object):
     @auto_attr
     def estimate(self):
         return self.gradient_descent[0]
+    
+    @auto_attr
+    def ballpark_prediction(self):
+        return self.model.generate_ballpark_prediction(*self.ballpark)
+    
+    @auto_attr
+    def slope(self):
+        return linregress(self.ballpark_prediction, self.data)[0]
+    
+    @auto_attr
+    def intercept(self):
+        return linregress(self.ballpark_prediction, self.data)[1]
     
     @auto_attr
     def prediction(self):
