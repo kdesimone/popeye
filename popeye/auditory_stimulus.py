@@ -16,7 +16,7 @@ from popeye.base import StimulusModel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 
-def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*12, freq_min = 20, logspace=True):
+def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*12, freq_min = 200 ,decibels=True):
     
     # window size is 1 TR x samples per seconds
     win = Fs*tr_length
@@ -27,7 +27,7 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*
     # get spectrum
     freqs, times, spec = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
     
-    if logspace:
+    if decibels:
         
         # Ratio between adjacent frequencies in log-f axis
         fratio = 2**(1/bins_per_octave)
@@ -66,7 +66,7 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*
         
         # output
         times = np.arange(spec.shape[-1])
-        freqs = logffrqs
+        freqs = np.log2(logffrqs)/np.log2(10)
         
     return spec, freqs, times
         
