@@ -8,6 +8,7 @@ warnings.simplefilter("ignore")
 
 import numpy as np
 from scipy.signal import fftconvolve
+from scipy.stats import linregress
 import nibabel
 
 from popeye.onetime import auto_attr
@@ -42,9 +43,9 @@ class GaussianModel(PopulationModel):
         """
         
         PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
-    
+        
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, beta):
+    def generate_ballpark_prediction(self, x, y, sigma):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -59,16 +60,22 @@ class GaussianModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
-        # convert units
+        # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        # scale it by beta
-        model *= beta
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
         
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, beta):
+    def generate_prediction(self, x, y, sigma, beta, baseline):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -83,8 +90,11 @@ class GaussianModel(PopulationModel):
         # convolve it with the stimulus
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
-        # convert units
+        # units
         model = (model-np.mean(model)) / np.mean(model)
+        
+        # offset
+        model += baseline
         
         # scale it by beta
         model *= beta
@@ -170,7 +180,12 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta, self.rho, self.sigma, self.beta]
+        return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
+    
+    
+    @auto_attr
+    def overloaded_ballpark(self):
+        return np.append(self.ballpark, (self.beta0, self.baseline0))
     
     @auto_attr
     def x0(self):
@@ -186,8 +201,12 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def beta0(self):
-        return self.ballpark[3]
-    
+        return np.abs(self.slope)
+        
+    @auto_attr
+    def baseline0(self):
+        return self.intercept
+            
     @auto_attr
     def x(self):
         return self.estimate[0]
@@ -203,6 +222,10 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[3]
+    
+    @auto_attr
+    def baseline(self):
+        return self.estimate[4]
         
     @auto_attr
     def rho(self):

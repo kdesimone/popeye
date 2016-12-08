@@ -45,8 +45,7 @@ class SpatioTemporalModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
     
     
-    # for the final solution, we use spatiotemporal
-    def generate_ballpark_prediction(self, x, y, sigma, weight, beta):
+    def generate_ballpark_prediction(self, x, y, sigma, weight):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -67,16 +66,21 @@ class SpatioTemporalModel(PopulationModel):
         # convolve with HRF
         model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
-        # convert units
+        # units
         model = (model - np.mean(model)) / np.mean(model)
         
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
         # scale
-        model *= beta
+        model *= np.abs(p[0])
         
         return model
     
-    # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, weight, beta):
+    def generate_prediction(self, x, y, sigma, weight, beta, baseline):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -97,10 +101,13 @@ class SpatioTemporalModel(PopulationModel):
         # convolve with HRF
         model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
-        # convert units
+        # units
         model = (model - np.mean(model)) / np.mean(model)
         
-        # scale
+        # offset
+        model += baseline
+        
+        # scale it by beta
         model *= beta
         
         return model
@@ -192,28 +199,36 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta, self.rho, self.sigma, self.weight, self.beta]
+        return [self.theta, self.rho, self.sigma, self.weight, self.beta, self.baseline]
+    
+    @auto_attr
+    def overloaded_ballpark(self):
+        return np.append(self.ballpark, (self.beta0, self.baseline0))
     
     @auto_attr
     def x0(self):
         return self.ballpark[0]
-        
+    
     @auto_attr
     def y0(self):
         return self.ballpark[1]
     
     @auto_attr
-    def sigma0(self):
+    def s0(self):
         return self.ballpark[2]
     
     @auto_attr
-    def weight0(self):
+    def w0(self):
         return self.ballpark[3]
-        
+    
     @auto_attr
     def beta0(self):
-        return self.ballpark[4]
-        
+        return np.abs(self.slope)
+    
+    @auto_attr
+    def baseline0(self):
+        return self.intercept
+    
     @auto_attr
     def x(self):
         return self.estimate[0]
@@ -225,7 +240,7 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def sigma(self):
         return self.estimate[2]
-        
+    
     @auto_attr
     def weight(self):
         return self.estimate[3]
@@ -233,6 +248,10 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[4]
+    
+    @auto_attr
+    def baseline(self):
+        return self.estimate[5]
         
     @auto_attr
     def rho(self):
