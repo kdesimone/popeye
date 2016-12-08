@@ -26,10 +26,10 @@ def test_distance_mask():
     amplitude=100
     dx,dy = np.meshgrid(np.linspace(-50,50,100),np.linspace(-50,50,100))
     mask = utils.distance_mask(x,y,sigma,dx,dy)
-    nt.assert_true(np.sqrt(np.sum(mask))==2)
-    nt.assert_true(np.max(mask)==1)
+    npt.assert_equal(np.sqrt(np.sum(mask)),2)
+    npt.assert_equal(np.max(mask),1)
     mask = utils.distance_mask(x,y,sigma,dx,dy,amplitude)
-    nt.assert_true(np.max(mask)==amplitude)
+    npt.assert_equal(np.max(mask),amplitude)
 
 
 def test_grid_slice():
@@ -143,9 +143,10 @@ def test_recast_estimation_results():
     y = 2.58
     sigma = 1.24
     beta = 2.5
+    baseline = -0.25
     
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta)
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # set search grid
     x_grid = utils.grid_slice(-5,4,5)
@@ -158,10 +159,11 @@ def test_recast_estimation_results():
     y_bound = (-12.0,12.0)
     s_bound = (1/stimulus.ppd,12.0)
     b_bound = (1e-8,1e2)
+    m_bound = (None,None)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid,)
-    bounds = (x_bound, y_bound, s_bound, b_bound,)
+    grids = (x_grid, y_grid, s_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
     
     # create 3 voxels of data
     all_data = np.array([data,data,data])
@@ -187,6 +189,7 @@ def test_recast_estimation_results():
     npt.assert_almost_equal(np.mean(dat[...,1]), y)
     npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
     npt.assert_almost_equal(np.mean(dat[...,3]), beta)
+    npt.assert_almost_equal(np.mean(dat[...,4]), baseline)
     
     # recast the estimation results - OVERLOADED
     nif = utils.recast_estimation_results(output, grid_parent, True)
@@ -197,6 +200,7 @@ def test_recast_estimation_results():
     npt.assert_almost_equal(np.mean(dat[...,1]), np.sqrt(x**2+y**2),2)
     npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
     npt.assert_almost_equal(np.mean(dat[...,3]), beta)
+    npt.assert_almost_equal(np.mean(dat[...,4]), baseline)
 
 
 def test_make_nifti():
@@ -265,21 +269,13 @@ def test_error_function():
 
     # assert parameter outside of bounds return inf
     params = (30.0,)
-    nt.assert_true(utils.error_function(params, bounds, response, func, verbose) == np.inf)
-
-    # # assert print is param and 0 error
-    # params = (10.0,)
-    # out = StringIO()
-    # sys.stdout = out
-    # x = utils.error_function(params, bounds, response, func, verbose)
-    # output = out.getvalue().strip()
-    # nt.assert_true(output == '((10.0,), 0.0)')
+    npt.assert_equal(utils.error_function(params, bounds, response, func, verbose), np.inf)
 
     # test nan returns inf
     response = func(params)
     response[0] = np.nan
     err = utils.error_function(params, bounds, response, func, verbose)
-    nt.assert_equal(err,np.inf)
+    npt.assert_equal(err,np.inf)
 
 def test_gradient_descent_search():
 
@@ -379,9 +375,9 @@ def test_double_gamma_hrf():
     hrf_0 = utils.double_gamma_hrf(-1, tr_length, integrator=None)
     hrf_1 = utils.double_gamma_hrf(0, tr_length, integrator=None)
     hrf_2 = utils.double_gamma_hrf(1, tr_length, integrator=None)
-    nt.assert_true(hrf_0.sum()<hrf_1.sum())
-    nt.assert_true(hrf_1.sum()<hrf_2.sum())
-    nt.assert_true(hrf_0.sum()<hrf_2.sum())
+    npt.assert_array_less(hrf_0.sum(),hrf_1.sum())
+    npt.assert_array_less(hrf_1.sum(),hrf_2.sum())
+    npt.assert_array_less(hrf_0.sum(),hrf_2.sum())
 
 
 def test_spm_hrf():
@@ -430,9 +426,9 @@ def test_randomize_voxels():
     rand_xi, rand_yi, rand_zi = xi[rand_ind], yi[rand_ind], zi[rand_ind]
 
     # assert that all members of the original and resorted indices are equal
-    nt.assert_true(set(xi) == set(rand_xi))
-    nt.assert_true(set(yi) == set(rand_yi))
-    nt.assert_true(set(zi) == set(rand_zi))
+    npt.assert_equal(set(xi),set(rand_xi))
+    npt.assert_equal(set(yi),set(rand_yi))
+    npt.assert_equal(set(zi),set(rand_zi))
 
 def test_zscore():
 
@@ -460,8 +456,8 @@ def test_percent_change():
     x = np.array([[99, 100, 101], [4, 5, 6]])
     p = utils.percent_change(x)
 
-    nt.assert_equal(x.shape, p.shape)
-    nt.assert_almost_equal(p[0, 2], 1.0)
+    npt.assert_equal(x.shape, p.shape)
+    npt.assert_almost_equal(p[0, 2], 1.0)
 
     ts = np.arange(4 * 5).reshape(4, 5)
     ax = 0
@@ -517,9 +513,10 @@ def test_parallel_fit_Ns():
     y = 2.58
     sigma = 1.24
     beta = 2.5
+    baseline = -0.25
     
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta,)
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # make 3 voxels
     all_data = np.array([data,data,data])
@@ -530,17 +527,17 @@ def test_parallel_fit_Ns():
     x_grid = (-10,10)
     y_grid = slice(-10,10)
     s_grid = (0.25,5.25)
-    b_grid = (0.1,3.0)
     
     # set search bounds
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (0.001,12.0)
     b_bound = (1e-8,1e2)
+    m_bound = (None, None)
     
     # make grids+bounds for all voxels in the sample
-    grids = (x_grid, y_grid, s_grid, b_grid,)
-    bounds = (x_bound, y_bound, s_bound, b_bound,)
+    grids = (x_grid, y_grid, s_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
     
     # fitting params
     auto_fit = True
@@ -555,10 +552,11 @@ def test_parallel_fit_Ns():
         
     # assert equivalence
     for fit in output:
-        nt.assert_almost_equal(fit.x, x, 2)
-        nt.assert_almost_equal(fit.y, y, 2)
-        nt.assert_almost_equal(fit.sigma, sigma, 2)
-        nt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.x, x, 2)
+        npt.assert_almost_equal(fit.y, y, 2)
+        npt.assert_almost_equal(fit.sigma, sigma, 2)
+        npt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.baseline, baseline, 2)
         
 def test_parallel_fit():
 
@@ -595,25 +593,26 @@ def test_parallel_fit():
     y = 2.58
     sigma = 1.24
     beta = 2.5
+    baseline = -0.25
     
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta,)
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # set search grid
     x_grid = slice(-5,4,5)
     y_grid = slice(-5,7,5)
     s_grid = slice(1/stimulus.ppd,5.25,5)
-    b_grid = slice(0.1,4.0,5)
-        
+    
     # set search bounds
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (1/stimulus.ppd,12.0)
     b_bound = (1e-8,1e2)
+    m_bound = (None, None)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid)
-    bounds = (x_bound, y_bound, s_bound, b_bound)
+    grids = (x_grid, y_grid, s_grid)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
     
     # make 3 voxels
     all_data = np.array([data,data,data])
@@ -626,10 +625,11 @@ def test_parallel_fit():
     fit = utils.parallel_fit(bundle[0])
     
     # assert equivalence
-    nt.assert_almost_equal(fit.x, x, 2)
-    nt.assert_almost_equal(fit.y, y, 2)
-    nt.assert_almost_equal(fit.sigma, sigma, 2)
-    nt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
 
 def test_parallel_fit_manual_grids():
 
@@ -649,11 +649,11 @@ def test_parallel_fit_manual_grids():
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
-
+    
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance,
                                 screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
-
+                                
     # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
@@ -666,9 +666,10 @@ def test_parallel_fit_manual_grids():
     y = 2.58
     sigma = 1.24
     beta = 2.5
+    baseline = -0.25
     
     # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta)
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # set search grid
     x_grid = slice(-5,4,5)
@@ -681,10 +682,11 @@ def test_parallel_fit_manual_grids():
     y_bound = (-12.0,12.0)
     s_bound = (1/stimulus.ppd,12.0)
     b_bound = (1e-8,1e2)
+    m_bound = (None, None)
     
     # loop over each voxel and set up a GaussianFit object
-    grids = (x_grid, y_grid, s_grid, b_grid)
-    bounds = (x_bound, y_bound, s_bound, b_bound)
+    grids = (x_grid, y_grid, s_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
     
     # make 3 voxels
     all_data = np.array([data,data,data])
@@ -700,10 +702,11 @@ def test_parallel_fit_manual_grids():
         
     # assert equivalence
     for fit in output:
-        nt.assert_almost_equal(fit.x, x, 2)
-        nt.assert_almost_equal(fit.y, y, 2)
-        nt.assert_almost_equal(fit.sigma, sigma, 2)
-        nt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.x, x, 2)
+        npt.assert_almost_equal(fit.y, y, 2)
+        npt.assert_almost_equal(fit.sigma, sigma, 2)
+        npt.assert_almost_equal(fit.beta, beta, 2)
+        npt.assert_almost_equal(fit.baseline, baseline, 2)
 
 def test_gaussian_2D():
 
@@ -724,29 +727,29 @@ def test_gaussian_2D():
     gy = np.exp(-((deg_y[:,0]-0)**2)/(2*10**2))
 
     # assertions
-    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gx,8)))
-    nt.assert_true(np.all(np.round(G[:,50],8) == np.round(gy,8)))
-
+    npt.assert_equal(np.round(G[:,50],5),np.round(gx,5))
+    npt.assert_equal(np.round(G[50,:],5),np.round(gy,5))
+    
 def test_cartes_to_polar():
     cartes = np.array([5,0]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], 0)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], 0)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([-5,0]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([0,5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi/2)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi/2)
+    npt.assert_equal(polar[...,1], 5)
 
     cartes = np.array([0,-5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
-    nt.assert_equal(polar[...,0], np.pi*3/2)
-    nt.assert_equal(polar[...,1], 5)
+    npt.assert_equal(polar[...,0], np.pi*3/2)
+    npt.assert_equal(polar[...,1], 5)
 
 def test_binner():
 
@@ -755,8 +758,8 @@ def test_binner():
     bins = np.arange(-0.5,1.5,0.5)
     binned_signal = utils.binner(signal, times, bins)
 
-    nt.assert_true(len(binned_signal), len(bins)-2)
-    nt.assert_true(np.all(binned_signal==[5,5]))
+    npt.assert_equal(len(binned_signal), len(bins)-2)
+    npt.assert_equal(binned_signal,[5,5])
 
 def test_find_files():
 
@@ -765,7 +768,7 @@ def test_find_files():
 
     path = utils.find_files('/tmp/','test*.txt')
 
-    nt.assert_equal(path[0],'/tmp/test_abc.txt')
+    npt.assert_equal(path[0],'/tmp/test_abc.txt')
 
 def test_peakdet():
 
@@ -779,31 +782,28 @@ def test_peakdet():
 
     a,b = utils.peakdet(ts,0.5)
 
-    nt.assert_true(np.all(a[:,0] == peaks))
-    nt.assert_true(np.all(b[:,0] == troughs))
-    nt.assert_true(np.all(a[:,1] == 1))
-    nt.assert_true(np.all(b[:,1] == -1))
-
-
-    a,b = utils.peakdet(ts,0.5)
+    npt.assert_equal(a[:,0], peaks)
+    npt.assert_equal(b[:,0], troughs)
+    npt.assert_equal(a[:,1], 1)
+    npt.assert_equal(b[:,1], -1)
 
 # def test_OLS():
 #
 #     o = utils.ols(np.arange(100),np.arange(100))
 #
-#     nt.assert_equal(o.R2,1.0)
-#     nt.assert_almost_equal(np.sum(o.e),0.0)
-#     nt.assert_almost_equal(np.sum(o.se),0.0)
-#     nt.assert_true(o.F == np.inf)
-#     nt.assert_almost_equal(np.sum(o.b),1.0)
-#     nt.assert_true(o.df_e == len(np.arange(100-2)))
-#     nt.assert_almost_equal(o.p[1],0)
-#     nt.assert_true(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
-#     nt.assert_true(o.nobs == 100)
+#     npt.assert_equal(o.R2,1.0)
+#     npt.assert_almost_equal(np.sum(o.e),0.0)
+#     npt.assert_almost_equal(np.sum(o.se),0.0)
+#     npt.assert_true(o.F == np.inf)
+#     npt.assert_almost_equal(np.sum(o.b),1.0)
+#     npt.assert_true(o.df_e == len(np.arange(100-2)))
+#     npt.assert_almost_equal(o.p[1],0)
+#     npt.assert_true(o.ll() == (2987.7752827161585, -59.715505654323174, -59.663402250603411))
+#     npt.assert_true(o.nobs == 100)
 #     omni_1 = o.omni()[0]
 #     omni_2 = o.omni()[1]
-#     nt.assert_almost_equal(omni_1,18.093297390235648)
-#     nt.assert_almost_equal(omni_2, 0.00011778511003501986)
-#     nt.assert_true(o.JB() == (5.0825725194665461,0.07876502232916649,0.16483617111543283,1.9458968022816807))
-#     nt.assert_true(o.dw() == 0.0051450432267976026)
+#     npt.assert_almost_equal(omni_1,18.093297390235648)
+#     npt.assert_almost_equal(omni_2, 0.00011778511003501986)
+#     npt.assert_true(o.JB() == (5.0825725194665461,0.07876502232916649,0.16483617111543283,1.9458968022816807))
+#     npt.assert_true(o.dw() == 0.0051450432267976026)
 #

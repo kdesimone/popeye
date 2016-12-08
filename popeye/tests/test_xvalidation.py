@@ -33,7 +33,7 @@ def test_kfold_xval_repeated_runs():
     # stimulus features
     viewing_distance = 38
     screen_width = 25
-    thetas = np.arange(0,360,45)
+    thetas = np.arange(0,360,90)
     num_blank_steps = 0
     num_bar_steps = 30
     ecc = 10
@@ -43,7 +43,7 @@ def test_kfold_xval_repeated_runs():
     pixels_down = 100
     pixels_across = 100
     dtype = ctypes.c_int16
-    Ns = 5
+    Ns = 3
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -59,8 +59,8 @@ def test_kfold_xval_repeated_runs():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # set up bounds for the grid search
-    grids = ((-10,10),(-10,10),(0.25,5.25),(0.1,1e2))
-    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(0.1,1e3))
+    grids = ((-10,10),(-10,10),(0.25,5.25))
+    bounds = ((-12,12),(-12,12),(1/stimulus.ppd,12),(1e-8,None),(None,None))
     
     # set the grid smaples
     Ns = 5
@@ -74,7 +74,7 @@ def test_kfold_xval_repeated_runs():
     y = 2.58
     sigma = 1.24
     beta = 2.5
-    hrf_delay = -0.25
+    baseline = -0.25
     
     # create the args context for calling the Fit class
     fit_args = [grids, bounds, [0,0,0], Ns]
@@ -86,7 +86,7 @@ def test_kfold_xval_repeated_runs():
     for r in range(num_runs):
         
         # fill out the data list
-        data[r,:] = model.generate_prediction(x, y, sigma, beta)
+        data[r,:] = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # get predictions out for each of the folds ...
     models = (model,)
