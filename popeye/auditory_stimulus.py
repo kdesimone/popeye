@@ -66,7 +66,7 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*
         
         # output
         times = np.arange(spec.shape[-1])
-        freqs = np.log2(logffrqs)/np.log2(10)
+        freqs = 10**(np.log2(logffrqs)/np.log2(10))
         
     return spec, freqs, times
         
