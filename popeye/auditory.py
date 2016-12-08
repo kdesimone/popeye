@@ -74,6 +74,10 @@ class AuditoryModel(PopulationModel):
         
         """ 
         
+        # convert
+        center_freq = 10**center_freq
+        sigma = 10**sigma
+        
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
@@ -128,6 +132,10 @@ class AuditoryModel(PopulationModel):
             The delay of the HRF, units are in seconds.
         
         """
+        
+        # convert
+        center_freq = 10**center_freq
+        sigma = 10**sigma
         
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
@@ -253,7 +261,7 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def center_freq0(self):
         return self.ballpark[0]
-    
+        
     @auto_attr
     def sigma0(self):
         return self.ballpark[1]
@@ -281,7 +289,7 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def baseline(self):
         return self.estimate[3]
-    
+        
     @auto_attr
     def receptive_field(self):
         
