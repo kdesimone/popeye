@@ -72,11 +72,7 @@ class AuditoryModel(PopulationModel):
         hrf_delay : float
             The delay of the HRF, units are in seconds.
         
-        """
-        
-        # de-log the center and spread
-        center_freq = np.e ** center_freq
-        sigma = np.e ** sigma
+        """ 
         
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
@@ -133,10 +129,6 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        # de-log the center and spread
-        center_freq = np.e ** center_freq
-        sigma = np.e ** sigma
-        
         # generate stimulus time-series
         rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
@@ -167,32 +159,19 @@ class AuditoryModel(PopulationModel):
         
         return model
     
-    def estimate_scaling(self, center_freq, sigma):
+    def generate_receptive_field(self, freqs, center_freq, sigma, decibels=False):
         
-        # de-log the center and spread
-        center_freq = np.e ** center_freq
-        sigma = np.e ** sigma
+        # if not decibels:
+        #     freqs = 10**(np.log2(freqs)/np.log2(10))
+        #     center_freq = 10**center_freq
+        #     sigma = 10**sigma
         
-        # generate stimulus time-series
-        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
+        rf = np.exp(-((freqs-center_freq)**2)/(2*sigma**2))
         rf /= (sigma*np.sqrt(2*np.pi))
         
-        mask = np.ones_like(rf).astype('uint8')
+        return rf
         
-        # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
         
-        # convolve it with the stimulus
-        model = fftconvolve(response, self.hrf())[0:len(response)]
-        
-        # units
-        model = (model - np.mean(model)) / np.mean(model)
-        
-        # regress to find beta and baseline
-        p = linregress(model, self.data)
-        
-        return p
-
 class AuditoryFit(PopulationFit):
     
     def __init__(self, model, data, grids, bounds,
@@ -269,7 +248,7 @@ class AuditoryFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [np.e**self.center_freq, np.e**self.sigma, self.beta, self.baseline]
+        return [10**self.center_freq, 10**self.sigma, self.beta, self.baseline]
     
     @auto_attr
     def center_freq0(self):
@@ -281,13 +260,11 @@ class AuditoryFit(PopulationFit):
         
     @auto_attr
     def beta0(self):
-        p = self.model.estimate_scaling(self.center_freq0, self.sigma0)
-        return np.abs(p[0]) # don't let slope flip negative
-        
+        return np.abs(self.slope)
+
     @auto_attr
     def baseline0(self):
-        p = self.model.estimate_scaling(self.center_freq0, self.sigma0)
-        return p[1]
+        return self.intercept
     
     @auto_attr
     def center_freq(self):
@@ -307,8 +284,13 @@ class AuditoryFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        rf = np.exp(-((self.model.stimulus.freqs-self.center_freq)**2)/(2*self.sigma**2))
-        rf /= (self.sigma*np.sqrt(2*np.pi))
+        
+        freqs = 10 ** freqs
+        center_freq = 10 ** self.center_freq
+        sigma = 10** self.sigma
+        
+        rf = np.exp(-((freqs-center_freq)**2)/(2*sigma**2))
+        rf /= (sigma*np.sqrt(2*np.pi))
         return rf
     
        
