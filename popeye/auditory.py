@@ -74,13 +74,9 @@ class AuditoryModel(PopulationModel):
         
         """ 
         
-        # convert
-        center_freq = 10**center_freq
-        sigma = 10**sigma
-        
-        # generate stimulus time-series
-        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
-        rf /= (sigma*np.sqrt(2*np.pi))
+        # receptive field
+        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
+        rf /= (10**sigma*np.sqrt(2*np.pi))
         
         # # create mask for speed
         # distance = self.stimulus.freqs - center_freq
@@ -133,13 +129,9 @@ class AuditoryModel(PopulationModel):
         
         """
         
-        # convert
-        center_freq = 10**center_freq
-        sigma = 10**sigma
-        
-        # generate stimulus time-series
-        rf = np.exp(-((self.stimulus.freqs-center_freq)**2)/(2*sigma**2))
-        rf /= (sigma*np.sqrt(2*np.pi))
+        # receptive field
+        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
+        rf /= (10**sigma*np.sqrt(2*np.pi))
         
         # # create mask for speed
         # distance = self.stimulus.freqs - center_freq
@@ -166,18 +158,6 @@ class AuditoryModel(PopulationModel):
         model *= np.abs(p[0])
         
         return model
-    
-    def generate_receptive_field(self, freqs, center_freq, sigma, decibels=False):
-        
-        # if not decibels:
-        #     freqs = 10**(np.log2(freqs)/np.log2(10))
-        #     center_freq = 10**center_freq
-        #     sigma = 10**sigma
-        
-        rf = np.exp(-((freqs-center_freq)**2)/(2*sigma**2))
-        rf /= (sigma*np.sqrt(2*np.pi))
-        
-        return rf
         
         
 class AuditoryFit(PopulationFit):
@@ -289,16 +269,25 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def baseline(self):
         return self.estimate[3]
-        
+    
+    
+    @auto_attr
+    def center_freq_hz(self):
+        return 10**self.center_freq
+    
     @auto_attr
     def receptive_field(self):
         
-        freqs = 10 ** freqs
-        center_freq = 10 ** self.center_freq
-        sigma = 10** self.sigma
-        
-        rf = np.exp(-((freqs-center_freq)**2)/(2*sigma**2))
-        rf /= (sigma*np.sqrt(2*np.pi))
+        # generate stimulus time-series
+        rf = np.exp(-((10**self.model.stimulus.freqs-10**self.center_freq)**2)/(2*(10**self.sigma)**2))
+        rf /= (10**self.sigma*np.sqrt(2*np.pi))
         return rf
     
+    @auto_attr
+    def receptive_field_log10(self):
+            
+        # generate stimulus time-series
+        rf = np.exp(-((self.model.stimulus.freqs-self.center_freq)**2)/(2*self.sigma**2))
+        rf /= (self.sigma*np.sqrt(2*np.pi))
+        return rf
        
