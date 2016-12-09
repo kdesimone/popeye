@@ -11,7 +11,7 @@ omit =
     popeye/spatiotemporal*py
     popeye/xvalidation.py
     popeye/strf.py
-    poopeye/auditory*py
+    popeye/auditory*py	
     
 [report]
 show_missing = True
