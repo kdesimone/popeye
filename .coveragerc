@@ -11,7 +11,8 @@ omit =
     popeye/spatiotemporal*py
     popeye/xvalidation.py
     popeye/strf.py
-    popeye/auditory*py	
+    popeye/auditory*py
+    popeye/css_regularized.py	
     
 [report]
 show_missing = True
@@ -26,3 +27,4 @@ omit =
     */popeye/strf.py
     */popeye/gabor.py
     */popeye/auditory*py
+    */popeye/css_regularized.py
