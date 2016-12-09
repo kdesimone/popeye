@@ -25,3 +25,4 @@ omit =
     */popeye/xvalidation.py
     */popeye/strf.py
     */popeye/gabor.py
+    */popeye/auditory*py
