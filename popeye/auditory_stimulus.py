@@ -16,7 +16,7 @@ from popeye.base import StimulusModel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 
-def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 5*12, freq_min = 200 ,decibels=True):
+def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 20*12, freq_min = 200 ,decibels=True):
     
     # window size is 1 TR x samples per seconds
     win = Fs*tr_length
