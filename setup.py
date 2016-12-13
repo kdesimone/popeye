@@ -24,13 +24,14 @@ if os.path.exists('MANIFEST'):
     os.remove('MANIFEST')
 
 from distutils.core import setup
+from setuptools import setup, Extension, Command
 
 # Get version and release info, which is all stored in popeye/version.py
 ver_file = os.path.join('popeye', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
-install_requires=['scipy','numpy','matplotlib','statsmodels','nibabel','sharedmem','cython'],
+install_requires=['scipy','numpy','matplotlib','nibabel','statsmodels','sharedmem','cython'],
 
 opts = dict(name=NAME,
             maintainer=MAINTAINER,
@@ -47,7 +48,7 @@ opts = dict(name=NAME,
             version=VERSION,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
-            requires=['scipy','numpy','matplotlib','statsmodels','nibabel','sharedmem','cython'],
+            install_requires=['scipy','numpy','matplotlib','nibabel','sharedmem','cython'],
             )
 
 try:
