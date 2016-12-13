@@ -3,7 +3,7 @@
 [![image](https://coveralls.io/repos/github/kdesimone/popeye/badge.svg?branch=master)](https://coveralls.io/github/kdesimone/popeye?branch=master)
 [![status](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786/status.svg)](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786)
 [![DOI](https://zenodo.org/badge/11797525.svg)](https://zenodo.org/badge/latestdoi/11797525)
-
+[![PyPI version](https://badge.fury.io/py/popeye.svg)](https://badge.fury.io/py/popeye)
 
 popeye
 ======
