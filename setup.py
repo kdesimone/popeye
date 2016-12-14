@@ -48,7 +48,7 @@ opts = dict(name=NAME,
             version=VERSION,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
-            install_requires=['scipy','numpy','matplotlib','nibabel','sharedmem','cython'],
+            install_requires=['scipy','numpy','matplotlib','nibabel','statsmodels','sharedmem','cython'],
             )
 
 try:
