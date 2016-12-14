@@ -2,13 +2,13 @@
 """Setup file for the popeye package."""
 
 import urllib
-import zipfile 
+import zipfile
 import os
 import sys
 
 popeye_config = os.path.join(os.path.expanduser('~'), '.popeye')
 
-# # If the data is not already there: 
+# # If the data is not already there:
 # if not os.path.exists(popeye_config):
 #     os.mkdir(popeye_config)
 #     # You might need to get the data:
@@ -16,7 +16,7 @@ popeye_config = os.path.join(os.path.expanduser('~'), '.popeye')
 #     # Get the test data and put it in the right place
 #     f=urllib.urlretrieve("http://arokem.org/data/popeye.zip")[0]
 #     zf = zipfile.ZipFile(f)
-#     zf.extractall(path=popeye_config)    
+#     zf.extractall(path=popeye_config)
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
@@ -31,7 +31,8 @@ ver_file = os.path.join('popeye', 'version.py')
 with open(ver_file) as f:
     exec(f.read())
 
-install_requires=['scipy','numpy','matplotlib','nibabel','statsmodels','sharedmem','cython'],
+install_requires = ['scipy', 'numpy', 'matplotlib', 'nibabel', 'statsmodels',
+                    'sharedmem', 'cython'],
 
 opts = dict(name=NAME,
             maintainer=MAINTAINER,
@@ -48,7 +49,7 @@ opts = dict(name=NAME,
             version=VERSION,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
-            install_requires=['scipy','numpy','matplotlib','nibabel','statsmodels','sharedmem','cython'],
+            install_requires=install_requires
             )
 
 try:
@@ -82,10 +83,10 @@ def find(name, path):
         if name in files:
             return os.path.join(root, name)
 
-# Now call the actual setup function  
+# Now call the actual setup function
 if __name__ == '__main__':
     setup(**opts)
-    
+
     # this is a total hack!
     # python setup.py install build_ext does not create
     # spinach.so in the ./popeye/ dir.  this is necessary
@@ -96,5 +97,3 @@ if __name__ == '__main__':
     # srcfile = find('spinach.so','.')
     # dstfile = './popeye/spinach.so'
     # shutil.copy(srcfile, dstfile)
-    
-    
