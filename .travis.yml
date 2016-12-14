@@ -32,6 +32,7 @@ before_install:
 
 install:
   - python setup.py install
+  - pip install codecov
 script:
     # Change into an innocuous directory and find tests from installation
     - mkdir for_testing
@@ -43,3 +44,4 @@ script:
     - nosetests --with-doctest --verbose $COVER_ARGS popeye
 after_success:
     - coveralls
+    - cocecov
