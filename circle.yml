@@ -9,7 +9,7 @@ machine:
         CIRCLE_ENV: test
         COVERAGE: 1
         COVERALLS_REPO_TOKEN: DoqUKyhEKXo6d8DS0y2Bs3klwdzhnz51y
-    
+        
 ## Customize dependencies
 dependencies:
     pre:
@@ -39,5 +39,4 @@ test:
                 tests_dir
     post:
         - coveralls
-        - codecov
-        
+        - bash <(curl -s https://codecov.io/bash)        

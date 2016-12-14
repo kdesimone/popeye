@@ -44,4 +44,4 @@ script:
     - nosetests --with-doctest --verbose $COVER_ARGS popeye
 after_success:
     - coveralls
-    - cocecov
+    - bash <(curl -s https://codecov.io/bash)
