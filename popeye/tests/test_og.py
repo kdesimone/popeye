@@ -86,10 +86,10 @@ def test_og_fit():
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
-    npt.assert_almost_equal(rf.sum(), fit.receptive_field.sum()) 
+    npt.assert_almost_equal(np.round(rf.sum()), np.round(fit.receptive_field.sum())) 
     
     # test model == fit RF
-    npt.assert_almost_equal(fit.model.generate_receptive_field(x,y,sigma).sum(), fit.receptive_field.sum()) 
+    npt.assert_almost_equal(np.round(fit.model.generate_receptive_field(x,y,sigma).sum()), np.round(fit.receptive_field.sum()))
 
 # def test_og_nuisance_fit():
 #     
