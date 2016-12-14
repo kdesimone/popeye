@@ -1,6 +1,6 @@
 [![TravisCI](https://api.travis-ci.org/kdesimone/popeye.svg?branch=master)](https://travis-ci.org/kdesimone/popeye/)
 [![CircleCI](https://circleci.com/gh/kdesimone/popeye.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/kdesimone/popeye)
-[![Coverage](https://codecov.io/gh/baccuslab/pyret/branch/master/graph/badge.svg)](https://codecov.io/gh/baccuslab/pyret)
+[![Coverage](https://codecov.io/gh/kdesimone/popeye/branch/master/graph/badge.svg)](https://codecov.io/gh/kdesimone/popeye)
 [![JOSS](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786/status.svg)](http://joss.theoj.org/papers/053a64ce9fda79e99fe8a703e30e4786)
 [![DOI](https://zenodo.org/badge/11797525.svg)](https://zenodo.org/badge/latestdoi/11797525)
 [![PyPI version](https://badge.fury.io/py/popeye.svg)](https://badge.fury.io/py/popeye)
