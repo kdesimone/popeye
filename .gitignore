@@ -3,6 +3,7 @@
 *.c
 *.pyc
 .coverage
+*egg*
 
 dist
 build
