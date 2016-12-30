@@ -128,7 +128,7 @@ class ResetMixin(object):
     10.0
     """
 
-    def reset(self):
+    def reset(self): ## pragma: no cover
         """Reset all OneTimeProperty attributes that may have fired already."""
         instdict = self.__dict__
         classdict = self.__class__.__dict__
