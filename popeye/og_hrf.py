@@ -43,34 +43,9 @@ class GaussianModel(PopulationModel):
         """
         
         PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
-
-        
+    
     # main method for deriving model time-series
-    def estimate_scaling(self, x, y, sigma):
-        
-        # mask for speed
-        mask = self.distance_mask_coarse(x, y, sigma)
-        
-        # generate the RF
-        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
-        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2
-        
-        # extract the stimulus time-series
-        response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
-        
-        # convolve it with the stimulus
-        model = fftconvolve(response, self.hrf())[0:len(response)]
-        
-        # units
-        model = (model-np.mean(model)) / np.mean(model)
-        
-        # regress out mean and linear
-        p = linregress(model, self.data)
-        
-        return p
-        
-    # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma):
+    def generate_ballpark_prediction(self, x, y, sigma, hrf_delay):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -83,7 +58,8 @@ class GaussianModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
         # convolve it with the stimulus
-        model = fftconvolve(response, self.hrf())[0:len(response)]
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # units
         model = (model-np.mean(model)) / np.mean(model)
@@ -100,7 +76,7 @@ class GaussianModel(PopulationModel):
         return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, beta, baseline, hrf_delay):
+    def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -113,8 +89,8 @@ class GaussianModel(PopulationModel):
         response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # convolve it with the stimulus
-        self.hrf_delay = hrf_delay
-        model = fftconvolve(response, self.hrf())[0:len(response)]
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        model = fftconvolve(response, hrf)[0:len(response)]
         
         # units
         model = (model-np.mean(model)) / np.mean(model)
@@ -206,12 +182,13 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-        return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
+        return [self.theta, self.rho, self.sigma, self.hrf_delay + 5, self.beta, self.baseline]
     
     
     @auto_attr
     def overloaded_ballpark(self):
-        return np.append(self.ballpark, (self.beta0, self.baseline0, self.hrf0))
+        return np.append(self.ballpark, (self.beta0, self.baseline0))
+        
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -225,14 +202,16 @@ class GaussianFit(PopulationFit):
         return self.ballpark[2]
     
     @auto_attr
+    def hrf0(self):
+        return self.ballpark[3]
+    
+    @auto_attr
     def beta0(self):
-        p = self.model.estimate_scaling(self.x0, self.y0, self.s0)
-        return np.abs(p[0])
+        return np.abs(self.slope)
         
     @auto_attr
     def baseline0(self):
-        p = self.model.estimate_scaling(self.x0, self.y0, self.s0)
-        return p[1]
+        return self.intercept
     
     @auto_attr
     def hrf0(self):
@@ -251,15 +230,15 @@ class GaussianFit(PopulationFit):
         return self.estimate[2]
     
     @auto_attr
-    def beta(self):
+    def hrf_delay(self):
         return self.estimate[3]
-    
+        
     @auto_attr
-    def baseline(self):
+    def beta(self):
         return self.estimate[4]
     
     @auto_attr
-    def hrf_delay(self):
+    def baseline(self):
         return self.estimate[5]
         
     @auto_attr
