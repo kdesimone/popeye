@@ -11,7 +11,6 @@ omit =
     popeye/spatiotemporal*py
     popeye/xvalidation.py
     popeye/strf.py
-    popeye/auditory*py
     popeye/css_regularized.py
     popeye/og_hrf_regularized.py	
     
@@ -27,6 +26,5 @@ omit =
     */popeye/xvalidation.py
     */popeye/strf.py
     */popeye/gabor.py
-    */popeye/auditory*py
     */popeye/css_regularized.py
     */popeye/og_hrf_regularized.py
