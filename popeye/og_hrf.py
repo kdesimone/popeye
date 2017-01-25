@@ -214,10 +214,6 @@ class GaussianFit(PopulationFit):
         return self.intercept
     
     @auto_attr
-    def hrf0(self):
-        return self.model.hrf_delay
-    
-    @auto_attr
     def x(self):
         return self.estimate[0]
         
