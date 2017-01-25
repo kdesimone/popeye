@@ -80,6 +80,7 @@ def test_og_fit():
     npt.assert_almost_equal(fit.y0,0.0)
     npt.assert_almost_equal(fit.s0, 5.25)
     npt.assert_almost_equal(fit.beta0, 1.0)
+    npt.assert_almost_equal(fit.hrf0, 0.0)
     
     # assert equivalence
     npt.assert_almost_equal(fit.x, x, 2)
