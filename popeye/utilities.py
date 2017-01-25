@@ -61,17 +61,17 @@ def regularizing_error_function(parameter, bundle, p_bounds, thr=0.10):
 
 def regularizing_objective_function(parameter, bundle):
     
-        # attach the guess for tau to each of the voxels in the bundle
-        for voxel in bundle:
-            model = voxel[1]
-            model.parameter = parameter
-            
-        # fit each of the voxels
-        num_cpus = sharedmem.cpu_count()-1
-        with sharedmem.Pool(np=num_cpus) as pool:
-            output = pool.map(parallel_fit, bundle)
+    # attach the guess for tau to each of the voxels in the bundle
+    for voxel in bundle:
+        model = voxel[1]
+        model.parameter = parameter
         
-        return output
+    # fit each of the voxels
+    num_cpus = sharedmem.cpu_count()-1
+    with sharedmem.Pool(np=num_cpus) as pool:
+        output = pool.map(parallel_fit, bundle)
+    
+    return output
 
 def regularizer(bundle, p_grid, p_bounds, Ns=None):
     
