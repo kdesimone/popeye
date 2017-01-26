@@ -2,7 +2,7 @@ sudo: false
 
 env:
   global:
-    - PIP_DEPS="'numpy==1.11' cython scipy matplotlib nibabel sharedmem statsmodels nose python-coveralls coverage"
+    - PIP_DEPS="numpy==1.11 cython scipy matplotlib nibabel sharedmem statsmodels nose python-coveralls coverage"
 
 matrix:
   include:
