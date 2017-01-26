@@ -16,7 +16,7 @@ dependencies:
         - pip install --upgrade pip
         - pip install nose
         - pip install pillow
-        - pip install numpy
+        - pip install 'numpy==1.11'
         - pip install nibabel
         - pip install cython
         - pip install scipy
