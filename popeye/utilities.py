@@ -82,35 +82,35 @@ def regularizer(bundle, p_grid, p_bounds, Ns=None):
 
 def spm_hrf(delay, TR):
     """ An implementation of spm_hrf.m from the SPM distribution
-
-Arguments:
-
-Required:
-TR: repetition time at which to generate the HRF (in seconds)
-
-Optional:
-p: list with parameters of the two gamma functions:
-                                                     defaults
-                                                    (seconds)
-   p[0] - delay of response (relative to onset)         6
-   p[1] - delay of undershoot (relative to onset)      16
-   p[2] - dispersion of response                        1
-   p[3] - dispersion of undershoot                      1
-   p[4] - ratio of response to undershoot               6
-   p[5] - onset (seconds)                               0
-   p[6] - length of kernel (seconds)                   32
-
-"""
+    
+    Arguments:
+    
+    Required:
+    TR: repetition time at which to generate the HRF (in seconds)
+    
+    Optional:
+    p: list with parameters of the two gamma functions:
+                                                         defaults
+                                                        (seconds)
+       p[0] - delay of response (relative to onset)         6
+       p[1] - delay of undershoot (relative to onset)      16
+       p[2] - dispersion of response                        1
+       p[3] - dispersion of undershoot                      1
+       p[4] - ratio of response to undershoot               6
+       p[5] - onset (seconds)                               0
+       p[6] - length of kernel (seconds)                   32
+       
+    """
     # default settings
     p=[5,15,1,1,6,0,32]
     p=[float(x) for x in p]
-
+    
     # delay variation
     p[0] += delay
     p[1] += delay
-
+    
     fMRI_T = 16.0
-
+    
     TR=float(TR)
     dt  = TR/fMRI_T
     u   = np.arange(p[6]/dt + 1) - p[5]/dt
@@ -122,70 +122,70 @@ p: list with parameters of the two gamma functions:
     return hrf
 
 def grid_slice(start, stop, Ns, dryrun=False):
-
+    
     # special case
     if Ns == 2:
         step = stop-start
     # all others
     else:
         step = (stop-start) / (Ns-1)
-
+        
     # if true, this return the ndarray rather than slice object.
     if dryrun: # pragma: no cover
         return arange(start, stop+step, step) # pragma: no cover
     else:
         return slice(start, stop+step, step)
-
+        
 def distance_mask(x, y, sigma, deg_x, deg_y, amplitude=1):
-
+    
     distance = (deg_x - x)**2 + (deg_y - y)**2
     mask = np.zeros_like(distance, dtype='uint8')
     mask[distance < sigma**2] = 1
     mask *= amplitude
-
+    
     return mask
 
 def recast_estimation_results(output, grid_parent, overloaded=False):
-
+    
     # load the gridParent
     dims = list(grid_parent.shape)
     dims = dims[0:3]
-
+    
     if overloaded == True and output[0].overloaded_estimate is not None:
         dims.append(len(output[0].overloaded_estimate)+1)
     else:
         dims.append(len(output[0].estimate)+1)
-
+        
     # initialize the statmaps
     estimates = np.zeros(dims)
-
+    
     # extract the prf model estimates from the results queue output
     for fit in output:
-
+        
         if not np.isnan(fit.rsquared): # pragma: no cover
-
+        
             # gather the estimate + stats
             if overloaded == True and fit.overloaded_estimate is not None:
                 voxel_dat = list(fit.overloaded_estimate)
             else:
                 voxel_dat = list(fit.estimate)
-
+                
             voxel_dat.append(fit.rsquared)
             voxel_dat = np.array(voxel_dat)
-
+            
             # assign to
             estimates[fit.voxel_index] = voxel_dat
-
+            
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
     hdr = grid_parent.get_header()
     hdr.set_data_shape(dims)
-
+    
     # recast as nifti
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
-
+    
     return nifti_estimates
-
+    
 def make_nifti(data, grid_parent=None):
 
     if grid_parent:
