@@ -22,7 +22,7 @@ from popeye.spinach import generate_og_receptive_field, generate_mp_timeseries, 
 # Python 3 compatibility:
 try:
     xrange
-except NameError:  # python3
+except NameError:  # pragma: no cover
     xrange = range
 
 
@@ -52,7 +52,7 @@ class SpatioTemporalModel(PopulationModel):
         
         
     # for the final solution, we use spatiotemporal
-    def generate_ballpark_prediction(self, x, y, sigma, n, weight, beta):
+    def generate_ballpark_prediction(self, x, y, sigma, n, weight):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -76,16 +76,22 @@ class SpatioTemporalModel(PopulationModel):
         # convolve with HRF
         model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
-        # convert units
+        # units
         model = (model - np.mean(model)) / np.mean(model)
         
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
         # scale
-        model *= beta
+        model *= np.abs(p[0])
         
         return model
         
     # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, n, weight, beta):
+    def generate_prediction(self, x, y, sigma, n, weight, beta, baseline):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -114,6 +120,9 @@ class SpatioTemporalModel(PopulationModel):
         
         # scale
         model *= beta
+        
+        # offset
+        model += baseline
         
         return model
         
@@ -204,7 +213,11 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def overloaded_estimate(self):
         return [self.theta, self.rho, self.sigma_size, self.n, self.weight, self.beta]
-        
+    
+    @auto_attr
+    def overloaded_ballpark(self):
+        return np.append(self.ballpark, (self.beta0, self.baseline0))
+    
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -227,7 +240,11 @@ class SpatioTemporalFit(PopulationFit):
         
     @auto_attr
     def beta0(self):
-        return self.ballpark[5]
+        return np.abs(self.slope)
+        
+    @auto_attr
+    def baseline0(self):
+        return self.intercept
         
     @auto_attr
     def x(self):
@@ -252,6 +269,10 @@ class SpatioTemporalFit(PopulationFit):
     @auto_attr
     def beta(self):
         return self.estimate[5]
+    
+    @auto_attr
+    def baseline(self):
+        return self.estimate[6]
         
     @auto_attr
     def rho(self):
