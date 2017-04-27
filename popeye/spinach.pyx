@@ -503,6 +503,56 @@ def generate_spectrotemporal_timeseries(np.ndarray[DTYPE2_t, ndim=1] freqs,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def generate_2dcos_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma, DTYPE2_t power,
+                                np.ndarray[DTYPE2_t, ndim=2] deg_x,
+                                np.ndarray[DTYPE2_t, ndim=2] deg_y):
+    """
+    Generate a Gaussian.
+
+    Parameters
+    ----------
+    x : float
+       The x coordinate of the center of the Gaussian (degrees)
+    y : float
+       The y coordinate of the center of the Gaussian (degrees)
+    s : float
+       The dispersion of the Gaussian (degrees)
+    power : float
+        The amplitude of the Gaussian
+    deg_x : 2D array
+            The coordinate matrix along the horizontal dimension of the display (degrees)
+    deg_y : 2D array
+            The coordinate matrix along the vertical dimension of the display (degrees)
+            
+            
+    Returns
+    
+    stim : ndarray
+        The 1D array containing the stimulus energies given the Gaussian coordinates
+        
+    """
+    
+    # cdef's
+    cdef int i,j,k
+    cdef int xlim = deg_x.shape[0]
+    cdef int ylim = deg_x.shape[1]
+    cdef DTYPE2_t d
+    cdef DTYPE2_t pi = 3.14159265
+    
+    
+    # initialize output variable
+    cdef np.ndarray[DTYPE2_t, ndim=2, mode='c'] rf = np.zeros((xlim,ylim),dtype=DTYPE2)
+    
+    # the loop
+    for i in xrange(xlim):
+        for j in xrange(ylim):
+            d = ((deg_x[i,j]-x)**2 + (deg_y[i,j]-y)**2)**0.5
+            rf[i,j] = ((0.5*(1 + cos(d*pi/sigma) ))**power) * (d<=sigma)
+            
+    return rf
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_og_receptive_field(DTYPE2_t x, DTYPE2_t y, DTYPE2_t sigma,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_x,
                                 np.ndarray[DTYPE2_t, ndim=2] deg_y):
