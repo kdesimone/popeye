@@ -23,8 +23,8 @@ def test_strf_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.50
-    pixels_down = 100
-    pixels_across = 100
+    pixels_down = 200
+    pixels_across = 200
     dtype = ctypes.c_int16
     Ns = 3
     voxel_index = (1,2,3)
@@ -66,10 +66,10 @@ def test_strf_fit():
     data =  model.generate_prediction(x, y, sigma, weight, beta, baseline)
     
     # set search grid
-    x_grid = (-3,2)
-    y_grid = (-3,2)
-    s_grid = (1/stimulus.ppd,2.75)
-    w_grid = (0.1,0.90)
+    x_grid = utils.grid_slice(-8.0,7.0,5)
+    y_grid = utils.grid_slice(-8.0,7.0,5)
+    s_grid = utils.grid_slice(0.75,3.0,5)
+    w_grid = utils.grid_slice(0.05,0.95,5)
     
     # set search bounds
     x_bound = (-10,10)
@@ -84,23 +84,23 @@ def test_strf_fit():
     bounds = (x_bound, y_bound, s_bound, w_bound, b_bound, u_bound)
     
     # fit the response
-    fit = strf.SpatioTemporalFit(model, data, grids, bounds, Ns=Ns)
+    fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.w0,fit.beta0,fit.baseline0),[-3., 2.,  1.5570848, 0.9,1.0000000000000013,0.0060600253776198765])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.w0,fit.beta0,fit.baseline0),[-0.5 ,  3.25,  2.44,  0.95,  1.  ,  0.01],2)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.weight, weight)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.baseline, baseline)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.weight, weight, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327894366,
-                                                     2.7411676344272533,
-                                                     1.2300000000000411,
-                                                     0.89999999999142188,
-                                                     1.0000000000029761,
-                                                     -0.24999999999909184])
+    npt.assert_almost_equal(fit.overloaded_estimate, [2.5270727137292481,
+                                                      2.7416305841622624,
+                                                      1.2256761293512328,
+                                                      0.89789336800034436,
+                                                      0.99962425175020264,
+                                                      -0.25009416568850351],2)
