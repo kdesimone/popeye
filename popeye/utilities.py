@@ -15,6 +15,7 @@ import numpy as np
 import nibabel
 from scipy.special import gamma
 from scipy.optimize import brute, fmin_powell, fmin
+from scipy.stats import linregress
 from scipy.integrate import romb, trapz
 from scipy import c_, ones, dot, stats, diff
 from scipy.linalg import inv, solve, det
@@ -39,7 +40,7 @@ except NameError:  # pragma: no cover
     xrange = range
 
 
-def regularizing_error_function(parameter, bundle, p_bounds, thr=0.10):
+def regularizing_error_function(parameter, bundle, p_bounds, thr=0.10): # pragma: no cover
     
     # if out of bounds
     if parameter < p_bounds[0] or parameter > p_bounds[1]:
@@ -59,7 +60,7 @@ def regularizing_error_function(parameter, bundle, p_bounds, thr=0.10):
     
     return error
 
-def regularizing_objective_function(parameter, bundle):
+def regularizing_objective_function(parameter, bundle): # pragma: no cover
     
     # attach the guess for tau to each of the voxels in the bundle
     for voxel in bundle:
@@ -73,7 +74,7 @@ def regularizing_objective_function(parameter, bundle):
     
     return output
 
-def regularizer(bundle, p_grid, p_bounds, Ns=None):
+def regularizer(bundle, p_grid, p_bounds, Ns=None): # pragma: no cover
     
     p0 = brute(regularizing_error_function, (p_grid,), args=(bundle, p_bounds), Ns=Ns, finish=None, full_output=True)
     phat = fmin_powell(regularizing_error_function, p0[0], args=(bundle, p_bounds), xtol=1e-4, ftol=1e-4, full_output=True, retall=True)
@@ -187,20 +188,20 @@ def recast_estimation_results(output, grid_parent, overloaded=False):
     return nifti_estimates
     
 def make_nifti(data, grid_parent=None):
-
+    
     if grid_parent:
-
+        
         # get header information from the gridParent and update for the prf volume
         aff = grid_parent.get_affine()
         hdr = grid_parent.get_header()
-
+        
         # recast as nifti
         nifti = nibabel.Nifti1Image(data,aff,header=hdr)
-
+        
     else:
         aff = np.eye(4,4)
         nifti = nibabel.Nifti1Image(data,aff)
-
+        
     return nifti
 
 def generate_shared_array(unshared_arr,dtype):
@@ -621,18 +622,84 @@ def zscore(time_series, axis=-1):
     else:
         zt = time_series - et[sl]
         zt /= st[sl]
-
+        
     return zt
+    
+def bootstrap_bundle(bootstraps, resamples, Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
+    
+    # initialze
+    Fits = []
+    
+    # main loop
+    for resample in resamples:
+        for bootstrap in xrange(bootstraps):
+            for voxel in xrange(data.shape[0]):
+                
+                # voxel
+                voxel_idx = indices[voxel]
+                
+                # create random draws
+                resample_idx = np.random.randint(0,data.shape[1],resample)
+                
+                # data
+                this_data = np.mean(data[voxel,resample_idx,:],0)
+                
+                # store it
+                Fits.append((Fit, model, this_data, grids, bounds, Ns, voxel_idx, auto_fit, verbose, resample_idx))
+                
+    # randomize list order
+    idx = np.argsort(np.random.rand(len(Fits)))
+    Fits = [Fits[i] for i in idx]
+    
+    return Fits
 
-def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
+def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
+    
+    # num runs
+    runs = np.arange(data.shape[1])
+    
+    # initialize
+    Fits = []
+    
+    # main loop
+    for bootstrap in xrange(bootstraps):
+        for voxel in xrange(data.shape[0]):
+            
+            # voxel
+            voxel_idx = indices[voxel]
+            
+            # data
+            the_data = data[voxel,:,:]
+            
+            # create random draws
+            trn_idx = np.random.choice(runs, len(runs)/kfolds, replace=False)
+            tst_idx = np.array(list(set(runs)-set(trn_idx)))
+            
+            # compute mean timeseries
+            trn_data = np.mean(the_data[trn_idx,:], 0)
+            tst_data = np.mean(the_data[tst_idx,:], 0)
+            
+            # store it
+            Fits.append((Fit, model, trn_data, tst_data, grids, bounds, Ns, voxel_idx, auto_fit, verbose))
+    
+    # randomize list order
+    idx = np.argsort(np.random.rand(len(Fits)))
+    Fits = [Fits[i] for i in idx]
+    
+    return Fits
 
+def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None, seed=2764932):
+    
+    # seed rng
+    np.random.seed(seed)
+    
     # num voxels
     num_voxels = np.shape(data)[0]
-
+    
     # expand out grids and bounds
     grids = [grids,]*num_voxels
     bounds = [bounds,]*num_voxels
-
+    
     # package the data structure
     dat = zip(repeat(Fit,num_voxels),
               repeat(model,num_voxels),
@@ -643,14 +710,12 @@ def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True,
               indices,
               repeat(auto_fit,num_voxels),
               repeat(verbose,num_voxels))
-
-    # return randomized order
-    np.random.seed(12345)
-    # Consume the zip upfront into a list:
+    
+    # randomize list order
     dat = list(dat)
     idx = np.argsort(np.random.rand(len(dat)))
     dat = [dat[i] for i in idx]
-
+    
     return dat
 
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
@@ -664,6 +729,109 @@ def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
     Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
 
     return Z
+
+def parallel_xval(args):
+
+    r"""
+    This is a convenience function for parallelizing the fitting
+    procedure.  Each call is handed a tuple or list containing
+    all the necessary inputs for instantiaing a `GaussianFit`
+    class object and estimating the model parameters.
+    
+    
+    Paramaters
+    ----------
+    args : list/tuple
+        A list or tuple containing all the necessary inputs for fitting
+        the Gaussian pRF model.
+        
+    Returns
+    -------
+    
+    fit : `Fit` class object
+        A fit object that contains all the inputs and outputs of the
+        pRF model estimation for a single voxel.
+        
+    """
+    
+    # unpackage the arguments
+    Fit = args[0]
+    model = args[1]
+    trn_data = args[2]
+    tst_data = args[3]
+    grids = args[4]
+    bounds = args[5]
+    voxel_index = args[6]
+    Ns = args[7]
+    auto_fit = args[8]
+    verbose = args[9]
+    
+    # fit the data
+    fit = Fit(model,
+              trn_data,
+              grids,
+              bounds,
+              Ns,
+              voxel_index,
+              auto_fit,
+              verbose)
+    
+    fit.trn_data = trn_data
+    fit.tst_data = tst_data
+    fit.cod = coeff_of_determination(fit.tst_data, fit.prediction)
+    return fit
+        
+def parallel_bootstrap(args):
+
+    r"""
+    This is a convenience function for parallelizing the fitting
+    procedure.  Each call is handed a tuple or list containing
+    all the necessary inputs for instantiaing a `GaussianFit`
+    class object and estimating the model parameters.
+
+
+    Paramaters
+    ----------
+    args : list/tuple
+        A list or tuple containing all the necessary inputs for fitting
+        the Gaussian pRF model.
+
+    Returns
+    -------
+
+    fit : `Fit` class object
+        A fit object that contains all the inputs and outputs of the
+        pRF model estimation for a single voxel.
+
+    """
+
+
+    # unpackage the arguments
+    Fit = args[0]
+    model = args[1]
+    data = args[2]
+    grids = args[3]
+    bounds = args[4]
+    voxel_index = args[5]
+    Ns = args[6]
+    auto_fit = args[7]
+    verbose = args[8]
+    resamples = args[9]
+
+    # fit the data
+    fit = Fit(model,
+              data,
+              grids,
+              bounds,
+              Ns,
+              voxel_index,
+              auto_fit,
+              verbose)
+    
+    fit.resamples = resamples
+    fit.n_resamples = len(resamples)
+    
+    return fit
 
 
 def parallel_fit(args):
@@ -768,21 +936,21 @@ def peakdet(v, delta, x = None):
     #
     # Eli Billauer, 3.4.05 (Explicitly not copyrighted).
     # This function is released to the public domain; Any use is allowed.
-
+    
     """
     maxtab = []
     mintab = []
-
+    
     if x is None: # pragma: no cover
         x = arange(len(v))
-
+        
     v = asarray(v)
-
+    
     mn, mx = Inf, -Inf
     mnpos, mxpos = NaN, NaN
-
+    
     lookformax = True
-
+    
     for i in arange(len(v)):
         this = v[i]
         if this > mx:
@@ -791,7 +959,7 @@ def peakdet(v, delta, x = None):
         if this < mn:
             mn = this
             mnpos = x[i]
-
+            
         if lookformax:
             if this < mx-delta:
                 maxtab.append((mxpos, mx))
@@ -806,6 +974,40 @@ def peakdet(v, delta, x = None):
                 lookformax = True
 
     return array(maxtab), array(mintab)
+
+def coeff_of_determination(data, model, axis=-1):
+    
+    r"""
+    Calculate the coefficient of determination for a model prediction, relative
+    to data.
+    
+    Parameters
+    ----------
+    data : ndarray
+        The data
+    model : ndarray
+        The predictions of a model for this data. Same shape as the data.
+    axis: int, optional
+        The axis along which different samples are laid out (default: -1).
+        
+    Returns
+    -------
+    COD : ndarray
+       The coefficient of determination.
+       
+    """
+    
+    residuals = data - model
+    ss_err = np.sum(residuals ** 2, axis=axis)
+    
+    demeaned_data = data - np.mean(data, axis=axis)[..., np.newaxis]
+    ss_tot = np.sum(demeaned_data **2, axis=axis)
+    
+    # Don't divide by 0:
+    if np.all(ss_tot==0.0):
+        return np.nan
+            
+    return 100 * (1 - (ss_err/ss_tot))
 
 # class ols:
 #     """
