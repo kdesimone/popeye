@@ -23,8 +23,8 @@ def test_strf_2dcos_fit():
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 1.0
-    pixels_down = 200
-    pixels_across = 200
+    pixels_down = 300
+    pixels_across = 300
     dtype = ctypes.c_int16
     auto_fit = True
     verbose = 1
