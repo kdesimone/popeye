@@ -15,17 +15,17 @@ import popeye.xvalidation as xval
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 from popeye.spinach import generate_og_timeseries
 
-# def test_coeff_of_determination():
-#     
-#     # make up some data and a model
-#     data = np.arange(0,100)
-#     model = np.arange(0,100)
-#     
-#     # compute cod
-#     cod = xval.coeff_of_determination(data,model)
-#     
-#     # assert
-#     npt.assert_equal(cod, 100)
+def test_coeff_of_determination():
+    
+    # make up some data and a model
+    data = np.arange(0,100)
+    model = np.arange(0,100)
+    
+    # compute cod
+    cod = xval.coeff_of_determination(data,model)
+    
+    # assert
+    npt.assert_equal(cod, 100)
     
 
 def test_kfold_xval_repeated_runs():

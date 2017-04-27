@@ -476,8 +476,7 @@ def test_percent_change():
 
 
 def test_parallel_fit_Ns():
-
-    # stimulus features
+    
     # stimulus features
     viewing_distance = 38
     screen_width = 25
@@ -558,7 +557,7 @@ def test_parallel_fit_Ns():
         npt.assert_almost_equal(fit.baseline, baseline, 2)
         
 def test_parallel_fit():
-
+    
     # stimulus features
     viewing_distance = 38
     screen_width = 25
@@ -706,25 +705,25 @@ def test_parallel_fit_manual_grids():
         npt.assert_almost_equal(fit.sigma, sigma, 2)
         npt.assert_almost_equal(fit.beta, beta, 2)
         npt.assert_almost_equal(fit.baseline, baseline, 2)
-
+        
 def test_gaussian_2D():
-
+    
     # set some dummy display parameters
     pixels_across = 101
     pixels_down = 101
     ppd = 1.0
     scale_factor = 1.0
-
+    
     # generate coordinates
     deg_x, deg_y = generate_coordinate_matrices(pixels_across,pixels_down,ppd,scale_factor)
-
+    
     # generate 2D case
     G = utils.gaussian_2D(deg_x,deg_y,0,0,10,10,0)
-
+    
     # generate 1D case
     gx = np.exp(-((deg_x[0,:]-0)**2)/(2*10**2))
     gy = np.exp(-((deg_y[:,0]-0)**2)/(2*10**2))
-
+    
     # assertions
     npt.assert_equal(np.round(G[:,50],5),np.round(gx,5))
     npt.assert_equal(np.round(G[50,:],5),np.round(gy,5))
@@ -734,58 +733,74 @@ def test_cartes_to_polar():
     polar = utils.cartes_to_polar(cartes)
     npt.assert_equal(polar[...,0], 0)
     npt.assert_equal(polar[...,1], 5)
-
+    
     cartes = np.array([-5,0]).astype('double')
     polar = utils.cartes_to_polar(cartes)
     npt.assert_equal(polar[...,0], np.pi)
     npt.assert_equal(polar[...,1], 5)
-
+    
     cartes = np.array([0,5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
     npt.assert_equal(polar[...,0], np.pi/2)
     npt.assert_equal(polar[...,1], 5)
-
+    
     cartes = np.array([0,-5]).astype('double')
     polar = utils.cartes_to_polar(cartes)
     npt.assert_equal(polar[...,0], np.pi*3/2)
     npt.assert_equal(polar[...,1], 5)
 
 def test_binner():
-
+    
     signal = np.ones(10)
     times = np.linspace(0,1,10)
     bins = np.arange(-0.5,1.5,0.5)
     binned_signal = utils.binner(signal, times, bins)
-
+    
     npt.assert_equal(len(binned_signal), len(bins)-2)
     npt.assert_equal(binned_signal,[5,5])
 
 def test_find_files():
-
+    
     f = open('/tmp/test_abc.txt', 'w')
     f.close()
-
+    
     path = utils.find_files('/tmp/','test*.txt')
-
+    
     npt.assert_equal(path[0],'/tmp/test_abc.txt')
-
+    
 def test_peakdet():
-
+    
     ts = np.zeros(100)
-
+    
     peaks = np.arange(0,100,20)
     troughs = np.arange(10,100,20)
-
+    
     ts[peaks] = 1
     ts[troughs] = -1
-
+    
     a,b = utils.peakdet(ts,0.5)
-
+    
     npt.assert_equal(a[:,0], peaks)
     npt.assert_equal(b[:,0], troughs)
     npt.assert_equal(a[:,1], 1)
     npt.assert_equal(b[:,1], -1)
-
+    
+def test_coeff_of_determination():
+    
+    # make up some data and a model
+    data = np.arange(0,100)
+    model = np.arange(0,100)
+    
+    # compute cod
+    cod = utils.coeff_of_determination(data,model)
+    
+    # assert
+    npt.assert_equal(cod, 100)
+    
+    # nan test
+    cod = utils.coeff_of_determination(np.zeros_like(model),model)
+    npt.assert_equal(cod,np.nan)
+    
 # def test_OLS():
 #
 #     o = utils.ols(np.arange(100),np.arange(100))
