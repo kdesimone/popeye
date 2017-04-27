@@ -4,7 +4,9 @@ Base-classes for poulation encoding models and fits.
 
 
 """
-import time, ctypes
+import time, ctypes, itertools
+import sharedmem
+from types import SliceType
 import statsmodels.api as sm 
 import numpy as np
 from scipy.stats import linregress
@@ -105,6 +107,29 @@ class PopulationModel(object):
             return self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
         else: # pragma: no cover
             raise NotImplementedError("You must set the HRF delay to generate the HRF")
+            
+    def cache(self, grids, ncpus=1, Ns=None): # pragma: no cover
+        
+        # get parameter space
+        if isinstance(grids[0], SliceType):
+            params = [list(np.arange(g.start,g.stop,g.step)) for g in grids]
+        else:
+            params = [list(np.linspace(g[0],g[1],Ns)) for g in grids]
+        
+        # make combos
+        combos = [c for c in itertools.product(*params)]
+        
+        def mini_predictor(combo):
+            print(combo)
+            return self.generate_ballpark_prediction(*combo)
+            
+        # compute predictions
+        num_cpus = sharedmem.cpu_count()-1
+        with sharedmem.Pool(np=num_cpus) as pool:
+            models = pool.map(self.mini_predictor, combos)
+            
+        # turn into array
+        return models
     
 class PopulationFit(object):
     
@@ -328,7 +353,7 @@ class PopulationFit(object):
                   self.rsquared,
                   np.round(self.estimate,4)))
         return txt
-    
+            
 class StimulusModel(object):
 
     def __init__(self, stim_arr, dtype=ctypes.c_int16, tr_length=1.0):
