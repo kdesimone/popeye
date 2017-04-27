@@ -141,7 +141,7 @@ class SpatioTemporalModel(PopulationModel):
     
     @auto_attr
     def center(self):
-        return self.t[len(self.t)/2]
+        return self.stimulus.tr_length/2
     
     @auto_attr
     def flickers(self):
@@ -152,7 +152,7 @@ class SpatioTemporalModel(PopulationModel):
         m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
         # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
         # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
-        # m_resp= utils.normalize(m_resp,-1,1)
+        m_resp= utils.normalize(m_resp,-1,1)
         return m_resp
         
     def generate_m_resp(self, tau):
@@ -160,7 +160,7 @@ class SpatioTemporalModel(PopulationModel):
         m_resp = fftconvolve(self.flickers,m_rf[:,np.newaxis])
         # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
         # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
-        # m_resp= utils.normalize(m_resp,-1,1)
+        m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
         
     @auto_attr
@@ -170,13 +170,13 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def p_resp(self):
         p_resp = fftconvolve(self.flickers,self.p[:,np.newaxis])
-        # p_resp = utils.normalize(p_resp,-1,1)
+        p_resp = utils.normalize(p_resp,-1,1)
         return p_resp
         
     def generate_p_resp(self, tau):
         p_rf = self.p_rf(tau)
         p_resp = fftconvolve(self.flickers,p_rf[:,np.newaxis])
-        # p_resp = utils.normalize(p_resp,-1,1)
+        p_resp = utils.normalize(p_resp,-1,1)
         return p_resp
         
     @auto_attr
