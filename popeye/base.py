@@ -6,13 +6,17 @@ Base-classes for poulation encoding models and fits.
 """
 import time, ctypes, itertools
 import sharedmem
-from types import SliceType
 import statsmodels.api as sm 
 import numpy as np
 from scipy.stats import linregress
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 import numpy as np
+
+try:  # pragma: no cover
+    from types import SliceType
+except ImportError:  # pragma: no cover
+    SliceType = slice
 
 def set_verbose(verbose):
     
