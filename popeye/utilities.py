@@ -688,10 +688,7 @@ def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, au
     
     return Fits
 
-def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None, seed=2764932):
-    
-    # seed rng
-    np.random.seed(seed)
+def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
     
     # num voxels
     num_voxels = np.shape(data)[0]
