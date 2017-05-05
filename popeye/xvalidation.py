@@ -135,7 +135,7 @@ def kfold_xval(models, data, Fit, folds, fit_args, fit_kwargs):
     
     # We are going to leave out some randomly chosen samples in each iteration
     order = np.random.permutation(data.shape[0])
-    order = np.reshape(order,(folds,len(order)/folds))
+    order = np.reshape(order,(folds,int(len(order)/folds)))
     
     # initilize a list of predictions
     fits = []
