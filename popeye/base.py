@@ -220,10 +220,10 @@ class PopulationFit(object):
         
         # push data down to model
         # there is probably a better of exposing the data
-        # to the PopulationModel. the idea is that the we want
+        # to the PopulationModel. the idea is that the we want to
         # compute beta and baseline via linear regression rather
-        # than estimate through descent. Thus, model needs to see
-        # the data. Since the data is in shared memory, no overhead
+        # than estimate through optimization. Thus, model needs to see
+        # the data. Since the data is in shared memory, no overhead incurred.
         self.model.data = data
         
         # automatic fitting

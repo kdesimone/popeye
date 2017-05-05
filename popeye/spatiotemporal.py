@@ -150,22 +150,20 @@ class SpatioTemporalModel(PopulationModel):
     @auto_attr
     def m_resp(self):
         m_resp = fftconvolve(self.flickers,self.m[:,np.newaxis])
-        # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
-        # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
         m_resp= utils.normalize(m_resp,-1,1)
         return m_resp
         
     def generate_m_resp(self, tau):
         m_rf = self.m_rf(tau)
         m_resp = fftconvolve(self.flickers,m_rf[:,np.newaxis])
-        # m_resp[:,0] = utils.normalize(m_resp[:,0],-1,1)
-        # m_resp[:,1] = utils.normalize(m_resp[:,1],-1,1)
         m_resp = utils.normalize(m_resp,-1,1)
         return m_resp
         
     @auto_attr
     def m_amp(self):
-        return np.sum(np.abs(self.m_resp),0)
+        m_amp = np.sum(np.abs(self.m_resp),0)
+        m_amp /= m_amp.max()
+        return m_amp
         
     @auto_attr
     def p_resp(self):
@@ -181,7 +179,9 @@ class SpatioTemporalModel(PopulationModel):
         
     @auto_attr
     def p_amp(self):
-        return np.sum(np.abs(self.p_resp),0)
+        p_amp = np.sum(np.abs(self.p_resp),0)
+        p_amp /= np.max(p_amp)
+        return p_amp
         
 class SpatioTemporalFit(PopulationFit):
     

@@ -117,7 +117,7 @@ def spm_hrf(delay, TR):
     u   = np.arange(p[6]/dt + 1) - p[5]/dt
     hrf=stats.gamma.pdf(u,p[0]/p[2],scale=1.0/(dt/p[2])) - stats.gamma.pdf(u,p[1]/p[3],scale=1.0/(dt/p[3]))/p[4]
     good_pts=np.array(range(np.int(p[6]/TR)))*fMRI_T
-    hrf=hrf[list(good_pts)]
+    hrf = hrf[good_pts.astype(int)]
     # hrf = hrf([0:(p(7)/RT)]*fMRI_T + 1);
     hrf /= trapz(hrf)
     return hrf
@@ -639,7 +639,7 @@ def bootstrap_bundle(bootstraps, resamples, Fit, model, data, grids, bounds, ind
                 voxel_idx = indices[voxel]
                 
                 # create random draws
-                resample_idx = np.random.randint(0,data.shape[1],resample)
+                resample_idx = np.random.choice(np.arange(data.shape[1]-1),resample,replace=False)
                 
                 # data
                 this_data = np.mean(data[voxel,resample_idx,:],0)
@@ -691,7 +691,7 @@ def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, au
 def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True, verbose=1, Ns=None):
     
     # num voxels
-    num_voxels = np.shape(data)[0]
+    num_voxels = np.int(np.shape(data)[0])
     
     # expand out grids and bounds
     grids = [grids,]*num_voxels

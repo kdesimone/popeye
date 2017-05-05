@@ -33,11 +33,11 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 20
         fratio = 2**(1/bins_per_octave)
         
         # How manp.ny bins in log-f axis
-        nbins = np.floor( np.log((Fs/2)/freq_min) / np.log(fratio) )
+        nbins = np.floor( np.log((Fs/2)/freq_min) / np.log(fratio) ).astype(int)
         
         # Freqs corresponding to each bin in FFT
         fftfrqs = np.arange(nfft/2)*(Fs/nfft)
-        nfftbins = nfft/2;
+        nfftbins = np.int(nfft/2);
         
         # Freqs corresponding to each bin in log F output
         logffrqs = freq_min * np.exp(np.log(2)*np.arange(nbins)/bins_per_octave);
