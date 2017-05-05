@@ -147,7 +147,7 @@ bundle = utils.multiprocess_bundle(og.GaussianFit, model, data,
                                    grids, bounds, indices, 
                                    auto_fit=True, verbose=1, Ns=3)
 
-# run
+## run
 print("popeye will analyze %d voxels across %d cores" %(len(bundle), 3))
 with sharedmem.Pool(np=3) as pool:
     t1 = datetime.datetime.now()
