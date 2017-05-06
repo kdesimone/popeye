@@ -11,7 +11,7 @@ Installation
 
 Download the popeye source code from the GitHub repository `here <https://github.com/kdesimone/popeye>`_.
 Using popeye requires that you have installed `NumPy <http://www.numpy.org>`_, `SciPy <http://www.scipy.org>`_,
-`statsmodel <https://pypi.python.org/pypi/statsmodels>`_, `Cython <http://www.cython.org>`_, `nibabel http://nipy.org/nibabel`_, and 
+`statsmodel <https://pypi.python.org/pypi/statsmodels>`_, `Cython <http://www.cython.org>`_, `nibabel <http://nipy.org/nibabel>`_, and 
 `matplotlib <http://www.matplotlib.org>`_.
 
 Once you've downloaded the popeye source code and installed the dependencies, install 
