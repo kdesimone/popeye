@@ -17,8 +17,167 @@ import popeye.spinach as spin
 import popeye.og as og
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus, generate_coordinate_matrices
 
-def test_distance_mask():
+def test_bootstrap():
+    
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.array([-1, 0, 90, 180, 270, -1])
+    num_blank_steps = 30
+    num_bar_steps = 30
+    ecc = 10
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 0.10
+    pixels_down = 100
+    pixels_across = 100
+    dtype = ctypes.c_int16
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
+    
+    # rng
+    np.random.seed(2764932)
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance,
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
+    model.hrf_delay = 0
+    
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    baseline = -0.25
+    
+    # create the "data"
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
+    
+    # set search grid
+    x_grid = utils.grid_slice(-10, 10, 5)
+    y_grid = utils.grid_slice(-10, 10, 5)
+    s_grid = utils.grid_slice(0.5, 3.25, 5)
+    
+    # set search bounds
+    x_bound = (-12.0,12.0)
+    y_bound = (-12.0,12.0)
+    s_bound = (0.001,12.0)
+    b_bound = (1e-8,None)
+    m_bound = (None,None)
+    
+    # loop over each voxel and set up a GaussianFit object
+    grids = (x_grid, y_grid, s_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
+    
+    # pack multiple "runs"
+    data = np.vstack((data,data,data))
+    
+    # make it a singular "voxel"
+    data = np.reshape(data, (1,data.shape[0],data.shape[1]))
+    
+    # set bootstraps and resamples
+    bootstraps = 2
+    resamples =  np.array((2,))
+    
+    # make fodder
+    bundle = utils.bootstrap_bundle(bootstraps, resamples, og.GaussianFit, model, data, grids, bounds, np.tile((1,2,3),(bootstraps,1)))
+    
+    # test
+    for b in bundle:
+        fit = utils.parallel_bootstrap(b)
+        npt.assert_almost_equal(fit.rss,0)
+        npt.assert_equal(fit.n_resamples,resamples[0])
+        npt.assert_equal(np.sum(fit.resamples), np.sum(np.arange(resamples[0])))
 
+def test_xval():
+    
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.array([-1, 0, 90, 180, 270, -1])
+    num_blank_steps = 30
+    num_bar_steps = 30
+    ecc = 10
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 0.10
+    pixels_down = 100
+    pixels_across = 100
+    dtype = ctypes.c_int16
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
+    
+    # rng
+    np.random.seed(2764932)
+    
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance,
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
+    
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
+    model.hrf_delay = 0
+    
+    # generate a random pRF estimate
+    x = -5.24
+    y = 2.58
+    sigma = 1.24
+    beta = 2.5
+    baseline = -0.25
+    
+    # create the "data"
+    data = model.generate_prediction(x, y, sigma, beta, baseline)
+    
+    # set search grid
+    x_grid = utils.grid_slice(-10, 10, 5)
+    y_grid = utils.grid_slice(-10, 10, 5)
+    s_grid = utils.grid_slice(0.5, 3.25, 5)
+    
+    # set search bounds
+    x_bound = (-12.0,12.0)
+    y_bound = (-12.0,12.0)
+    s_bound = (0.001,12.0)
+    b_bound = (1e-8,None)
+    m_bound = (None,None)
+    
+    # loop over each voxel and set up a GaussianFit object
+    grids = (x_grid, y_grid, s_grid,)
+    bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
+    
+    # pack multiple "runs"
+    data = np.vstack((data,data))
+    
+    # make it a singular "voxel"
+    data = np.reshape(data, (1,data.shape[0],data.shape[1]))
+    
+    # set bootstraps and resamples
+    bootstraps = 2
+    kfolds = 2
+    
+    # make fodder
+    bundle = utils.xval_bundle(bootstraps, kfolds, og.GaussianFit, model, data, grids, bounds, np.tile((1,2,3),(3,1)))
+    
+    # test
+    for b in bundle:
+        fit = utils.parallel_xval(b)
+        npt.assert_almost_equal(fit.rss,0)
+        npt.assert_equal(fit.cod, 100.0)
+        npt.assert_(np.all(fit.tst_data == fit.trn_data))
+        npt.assert_(np.all(fit.tst_idx != fit.trn_idx))
+
+def test_distance_mask():
+    
     x = 0
     y = 0
     sigma = 1
@@ -32,81 +191,79 @@ def test_distance_mask():
 
 
 def test_grid_slice():
-
+    
     # test this case
     from_1 = 0
     to_1 = 20
     from_2 = 0
     to_2 = 2
     Ns=5
-
+    
     # set a parameter to estimate
     params = (10,1)
-
+    
     # see if we properly tile the parameter space for Ns=2
     grid_1 = utils.grid_slice(from_1, to_1, Ns)
     grid_2 = utils.grid_slice(from_2, to_2, Ns)
     grids = (grid_1, grid_2)
-
+    
     # unbounded
     bounds = ()
-
+    
     # create a simple function to generate a response from the parameter
     func = lambda freq,offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
-
+    
     # create a "response"
     response = func(*params)
-
+    
     # get the ball-park estimate
     p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
-
+    
     # make sure we fit right
     npt.assert_equal(params, p0[0])
-
+    
     # make sure we sliced it right
     npt.assert_equal(p0[2][0].min(),from_1)
     npt.assert_equal(p0[2][0].max(),to_1)
     npt.assert_equal(p0[2][1].min(),from_2)
     npt.assert_equal(p0[2][1].max(),to_2)
-
+    
     # test this case
     from_1 = 0
     to_1 = 20
     from_2 = 1
     to_2 = 2
     Ns=2
-
+    
     # set a parameter to estimate
     params = (0,1)
-
+    
     # see if we properly tile the parameter space for Ns=2
     grid_1 = utils.grid_slice(from_1, to_1, Ns)
     grid_2 = utils.grid_slice(from_2, to_2, Ns)
     grids = (grid_1, grid_2)
-
+    
     # unbounded
     bounds = ()
-
+    
     # create a simple function to generate a response from the parameter
     func = lambda freq,offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
-
+    
     # create a "response"
     response = func(*params)
-
+    
     # get the ball-park estimate
     p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
-
+    
     # make sure we fit right
     npt.assert_equal(params, p0[0])
-
+    
     # make sure we sliced it right
     npt.assert_equal(p0[2][0].min(),from_1)
     npt.assert_equal(p0[2][0].max(),to_1)
     npt.assert_equal(p0[2][1].min(),from_2)
     npt.assert_equal(p0[2][1].max(),to_2)
-
-
-
+    
 def test_recast_estimation_results():
 
     # stimulus features
@@ -472,8 +629,6 @@ def test_percent_change():
          [-28.57142857, -14.28571429, 0., 14.28571429, 28.57142857],
           [-16.66666667, -8.33333333, 0., 8.33333333, 16.66666667],
           [-11.76470588, -5.88235294, 0., 5.88235294, 11.76470588]]))
-
-
 
 def test_parallel_fit_Ns():
     
