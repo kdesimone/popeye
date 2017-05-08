@@ -672,7 +672,7 @@ def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, au
             the_data = data[voxel,:,:]
             
             # create random draws
-            trn_idx = np.random.choice(runs, len(runs)/kfolds, replace=False)
+            trn_idx = np.random.choice(runs, np.int(len(runs)/kfolds), replace=False)
             tst_idx = np.array(list(set(runs)-set(trn_idx)))
             
             # compute mean timeseries
@@ -680,7 +680,7 @@ def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, au
             tst_data = np.mean(the_data[tst_idx,:], 0)
             
             # store it
-            Fits.append((Fit, model, trn_data, tst_data, grids, bounds, Ns, voxel_idx, auto_fit, verbose))
+            Fits.append((Fit, model, trn_data, tst_data, grids, bounds, Ns, voxel_idx, auto_fit, verbose, trn_idx, tst_idx))
     
     # randomize list order
     idx = np.argsort(np.random.rand(len(Fits)))
@@ -716,15 +716,15 @@ def multiprocess_bundle(Fit, model, data, grids, bounds, indices, auto_fit=True,
     return dat
 
 def gaussian_2D(X, Y, x0, y0, sigma_x, sigma_y, degrees, amplitude=1):
-
+    
     theta = degrees*np.pi/180
-
+    
     a = np.cos(theta)**2/2/sigma_x**2 + np.sin(theta)**2/2/sigma_y**2
     b = -np.sin(2*theta)/4/sigma_x**2 + np.sin(2*theta)/4/sigma_y**2
     c = np.sin(theta)**2/2/sigma_x**2 + np.cos(theta)**2/2/sigma_y**2
-
+    
     Z = amplitude*np.exp( - (a*(X-x0)**2 + 2*b*(X-x0)*(Y-y0) + c*(Y-y0)**2))
-
+    
     return Z
 
 def parallel_xval(args):
@@ -762,6 +762,8 @@ def parallel_xval(args):
     Ns = args[7]
     auto_fit = args[8]
     verbose = args[9]
+    trn_idx = args[10]
+    tst_idx = args[11]
     
     # fit the data
     fit = Fit(model,
@@ -775,34 +777,37 @@ def parallel_xval(args):
     
     fit.trn_data = trn_data
     fit.tst_data = tst_data
+    fit.trn_idx = trn_idx
+    fit.tst_idx = tst_idx
     fit.cod = coeff_of_determination(fit.tst_data, fit.prediction)
+    
     return fit
         
 def parallel_bootstrap(args):
-
+    
     r"""
     This is a convenience function for parallelizing the fitting
     procedure.  Each call is handed a tuple or list containing
     all the necessary inputs for instantiaing a `GaussianFit`
     class object and estimating the model parameters.
-
-
+    
+    
     Paramaters
     ----------
     args : list/tuple
         A list or tuple containing all the necessary inputs for fitting
         the Gaussian pRF model.
-
+        
     Returns
     -------
-
+    
     fit : `Fit` class object
         A fit object that contains all the inputs and outputs of the
         pRF model estimation for a single voxel.
-
+        
     """
-
-
+    
+    
     # unpackage the arguments
     Fit = args[0]
     model = args[1]
@@ -814,7 +819,7 @@ def parallel_bootstrap(args):
     auto_fit = args[7]
     verbose = args[8]
     resamples = args[9]
-
+    
     # fit the data
     fit = Fit(model,
               data,
@@ -838,24 +843,23 @@ def parallel_fit(args):
     procedure.  Each call is handed a tuple or list containing
     all the necessary inputs for instantiaing a `GaussianFit`
     class object and estimating the model parameters.
-
-
+    
     Paramaters
     ----------
     args : list/tuple
         A list or tuple containing all the necessary inputs for fitting
         the Gaussian pRF model.
-
+        
     Returns
     -------
-
+    
     fit : `Fit` class object
         A fit object that contains all the inputs and outputs of the
         pRF model estimation for a single voxel.
-
+        
     """
-
-
+    
+    
     # unpackage the arguments
     Fit = args[0]
     model = args[1]
@@ -866,7 +870,7 @@ def parallel_fit(args):
     Ns = args[6]
     auto_fit = args[7]
     verbose = args[8]
-
+    
     # fit the data
     fit = Fit(model,
               data,
