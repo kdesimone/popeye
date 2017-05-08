@@ -212,7 +212,7 @@ class PopulationFit(object):
         self.verbose, self.very_verbose = set_verbose(verbose)
         
         # regress out any nuisance
-        if self.model.nuisance is not None:
+        if self.model.nuisance is not None: # pragma: no cover
             self.model.nuisance_model = sm.OLS(self.data,self.model.nuisance)
             self.model.results = self.model.nuisance_model.fit()
             self.original_data = self.data
