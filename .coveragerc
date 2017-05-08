@@ -14,7 +14,8 @@ omit =
     popeye/strf.py
     popeye/css_regularized.py
     popeye/og_hrf_regularized.py	
-    
+    popeye/xvalidation.py
+ 
 [report]
 show_missing = True
 omit =
@@ -30,3 +31,4 @@ omit =
     */popeye/gabor.py
     */popeye/css_regularized.py
     */popeye/og_hrf_regularized.py
+    */popeye/xvalidation.py
