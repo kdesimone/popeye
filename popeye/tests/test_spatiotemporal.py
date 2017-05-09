@@ -5,6 +5,7 @@ import ctypes
 import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
+from scipy.integrate import simps
 
 import popeye.utilities as utils
 from popeye import spatiotemporal as strf
@@ -31,7 +32,7 @@ def test_strf_fit():
     auto_fit = True
     verbose = 1
     projector_hz = 480
-    tau = 0.0875
+    tau = 0.00875
     mask_size = 5
     hrf = 0.25
     
@@ -104,3 +105,17 @@ def test_strf_fit():
                                                       0.89789336800034436,
                                                       0.99962425175020264,
                                                       -0.25009416568850351],2)
+                                                      
+    m_rf = fit.model.m_rf(fit.model.tau)
+    p_rf = fit.model.p_rf(fit.model.tau)
+    npt.assert_almost_equal(simps(np.abs(m_rf)),simps(p_rf),5)
+    
+    # responses
+    m_resp = fit.model.generate_m_resp(fit.model.tau)
+    p_resp = fit.model.generate_p_resp(fit.model.tau)
+    npt.assert_(np.max(m_resp,0)[0]<np.max(m_resp,0)[1])
+    npt.assert_(np.max(p_resp,0)[0]>np.max(p_resp,0)[1])
+    
+    # amps
+    npt.assert_(fit.model.m_amp[0]<fit.model.m_amp[1])
+    npt.assert_(fit.model.p_amp[0]>fit.model.p_amp[1])
