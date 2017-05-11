@@ -262,6 +262,6 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        return generate_2dcos_receptive_field(self.x, self.y, self.sigma,
-                                              self.model.stimulus.deg_x,
-                                              self.model.stimulus.deg_y)
+        rf =  generate_2dcos_receptive_field(self.x, self.y, self.sigma, self.model.power, self.model.stimulus.deg_x, self.model.stimulus.deg_y)                       
+        rf /= (trapz(trapz(rf)) * 1/np.diff(self.model.stimulus.deg_x[0,0:2])**2)
+        return rf
