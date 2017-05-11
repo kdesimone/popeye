@@ -132,3 +132,6 @@ def test_strf_css_fit():
     # amps
     npt.assert_(fit.model.m_amp[0]<fit.model.m_amp[1])
     npt.assert_(fit.model.p_amp[0]>fit.model.p_amp[1])
+    
+    # receptive field
+    npt.assert_almost_equal(4.0, fit.receptive_field.sum())
