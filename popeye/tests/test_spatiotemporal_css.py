@@ -11,7 +11,7 @@ import popeye.utilities as utils
 from popeye import spatiotemporal_css as strf
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
 
-def test_strf_fit():
+def test_strf_css_fit():
     
     viewing_distance = 38
     screen_width = 25
