@@ -8,7 +8,6 @@ omit =
     popeye/reconstruction.py
     popeye/simulation.py
     popeye/spectrotemporal.py
-    popeye/spatiotemporal_hrf.py
     popeye/xvalidation.py
     popeye/strf.py
     popeye/css_regularized.py
@@ -23,7 +22,6 @@ omit =
     */popeye/reconstruction.py
     */popeye/simulation.py
     */popeye/spectrotemporal.py
-    */popeye/spatiotemporal_hrf.py
     */popeye/xvalidation.py
     */popeye/strf.py
     */popeye/gabor.py
