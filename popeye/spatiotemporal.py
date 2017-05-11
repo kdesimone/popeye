@@ -262,6 +262,10 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def receptive_field(self):
-        return generate_og_receptive_field(self.x, self.y, self.sigma,
-                                           self.model.stimulus.deg_x,
-                                           self.model.stimulus.deg_y)
+        rf =  generate_og_receptive_field(self.x, self.y, self.sigma,
+                                          self.model.stimulus.deg_x,
+                                          self.model.stimulus.deg_y)
+        
+        rf /= ((2 * np.pi * self.sigma**2) * 1/np.diff(self.model.stimulus.deg_x0[0,0:2])**2)
+        
+        return rf
