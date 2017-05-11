@@ -88,7 +88,7 @@ def test_strf_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.w0,fit.beta0,fit.baseline0),[-0.5 ,  3.25,  2.44,  0.95,  1.  ,  0.01],2)
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5   ,  3.25  ,  2.4375,  0.95  ,  1.    ,  0.0113],4)
     
     # fine fit
     npt.assert_almost_equal(fit.x, x, 2)
