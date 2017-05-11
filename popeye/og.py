@@ -47,6 +47,23 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma):
         
+        r"""
+        Predict signal for the Gaussian Model using the downsampled stimulus´.
+        The rate of stimulus downsampling is defined in `model.stimulus.scale_factor`.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        """
+        
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
         
@@ -77,6 +94,28 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline):
         
+        r"""
+        Predict signal for the Gaussian Model.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        beta : float
+            Amplitude scaling factor to account for units.
+        
+        baseline: float
+            Amplitude intercept to account for baseline.
+        
+        """
+        
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
         
@@ -102,6 +141,23 @@ class GaussianModel(PopulationModel):
         return model
     
     def generate_receptive_field(self, x, y, sigma):
+        
+        r"""
+        Generate a Gaussian receptive field in stimulus-referred coordinates.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        """
+        
         return generate_og_receptive_field(x, y, sigma,
                                            self.stimulus.deg_x,
                                            self.stimulus.deg_y)
@@ -229,14 +285,23 @@ class GaussianFit(PopulationFit):
         
     @auto_attr
     def rho(self):
+        
+        r""" Returns the eccentricity of the fitted pRF. """
+        
         return np.sqrt(self.x**2+self.y**2)
     
     @auto_attr
     def theta(self):
+        
+        r""" Returns the polar angle of the fitted pRF. """
+        
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
     def receptive_field(self):
+        
+        r""" Returns the fitted Gaussian pRF. """
+        
         return generate_og_receptive_field(self.x, self.y, self.sigma,
                                            self.model.stimulus.deg_x,
                                            self.model.stimulus.deg_y)
