@@ -47,70 +47,18 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    
-    def generate_prediction(self, center_freq, sigma, beta, baseline):
-        
-        r"""
-        Generate a prediction for the 1D Gaussian model.
-        
-        This function generates a prediction of the 1D Gaussian model, 
-        given a stimulus and the stimulus-referred model parameters.  This
-        function operates on the native stimulus.
-        
-        Paramaters
-        ----------
-        
-        center_freq : float
-            The center frequency of the 1D Gaussian, units are in Hz.
-            
-        sigma : float
-            The dispersion of the 1D Gaussian, units are in Hz.
-        
-        beta : float
-            The scaling factor to account for arbitrary units of the BOLD signal.
-        
-        hrf_delay : float
-            The delay of the HRF, units are in seconds.
-        
-        """ 
-        
-        # receptive field
-        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
-        rf /= (10**sigma*np.sqrt(2*np.pi))
-        
-        # # create mask for speed
-        # distance = self.stimulus.freqs - center_freq
-        # mask = np.zeros_like(distance, dtype='uint8')
-        # mask[distance < (self.mask_size*sigma)] = 1
-        mask = np.ones_like(rf).astype('uint8')
-        
-        # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
-        
-        # convolve it with the stimulus
-        model = fftconvolve(response, self.hrf())[0:len(response)]
-        
-        # units
-        model = (model - np.mean(model)) / np.mean(model)
-        
-        # offset
-        model += baseline
-        
-        # scale it
-        model *= beta
-        
-        return model
-    
     def generate_ballpark_prediction(self, center_freq, sigma):
-        
+
         r"""
         Generate a prediction for the 1D Gaussian model.
-        
+
         This function generates a prediction of the 1D Gaussian model, 
-        given a stimulus and the stimulus-referred model parameters.  This
-        function operates on the native stimulus.  Usually, the function
-        `generate_ballpark_prediction` would operate on the downsampled
-        stimulus.
+        given a stimulus and the stimulus-referred model parameters.  
+        This function operates on a spectrogram representation of an 
+        auditory stimulus. This method does not estimate the scaling
+        paramter `beta` or the offset parameter `baseline`, since this
+        method will be used for a grid-fit and these values can simply
+        be calculated for a particular `center_freq` and `sigma` pair.
         
         Paramaters
         ----------
@@ -120,23 +68,14 @@ class AuditoryModel(PopulationModel):
             
         sigma : float
             The dispersion of the 1D Gaussian, units are in Hz.
-        
-        beta : float
-            The scaling factor to account for arbitrary units of the BOLD signal.
-        
-        hrf_delay : float
-            The delay of the HRF, units are in seconds.
-        
+            
         """
         
         # receptive field
         rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
         rf /= (10**sigma*np.sqrt(2*np.pi))
         
-        # # create mask for speed
-        # distance = self.stimulus.freqs - center_freq
-        # mask = np.zeros_like(distance, dtype='uint8')
-        # mask[distance < (self.mask_size*sigma)] = 1
+        # evaluate entire RF
         mask = np.ones_like(rf).astype('uint8')
         
         # extract the response
@@ -159,6 +98,56 @@ class AuditoryModel(PopulationModel):
         
         return model
         
+    def generate_prediction(self, center_freq, sigma, beta, baseline):
+        
+        r"""
+        Generate a prediction for the 1D Gaussian auditory pRF model.
+        
+        This function generates a prediction of the 1D Gaussian model, 
+        given a stimulus and the stimulus-referred model parameters.  
+        This function operates on a spectrogram representation of an 
+        auditory stimulus.
+        
+        Paramaters
+        ----------
+        
+        center_freq : float
+            The center frequency of the 1D Gaussian, units are in Hz.
+            
+        sigma : float
+            The dispersion of the 1D Gaussian, units are in Hz.
+        
+        baseline : float
+            The y-intercept aka offset in amplitude to account for baseline.
+        
+        beta : float
+            The scaling factor to account for arbitrary units of the BOLD signal.
+        
+        """ 
+        
+        # receptive field
+        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
+        rf /= (10**sigma*np.sqrt(2*np.pi))
+        
+        # evaluate entire RF
+        mask = np.ones_like(rf).astype('uint8')
+        
+        # extract the response
+        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
+        
+        # convolve it with the stimulus
+        model = fftconvolve(response, self.hrf())[0:len(response)]
+        
+        # units
+        model = (model - np.mean(model)) / np.mean(model)
+        
+        # offset
+        model += baseline
+        
+        # scale it
+        model *= beta
+        
+        return model
         
 class AuditoryFit(PopulationFit):
     
@@ -166,7 +155,7 @@ class AuditoryFit(PopulationFit):
                  voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
         r"""
-        A class containing tools for fitting the 1D Gaussian pRF model.
+        A class containing tools for fitting the 1D Gaussian auditory pRF model.
         
         The `AuditoryFit` class houses all the fitting tool that are associated with 
         estimatinga pRF model.  The `PopulationFit` takes a `AuditoryModel` instance 
@@ -228,14 +217,20 @@ class AuditoryFit(PopulationFit):
                                voxel_index, Ns, auto_fit, verbose)
                                
     # overload ballpark
-    # with the linregress slope
-    # as a sub-stitute for beta
     @auto_attr
     def overloaded_ballpark(self):
+        
+
+        
         return np.append(self.ballpark, (self.beta0, self.baseline0))
     
     @auto_attr
     def overloaded_estimate(self):
+        
+        """
+        A more sensible 
+        """
+        
         return [10**self.center_freq, 10**self.sigma, self.beta, self.baseline]
     
     @auto_attr
