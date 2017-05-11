@@ -155,9 +155,8 @@ class PopulationFit(object):
         Paramaters
         ----------
         
-                
-        model : `AuditoryModel` class instance
-            An object representing the 1D Gaussian model.
+        model : `PopulationModel` class instance
+            An object representing pRF model.
         
         data : ndarray
             An array containing the measured BOLD signal of a single voxel.
@@ -178,17 +177,20 @@ class PopulationFit(object):
             bound the first parameter to be any positive number while the
             second parameter would be bounded between -10 and 10.
         
-        Ns : int
-            Number of samples per stimulus dimension to sample during the ballpark search.
-            
-            For more information, see `scipy.optimize.brute`.
-        
         voxel_index : tuple
             A tuple containing the index of the voxel being modeled. The 
             fitting procedure does not require a voxel index, but 
             collating the results across many voxels will does require voxel
             indices. With voxel indices, the brain volume can be reconstructed 
             using the newly computed model estimates.
+        
+        Ns : int
+            Number of samples per stimulus dimension to sample during the ballpark search.
+            
+            For more information, see `scipy.optimize.brute`.
+            
+            Tnis option can be ignored if you want to specify your own sampling rate 
+            for a given parameter. For more information, see `popeye.utilities.grid_slice`.
         
         auto_fit : bool
             A flag for automatically running the fitting procedures once the 
@@ -301,6 +303,15 @@ class PopulationFit(object):
     
     @auto_attr
     def overloaded_ballpark(self):
+        
+        """
+        `overloaded_ballpark` allows for attaching the calculated 
+        `beta` and `baseline` from the intial grid-fit to `ballpark` 
+        and sets up the gradient descent to also include these 
+        parameters for fine-tuned fitting.
+        
+        """
+        
         return None
     
     @auto_attr
@@ -309,6 +320,15 @@ class PopulationFit(object):
     
     @auto_attr
     def ballpark_prediction(self):
+        
+        """
+        `overloaded_estimate` allows for flexible representaiton of the
+        final model estimate. For instance, you may fit the model parameters
+        in cartesian space but would rather represent the fit in polar
+        coordinates. 
+        
+        """
+        
         return self.model.generate_ballpark_prediction(*self.ballpark)
     
     @auto_attr
