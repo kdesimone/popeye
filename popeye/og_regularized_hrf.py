@@ -176,67 +176,67 @@ class GaussianFit(PopulationFit):
     def __init__(self, model, data, grids, bounds,
                  voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
-     r"""
-     A class containing tools for fitting the 2D Gaussian pRF model.
+         r"""
+         A class containing tools for fitting the 2D Gaussian pRF model.
 
-     The `GaussianFit` class houses all the fitting tool that are associated with 
-     estimatinga pRF model.  The `GaussianFit` takes a `GaussianModel` instance 
-     `model` and a time-series `data`.  In addition, extent and sampling-rate of a 
-     brute-force grid-search is set with `grids` and `Ns`.  Use `bounds` to set 
-     limits on the search space for each parameter.  
+         The `GaussianFit` class houses all the fitting tool that are associated with 
+         estimatinga pRF model.  The `GaussianFit` takes a `GaussianModel` instance 
+         `model` and a time-series `data`.  In addition, extent and sampling-rate of a 
+         brute-force grid-search is set with `grids` and `Ns`.  Use `bounds` to set 
+         limits on the search space for each parameter.  
      
-     Paramaters
-     ----------
+         Paramaters
+         ----------
      
      
-     model : `GaussianModel` class instance
-         An object representing the 2D Gaussian model. 
+         model : `GaussianModel` class instance
+             An object representing the 2D Gaussian model. 
          
-     data : ndarray
-         An array containing the measured BOLD signal of a single voxel.
+         data : ndarray
+             An array containing the measured BOLD signal of a single voxel.
          
-     grids : tuple or Slice Object
-         A tuple indicating the search space for the brute-force grid-search.
-         The tuple contains pairs of upper and lower bounds for exploring a
-         given dimension.  For example `grids=((-10,10),(0,5),)` will
-         search the first dimension from -10 to 10 and the second from 0 to 5.
-         The resolution of this search space is set with the `Ns` argument. 
-         For more information, see `scipy.optimize.brute`.
+         grids : tuple or Slice Object
+             A tuple indicating the search space for the brute-force grid-search.
+             The tuple contains pairs of upper and lower bounds for exploring a
+             given dimension.  For example `grids=((-10,10),(0,5),)` will
+             search the first dimension from -10 to 10 and the second from 0 to 5.
+             The resolution of this search space is set with the `Ns` argument. 
+             For more information, see `scipy.optimize.brute`.
          
-         Alternatively you can pass `grids` a Slice Object. If you do use this
-         option, you do not need to specificy `Ns` in `GaussianFit`. See 
-         `popeye.utilities.grid_slice` for more details.
+             Alternatively you can pass `grids` a Slice Object. If you do use this
+             option, you do not need to specificy `Ns` in `GaussianFit`. See 
+             `popeye.utilities.grid_slice` for more details.
          
-     bounds : tuple
-         A tuple containing the upper and lower bounds for each parameter
-         in `parameters`.  If a parameter is not bounded, simply use
-         `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
-         bound the first parameter to be any positive number while the
-         second parameter would be bounded between -10 and 10.
+         bounds : tuple
+             A tuple containing the upper and lower bounds for each parameter
+             in `parameters`.  If a parameter is not bounded, simply use
+             `None`.  For example, `fit_bounds=((0,None),(-10,10),)` would 
+             bound the first parameter to be any positive number while the
+             second parameter would be bounded between -10 and 10.
          
-     voxel_index : tuple
-         A tuple containing the index of the voxel being modeled. The 
-         fitting procedure does not require a voxel index, but 
-         collating the results across many voxels will does require voxel
-         indices. With voxel indices, the brain volume can be reconstructed 
-         using the newly computed model estimates.
+         voxel_index : tuple
+             A tuple containing the index of the voxel being modeled. The 
+             fitting procedure does not require a voxel index, but 
+             collating the results across many voxels will does require voxel
+             indices. With voxel indices, the brain volume can be reconstructed 
+             using the newly computed model estimates.
          
-     Ns : int
-         Number of samples per stimulus dimension to sample during the ballpark search.
-         For more information, see `scipy.optimize.brute`.
+         Ns : int
+             Number of samples per stimulus dimension to sample during the ballpark search.
+             For more information, see `scipy.optimize.brute`.
          
-         This can be `None` if `grids` is a tuple of Slice Objects.
+             This can be `None` if `grids` is a tuple of Slice Objects.
          
-     auto_fit : bool
-         A flag for automatically running the fitting procedures once the 
-         `GaussianFit` object is instantiated.
+         auto_fit : bool
+             A flag for automatically running the fitting procedures once the 
+             `GaussianFit` object is instantiated.
          
-     verbose : int
-         0 = silent
-         1 = print the final solution of an error-minimization
-         2 = print each error-minimization step
+         verbose : int
+             0 = silent
+             1 = print the final solution of an error-minimization
+             2 = print each error-minimization step
          
-     """
+         """
         
         PopulationFit.__init__(self, model, data, grids, bounds, 
                                voxel_index, Ns, auto_fit, verbose)
