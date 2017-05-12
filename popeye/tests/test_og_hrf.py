@@ -91,6 +91,7 @@ def test_og_fit():
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
+    rf /= (2 * np.pi * sigma**2) * 1/np.diff(model.stimulus.deg_x[0,0:2])**2
     npt.assert_almost_equal(np.round(rf.sum()), np.round(fit.receptive_field.sum())) 
     
     # test model == fit RF
