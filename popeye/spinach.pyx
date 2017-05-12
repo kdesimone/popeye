@@ -103,22 +103,19 @@ def generate_mp_timeseries(np.ndarray[DTYPE2_t, ndim=1] spatial_ts,
     # cdef's
     cdef int t
     cdef int tlim = spatial_ts.shape[0]
-
+    
     # initialize output variable
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] m_ts = np.zeros(tlim,dtype=DTYPE2)
     cdef np.ndarray[DTYPE2_t,ndim=1,mode='c'] p_ts = np.zeros(tlim,dtype=DTYPE2)
-
+    
     # the loop
     for t in xrange(tlim):
         amp = spatial_ts[t]
         flicker = flicker_vec[t]
-        if flicker == 1:
-            m_ts[t] = m_amp[0] * amp
-            p_ts[t] = p_amp[0] * amp
-        if flicker == 2:
-            m_ts[t] = m_amp[1] * amp
-            p_ts[t] = p_amp[1] * amp
-
+        if flicker != 0:
+            m_ts[t] = m_amp[flicker-1] * amp
+            p_ts[t] = p_amp[flicker-1] * amp
+            
     return m_ts, p_ts
 
 @cython.boundscheck(False)
