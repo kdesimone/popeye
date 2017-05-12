@@ -20,7 +20,7 @@ class GaussianModel(PopulationModel):
     
     def __init__(self, stimulus, hrf_model, nuisance=None):
         
-        r"""A 2D Gaussian population receptive field model [1]_.
+        r"""A 2D Gaussian population receptive field model [1]_,[2]_.
         
         Paramaters
         ----------
@@ -39,6 +39,9 @@ class GaussianModel(PopulationModel):
         
         .. [1] Dumoulin SO, Wandell BA. (2008) Population receptive field 
         estimates in human visual cortex. NeuroImage 39:647-660
+        .. [2] DeSimone K, Viviano JD, Schneider KA (2015) Population receptive 
+        field estimation reveals new maps in human subcortex.  Journal of 
+        Neuroscience 35: 9836-9847. doi:10.1523/jneurosci.3840-14.2015
         
         """
         
@@ -46,6 +49,28 @@ class GaussianModel(PopulationModel):
     
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, hrf_delay):
+        
+        r"""
+        Predict signal for the Gaussian Model using the downsampled stimulus.
+        The rate of stimulus downsampling is defined in `model.stimulus.scale_factor`.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        hrf_delay: float
+            The delay of the hemodynamic response function (HRF). We assume the 
+            cannonical HRF delay is 5 s, and that this parameter is a deviation
+            +/- that 5 s.
+        
+        """
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -78,6 +103,34 @@ class GaussianModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline):
         
+        r"""
+        Predict signal for the Gaussian Model.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        hrf_delay: float
+            The delay of the hemodynamic response function (HRF). We assume the 
+            cannonical HRF delay is 5 s, and that this parameter is a deviation
+            +/- that 5 s.
+        
+        beta : float
+            Amplitude scaling factor to account for units.
+        
+        baseline: float
+            Amplitude intercept to account for baseline.
+        
+        """
+        
+        
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
         
@@ -104,9 +157,27 @@ class GaussianModel(PopulationModel):
         return model
     
     def generate_receptive_field(self, x, y, sigma):
-        return generate_og_receptive_field(x, y, sigma,
-                                           self.stimulus.deg_x,
-                                           self.stimulus.deg_y)
+        
+        r"""
+        Generate a Gaussian receptive field in stimulus-referred coordinates.
+        
+        Parameters
+        __________
+        x : float
+            Horizontal location of the Gaussian RF.
+        
+        y: float 
+            Vertical location of the Gaussian RF.
+        
+        sigma: float
+            Dipsersion of the Gaussian RF.
+        
+        """
+        
+        rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        rf /= (2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2
+        
+        return rf
         
 class GaussianFit(PopulationFit):
     
@@ -137,14 +208,17 @@ class GaussianFit(PopulationFit):
         data : ndarray
             An array containing the measured BOLD signal of a single voxel.
         
-        grids : tuple
+        grids : tuple or Slice Object
             A tuple indicating the search space for the brute-force grid-search.
             The tuple contains pairs of upper and lower bounds for exploring a
             given dimension.  For example `grids=((-10,10),(0,5),)` will
             search the first dimension from -10 to 10 and the second from 0 to 5.
-            These values cannot be `None`. 
-            
+            The resolution of this search space is set with the `Ns` argument. 
             For more information, see `scipy.optimize.brute`.
+            
+            Alternatively you can pass `grids` a Slice Object. If you do use this
+            option, you do not need to specificy `Ns` in `GaussianFit`. See 
+            `popeye.utilities.grid_slice` for more details.
         
         bounds : tuple
             A tuple containing the upper and lower bounds for each parameter
@@ -163,8 +237,9 @@ class GaussianFit(PopulationFit):
         
         Ns : int
             Number of samples per stimulus dimension to sample during the ballpark search.
-            
             For more information, see `scipy.optimize.brute`.
+            
+            This can be `None` if `grids` is a tuple of Slice Objects.
         
         auto_fit : bool
             A flag for automatically running the fitting procedures once the 
@@ -184,19 +259,18 @@ class GaussianFit(PopulationFit):
     def overloaded_estimate(self):
         return [self.theta, self.rho, self.sigma, self.hrf_delay + 5, self.beta, self.baseline]
     
-    
     @auto_attr
     def overloaded_ballpark(self):
         return np.append(self.ballpark, (self.beta0, self.baseline0))
-        
+    
     @auto_attr
     def x0(self):
         return self.ballpark[0]
-        
+    
     @auto_attr
     def y0(self):
         return self.ballpark[1]
-        
+    
     @auto_attr
     def s0(self):
         return self.ballpark[2]
@@ -208,7 +282,7 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def beta0(self):
         return np.abs(self.slope)
-        
+    
     @auto_attr
     def baseline0(self):
         return self.intercept
@@ -216,11 +290,11 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def x(self):
         return self.estimate[0]
-        
+    
     @auto_attr
     def y(self):
         return self.estimate[1]
-        
+    
     @auto_attr
     def sigma(self):
         return self.estimate[2]
@@ -228,7 +302,7 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def hrf_delay(self):
         return self.estimate[3]
-        
+    
     @auto_attr
     def beta(self):
         return self.estimate[4]
@@ -236,18 +310,24 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def baseline(self):
         return self.estimate[5]
-        
+    
     @auto_attr
     def rho(self):
+        
+        r""" Returns the eccentricity of the fitted pRF. """
+        
         return np.sqrt(self.x**2+self.y**2)
     
     @auto_attr
     def theta(self):
+        
+        r""" Returns the polar angle of the fitted pRF. """
+        
         return np.mod(np.arctan2(self.y,self.x),2*np.pi)
     
     @auto_attr
     def receptive_field(self):
-        return generate_og_receptive_field(self.x, self.y, self.sigma,
-                                           self.model.stimulus.deg_x,
-                                           self.model.stimulus.deg_y)
-                                           
+        
+        r""" Returns the fitted Gaussian pRF. """
+        
+        return self.model.generate_receptive_field(self.x, self.y, self.sigma)
