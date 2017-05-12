@@ -220,16 +220,10 @@ class AuditoryFit(PopulationFit):
     @auto_attr
     def overloaded_ballpark(self):
         
-
-        
         return np.append(self.ballpark, (self.beta0, self.baseline0))
     
     @auto_attr
     def overloaded_estimate(self):
-        
-        """
-        A more sensible 
-        """
         
         return [10**self.center_freq, 10**self.sigma, self.beta, self.baseline]
     
