@@ -176,8 +176,7 @@ class GaussianFit(PopulationFit):
     def __init__(self, model, data, grids, bounds,
                  voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
-        r"""
-        A class containing tools for fitting the 2D Gaussian pRF model.
+        r"""A class containing tools for fitting the 2D Gaussian pRF model.
         
         The `GaussianFit` class houses all the fitting tool that are associated with 
         estimatinga pRF model.  The `GaussianFit` takes a `GaussianModel` instance 
