@@ -26,5 +26,5 @@ omit =
     */popeye/strf.py
     */popeye/gabor.py
     */popeye/css_regularized.py
-    */popeye/oga_regularized_hrf.py
+    */popeye/og_regularized_hrf.py
     */popeye/xvalidation.py
