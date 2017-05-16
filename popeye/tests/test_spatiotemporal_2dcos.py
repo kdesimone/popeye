@@ -10,6 +10,7 @@ from scipy.integrate import simps
 import popeye.utilities as utils
 from popeye import spatiotemporal_2dcos as strf
 from popeye.visual_stimulus import VisualStimulus, simulate_bar_stimulus, resample_stimulus
+from popeye.spinach import generate_2dcos_receptive_field
 
 def test_strf_2dcos_fit():
     
@@ -121,5 +122,10 @@ def test_strf_2dcos_fit():
     npt.assert_(fit.model.p_amp[0]>fit.model.p_amp[1])
     
     # receptive field
-    npt.assert_almost_equal(fit.receptive_field.sum(), 0.014735506)
+    rf = generate_2dcos_receptive_field(x, y, sigma, fit.model.power, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
+    rf /= (2 * np.pi * sigma**2) * 1/np.diff(model.stimulus.deg_x[0,0:2])**2
+    npt.assert_almost_equal(np.round(rf.sum()), np.round(fit.receptive_field.sum())) 
+    
+    # test model == fit RF
+    npt.assert_almost_equal(np.round(fit.model.generate_receptive_field(x,y,sigma).sum()), np.round(fit.receptive_field.sum()))
     
