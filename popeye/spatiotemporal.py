@@ -104,7 +104,6 @@ class SpatioTemporalModel(PopulationModel):
     
     def generate_prediction(self, x, y, sigma, weight, beta, baseline):
         
-        
         r"""
         Predict signal for the Gaussian Model using the full resolution stimulus.
         
@@ -326,7 +325,7 @@ class SpatioTemporalModel(PopulationModel):
         p_resp = fftconvolve(self.flickers,p_rf[:,np.newaxis])
         p_resp = utils.normalize(p_resp,-1,1)
         return p_resp
-        
+    
     @auto_attr    
     def p_amp(self):
         
@@ -335,7 +334,7 @@ class SpatioTemporalModel(PopulationModel):
         p_amp = np.sum(np.abs(self.p_resp),0)
         p_amp /= np.max(p_amp)
         return p_amp
-
+    
     def generate_receptive_field(self, x, y, sigma):
         
         r"""
