@@ -70,7 +70,8 @@ def generate_coordinate_matrices(pixels_across, pixels_down, ppd, scale_factor=1
     
     return deg_x, np.flipud(deg_y)
 
-def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'):
+def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest',
+                      order=0, dtype='uint8'):
     
     """Resamples the visual stimulus
     
@@ -80,6 +81,9 @@ def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'
     over time.  The first two dimensions of `stim_arr` together represent the
     exent of the visual display (pixels) and the last dimensions represents
     time (TRs).
+
+    The underlying function used here is `scipy.ndimage.zoom`. Some arguments
+    are passed through to that function.
     
     Parameters
     ----------
@@ -95,7 +99,12 @@ def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'
         Points outside the boundaries of the input are filled according
         to the given mode ('constant', 'nearest', 'reflect' or 'wrap').
         Default is 'nearest'.
-        
+
+    order : int, optional
+        Interpolation order, must be in range 0-5.
+
+    dtype : numpy dtype, optional
+        Datatype for the returned array.
         
     Returns
     -------
@@ -112,7 +121,7 @@ def resample_stimulus(stim_arr, scale_factor=0.05, mode='nearest', dtype='uint8'
     for tr in np.arange(dims[-1]):
         
         # resize it
-        f = zoom(stim_arr[:,:,tr], scale_factor, mode=mode)
+        f = zoom(stim_arr[:,:,tr], scale_factor, mode=mode, order=order)
         
         # insert it
         resampled_arr[:,:,tr] = f

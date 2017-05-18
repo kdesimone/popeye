@@ -10,6 +10,7 @@ import nose.tools as nt
 
 from popeye.visual_stimulus import pixels_per_degree, generate_coordinate_matrices, resample_stimulus, simulate_sinflicker_bar, simulate_bar_stimulus, VisualStimulus
 
+
 def test_pixels_per_degree():
     
     pixels_across = 1
@@ -104,6 +105,12 @@ def test_resample_stimulus():
     nt.assert_true(stim_coarse_dims[0]/stim_dims[0] == scale_factor)
     nt.assert_true(stim_coarse_dims[1]/stim_dims[1] == scale_factor)
     nt.assert_true(stim_coarse_dims[2] == stim_dims[2])
+
+    # test nearest neighbor interpolation
+    binary_stimulus = (stimulus > .5).astype(np.float)
+    binary_stimulus_coarse = resample_stimulus(binary_stimulus, scale_factor,
+                                               order=0, dtype=np.float)
+    npt.assert_array_equal(np.unique(binary_stimulus_coarse), [0, 1])
 
 def test_simulate_sinflicker_bar():
     
