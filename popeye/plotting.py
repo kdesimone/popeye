@@ -200,7 +200,7 @@ def polar_angle_plot(x, y, voxel_dim, num_radians, rlim, dof,
     # return handles
     return fig,ax
 
-def XY_scatter(x, y, xlim, ylim, min_n, dof,
+def XY_scatter(x, y, xlim, ylim, min_n, dof, figsize=(5,5),
                plot_alpha=1.0, plot_color='k',label_name=None,
                show_legend=False, show_fit = False, fig=None, ax=None):
 
@@ -208,7 +208,7 @@ def XY_scatter(x, y, xlim, ylim, min_n, dof,
 
     # arguments can include figure and axes handles for plotting multiple ROIs
     if not fig:
-        fig = plt.figure()
+        fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111)
     else:
         ax = fig.add_subplot(111)
