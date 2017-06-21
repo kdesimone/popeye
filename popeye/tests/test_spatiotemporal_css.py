@@ -102,7 +102,7 @@ def test_strf_css_fit():
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),[-3.,  2.,  1.5 ,  0.95,  0.95, 0.87769466, -0.25])
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.x, x, 1)
     npt.assert_almost_equal(fit.y, y, 2)
     npt.assert_almost_equal(fit.sigma, sigma, 2)
     npt.assert_almost_equal(fit.n, n, 2)
