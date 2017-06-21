@@ -32,7 +32,7 @@ with open(ver_file) as f:
     exec(f.read())
 
 install_requires = ['scipy', 'numpy', 'matplotlib', 'nibabel', 'statsmodels',
-                    'sharedmem', 'cython'],
+                    'sharedmem', 'cython', 'numexpr'],
 
 opts = dict(name=NAME,
             maintainer=MAINTAINER,
