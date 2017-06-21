@@ -66,7 +66,7 @@ def test_cache_model():
     
     # save it out
     now = int(time.clock()*1000)
-    pickle.dump(cache, open('/tmp/og_cached_model_%d.pkl' %(now),'wb'),protocol=3)
+    pickle.dump(cache, open('/tmp/og_cached_model_%d.pkl' %(now),'wb'))
     
     model.cached_model_path = '/tmp/og_cached_model_%d.pkl' %(now)
     
