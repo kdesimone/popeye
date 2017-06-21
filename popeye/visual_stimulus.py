@@ -440,7 +440,6 @@ class VisualStimulus(StimulusModel):
         
         if self.scale_factor == 1.0:
             
-            
             self.stim_arr0 = self.stim_arr
             self.deg_x0 = self.deg_x
             self.deg_y0 = self.deg_y
@@ -457,4 +456,8 @@ class VisualStimulus(StimulusModel):
             self.deg_x0 = utils.generate_shared_array(deg_x0, ctypes.c_double)
             self.deg_y0 = utils.generate_shared_array(deg_y0, ctypes.c_double)
             self.stim_arr0 = utils.generate_shared_array(stim_arr0, dtype)
+        
+        # add ppd for the down-sampled stimulus
+        self.ppd0 = pixels_per_degree(self.stim_arr0.shape[1], self.screen_width, self.viewing_distance)
+        
         
