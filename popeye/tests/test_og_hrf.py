@@ -26,7 +26,7 @@ def test_og_fit():
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.10
+    scale_factor = 0.50
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
