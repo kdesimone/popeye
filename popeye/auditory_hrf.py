@@ -47,6 +47,67 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
+    def generate_ballpark_prediction(self, center_freq, sigma, hrf_delay, unscaled=False):
+        
+        r"""
+        Generate a prediction for the 1D Gaussian model.
+        
+        This function generates a prediction of the 1D Gaussian model, 
+        given a stimulus and the stimulus-referred model parameters.  This
+        function operates on the native stimulus.  Usually, the function
+        `generate_ballpark_prediction` would operate on the downsampled
+        stimulus.
+        
+        Paramaters
+        ----------
+        
+        center_freq : float
+            The center frequency of the 1D Gaussian, units are in Hz.
+            
+        sigma : float
+            The dispersion of the 1D Gaussian, units are in Hz.
+            
+        beta : float
+            The scaling factor to account for arbitrary units of the BOLD signal.
+            
+        hrf_delay : float
+            The delay of the HRF, units are in seconds.
+            
+        """
+        
+        # receptive field
+        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
+        rf /= (10**sigma*np.sqrt(2*np.pi))
+        
+        # # create mask for speed
+        # distance = self.stimulus.freqs - center_freq
+        # mask = np.zeros_like(distance, dtype='uint8')
+        # mask[distance < (self.mask_size*sigma)] = 1
+        mask = np.ones_like(rf).astype('uint8')
+        
+        # extract the response
+        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
+        
+        # convolve it with the stimulus
+        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
+        model = fftconvolve(response, hrf)[0:len(response)]
+        
+        # units
+        model = (model - np.mean(model)) / np.mean(model)
+        
+        if unscaled:
+            return model
+        else:
+            # regress out mean and linear
+            p = linregress(model, self.data)
+            
+            # offset
+            model += p[1]
+            
+            # scale
+            model *= np.abs(p[0])
+            
+            return model
     
     def generate_prediction(self, center_freq, sigma, hrf_delay, beta, baseline):
         
@@ -101,67 +162,7 @@ class AuditoryModel(PopulationModel):
         model *= beta
         
         return model
-    
-    def generate_ballpark_prediction(self, center_freq, sigma, hrf_delay):
-        
-        r"""
-        Generate a prediction for the 1D Gaussian model.
-        
-        This function generates a prediction of the 1D Gaussian model, 
-        given a stimulus and the stimulus-referred model parameters.  This
-        function operates on the native stimulus.  Usually, the function
-        `generate_ballpark_prediction` would operate on the downsampled
-        stimulus.
-        
-        Paramaters
-        ----------
-        
-        center_freq : float
-            The center frequency of the 1D Gaussian, units are in Hz.
-            
-        sigma : float
-            The dispersion of the 1D Gaussian, units are in Hz.
-        
-        beta : float
-            The scaling factor to account for arbitrary units of the BOLD signal.
-        
-        hrf_delay : float
-            The delay of the HRF, units are in seconds.
-        
-        """
-        
-        # receptive field
-        rf = np.exp(-((10**self.stimulus.freqs-10**center_freq)**2)/(2*(10**sigma)**2))
-        rf /= (10**sigma*np.sqrt(2*np.pi))
-        
-        # # create mask for speed
-        # distance = self.stimulus.freqs - center_freq
-        # mask = np.zeros_like(distance, dtype='uint8')
-        # mask[distance < (self.mask_size*sigma)] = 1
-        mask = np.ones_like(rf).astype('uint8')
-        
-        # extract the response
-        response = generate_rf_timeseries_1D(self.stimulus.spectrogram, rf, mask)
-        
-        # convolve it with the stimulus
-        hrf = self.hrf_model(hrf_delay, self.stimulus.tr_length)
-        model = fftconvolve(response, hrf)[0:len(response)]
-        
-        # units
-        model = (model - np.mean(model)) / np.mean(model)
-        
-        # regress to find beta and baseline
-        p = linregress(model, self.data)
-        
-        # offset
-        model += p[1]
-        
-        # scale it
-        model *= np.abs(p[0])
-        
-        return model
-        
-        
+
 class AuditoryFit(PopulationFit):
     
     def __init__(self, model, data, grids, bounds,

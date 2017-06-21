@@ -54,7 +54,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
         
         
-    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, unscaled=False):
         
         # extract the center response
         rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -75,9 +75,24 @@ class DifferenceOfGaussiansModel(PopulationModel):
         # convolve it
         model = fftconvolve(response, hrf)[0:len(response)]
         
-        return model
+        # units
+        model = (model-np.mean(model)) / np.mean(model)
         
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
+        if unscaled:
+            return model
+        else:
+            # regress out mean and linear
+            p = linregress(model, self.data)
+            
+            # offset
+            model += p[1]
+            
+            # scale
+            model *= np.abs(p[0])
+            
+            return model
+        
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, beta, baseline):
         
         # extract the center response
         rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -98,8 +113,17 @@ class DifferenceOfGaussiansModel(PopulationModel):
         # convolve it
         model = fftconvolve(response, hrf)[0:len(response)]
         
+        # units
+        model = (model-np.mean(model)) / np.mean(model)
+        
+        # offset
+        model += baseline
+        
+        # scale it by beta
+        model *= beta
+        
         return model
-    
+            
     # DoG receptive field
     def receptive_field(self, x, y, sigma, sigma_ratio, volume_ratio):
             rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -114,8 +138,8 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     """
     
-    def __init__(self, model, data, grids, bounds, Ns,
-                 voxel_index=(1,2,3), auto_fit=True, verbose=0):
+    def __init__(self, model, data, grids, bounds,
+                 voxel_index=(1,2,3), Ns=None, auto_fit=True, verbose=0):
         
         r"""
         A class containing tools for fitting the Difference of Gaussians pRF model.
@@ -176,8 +200,18 @@ class DifferenceOfGaussiansFit(PopulationFit):
         
         """
         
-        PopulationFit.__init__(self, model, data, grids, bounds, Ns, 
-                               voxel_index, auto_fit, verbose)
+        PopulationFit.__init__(self, model, data, grids, bounds, 
+                               voxel_index, Ns, auto_fit, verbose)
+    
+    
+    @auto_attr
+    def overloaded_estimate(self):
+       return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
+
+
+    @auto_attr
+    def overloaded_ballpark(self):
+       return np.append(self.ballpark, (self.beta0, self.baseline0))
     
     @auto_attr
     def x0(self):
@@ -198,7 +232,15 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def vr0(self):
         return self.ballpark[4]
+    
+    @auto_attr
+    def beta0(self):
+        return np.abs(self.slope)
         
+    @auto_attr
+    def baseline0(self):
+        return self.intercept
+    
     @auto_attr
     def x(self):
         return self.estimate[0]
@@ -218,6 +260,14 @@ class DifferenceOfGaussiansFit(PopulationFit):
     @auto_attr
     def volume_ratio(self):
         return self.estimate[4]
+    
+    @auto_attr
+    def beta(self):
+        return self.estimate[5]
+    
+    @auto_attr
+    def baseline(self):
+        return self.estimate[6]
     
     @auto_attr
     def rho(self):

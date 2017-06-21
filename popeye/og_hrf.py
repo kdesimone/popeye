@@ -48,7 +48,7 @@ class GaussianModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, hrf_delay):
+    def generate_ballpark_prediction(self, x, y, sigma, hrf_delay, unscaled=False):
         
         r"""
         Predict signal for the Gaussian Model using the downsampled stimulus.
@@ -89,16 +89,19 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        # regress out mean and linear
-        p = linregress(model, self.data)
-        
-        # offset
-        model += p[1]
-        
-        # scale
-        model *= np.abs(p[0])
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            # regress out mean and linear
+            p = linregress(model, self.data)
+            
+            # offset
+            model += p[1]
+            
+            # scale
+            model *= np.abs(p[0])
+            
+            return model
         
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline):

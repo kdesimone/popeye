@@ -47,7 +47,7 @@ class AuditoryModel(PopulationModel):
         # invoke the base class
         PopulationModel.__init__(self, stimulus, hrf_model)
     
-    def generate_ballpark_prediction(self, center_freq, sigma):
+    def generate_ballpark_prediction(self, center_freq, sigma, unscaled=False):
 
         r"""
         Generate a prediction for the 1D Gaussian model.
@@ -87,16 +87,19 @@ class AuditoryModel(PopulationModel):
         # units
         model = (model - np.mean(model)) / np.mean(model)
         
-        # regress to find beta and baseline
-        p = linregress(model, self.data)
-        
-        # offset
-        model += p[1]
-        
-        # scale it
-        model *= np.abs(p[0])
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            # regress out mean and linear
+            p = linregress(model, self.data)
+            
+            # offset
+            model += p[1]
+            
+            # scale
+            model *= np.abs(p[0])
+            
+            return model
         
     def generate_prediction(self, center_freq, sigma, beta, baseline):
         
