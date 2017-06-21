@@ -69,18 +69,18 @@ def test_strf_css_fit():
     sigma = 1.23
     n = 0.90
     weight = 0.95
-    beta = 1.0
-    baseline = 0
+    beta = 0.88
+    baseline = -0.25
     
     # create the "data"
     data =  model.generate_prediction(x, y, sigma, n, weight, beta, baseline)
     
     # set search grid
-    x_grid = utils.grid_slice(-8.0,7.0,3)
-    y_grid = utils.grid_slice(-8.0,7.0,3)
-    s_grid = utils.grid_slice(0.75,3.0,3)
-    n_grid = utils.grid_slice(0.25,0.95,3)
-    w_grid = utils.grid_slice(0.25,0.95,3)
+    x_grid = utils.grid_slice(-8.0,7.0,4)
+    y_grid = utils.grid_slice(-8.0,7.0,4)
+    s_grid = utils.grid_slice(0.75,3.0,4)
+    n_grid = utils.grid_slice(0.25,0.95,4)
+    w_grid = utils.grid_slice(0.25,0.95,4)
     
     # set search bounds
     x_bound = (-10,10)
@@ -99,24 +99,24 @@ def test_strf_css_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),[-0.5  , -0.5  ,  1.875,  0.95 ,  0.95 ,  1.   ,  0.   ])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),[-3.,  2.,  1.5 ,  0.95,  0.95, 0.87769466, -0.25])
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 1)
-    npt.assert_almost_equal(fit.y, y, 1)
-    npt.assert_almost_equal(fit.sigma, sigma, 1)
-    npt.assert_almost_equal(fit.n, n, 1)
-    npt.assert_almost_equal(fit.weight, weight, 1)
-    npt.assert_almost_equal(fit.beta, beta, 1)
-    npt.assert_almost_equal(fit.baseline, baseline, 1)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.n, n, 2)
+    npt.assert_almost_equal(fit.weight, weight, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [2.5259863707822303,
-                                                      2.7330681871539069,
-                                                      1.3062396482386418,
-                                                      0.9011492100931614,
-                                                      0.94990930073215352,
-                                                      1.0005707740082497],4)
+    npt.assert_almost_equal(fit.overloaded_estimate,[2.5263689305237405,
+                                                     2.7346764426634871,
+                                                     1.3095695698432792,
+                                                     0.9013959296721088,
+                                                     0.94982341134496429,
+                                                     0.88089506069647616])
                                                      
     # rfs
     m_rf = fit.model.m_rf(fit.model.tau)

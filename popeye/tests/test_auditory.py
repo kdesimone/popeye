@@ -15,7 +15,7 @@ def test_auditory_fit():
     
     # stimulus features
     duration = 30 # seconds
-    Fs = 44100 # Hz
+    Fs = int(44100/2) # Hz
     lo_freq = 200.0 # Hz
     hi_freq = 10000.0 # Hz
     tr_length = 1.0 # seconds
@@ -43,10 +43,12 @@ def test_auditory_fit():
     model.hrf_delay = 0
     
     # invent pRF estimate
-    center_freq = np.log10(987)
-    sigma = np.log10(123)
-    beta = 1.0
-    baseline = 0.0
+    center_freq_hz = 987
+    sigma_hz = 123
+    center_freq = np.log10(center_freq_hz)
+    sigma = np.log10(sigma_hz)
+    beta = 2.4
+    baseline = 0.59
     
     # generate data
     data = model.generate_prediction(center_freq, sigma, beta, baseline)
@@ -66,16 +68,18 @@ def test_auditory_fit():
     # fit it
     fit = aud.AuditoryFit(model, data, grids, bounds, Ns=Ns)
     
-    # assert equivalence
+    # grid fit
+    npt.assert_almost_equal(fit.center_freq0, 3)
+    npt.assert_almost_equal(fit.sigma0, 2)
+    npt.assert_almost_equal(fit.beta0, 2.34556886)
+    npt.assert_almost_equal(fit.baseline0, 1.416)
+    npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
+    
+    # final fit
     npt.assert_almost_equal(fit.center_freq, center_freq)
     npt.assert_almost_equal(fit.sigma, sigma)
     npt.assert_almost_equal(fit.beta, beta)
     npt.assert_almost_equal(fit.baseline, baseline)
-    npt.assert_almost_equal(fit.center_freq0, 3)
-    npt.assert_almost_equal(fit.sigma0, 2.14715158)
-    npt.assert_almost_equal(fit.beta0, beta)
-    npt.assert_almost_equal(fit.baseline0, baseline)
-    npt.assert_almost_equal(fit.center_freq_hz, 987)
     
     # test receptive field
     rf = np.exp(-((10**fit.model.stimulus.freqs-10**fit.center_freq)**2)/(2*(10**fit.sigma)**2))

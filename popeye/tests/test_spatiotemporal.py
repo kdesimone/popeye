@@ -89,24 +89,23 @@ def test_strf_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5   ,  3.25  ,  2.4375,  0.95  ,  1.    ,  0.0113],4)
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5, 3.25, 2.4375, 0.95, 1.04530554, -0.25],4)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 2)
-    npt.assert_almost_equal(fit.y, y, 2)
-    npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.weight, weight, 2)
-    npt.assert_almost_equal(fit.beta, beta, 2)
-    npt.assert_almost_equal(fit.baseline, baseline, 2)
+    npt.assert_almost_equal(fit.x, x)
+    npt.assert_almost_equal(fit.y, y)
+    npt.assert_almost_equal(fit.sigma, sigma)
+    npt.assert_almost_equal(fit.weight, weight)
+    npt.assert_almost_equal(fit.beta, beta)
+    npt.assert_almost_equal(fit.baseline, baseline)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [2.5270727137292481,
-                                                      2.7416305841622624,
-                                                      1.2256761293512328,
-                                                      0.89789336800034436,
-                                                      0.99962425175020264,
-                                                      -0.25009416568850351],2)
-                                                      
+    npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327887128,
+                                                      2.7411676344185993,
+                                                      1.2300000000008835,
+                                                      0.89999999999333258,
+                                                      1.0000000000005003,
+                                                      -0.25000000000063088])
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)
     npt.assert_almost_equal(simps(np.abs(m_rf)),simps(p_rf),5)

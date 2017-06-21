@@ -24,17 +24,18 @@ def test_strf_2dcos_fit():
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 1.0
-    pixels_down = 300
-    pixels_across = 300
+    scale_factor = 0.50
+    pixels_down = 200
+    pixels_across = 200
     dtype = ctypes.c_int16
+    Ns = 3
+    voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
     projector_hz = 480
     tau = 0.00875
     mask_size = 5
     hrf = 0.25
-    power = 0
     
     # create the sweeping bar stimulus in memory
     stim = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -54,7 +55,7 @@ def test_strf_2dcos_fit():
     model.tau = tau
     model.hrf_delay = hrf
     model.mask_size = mask_size
-    model.power = 0
+    model.power = 0.7
     
     # generate a random pRF estimate
     x = -2.24
@@ -89,24 +90,23 @@ def test_strf_2dcos_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.w0,fit.beta0,fit.baseline0),(-0.5, 3.25, 3.0, 0.95, 1.0000000000000002, -0.010826240688006666),2)
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5      ,  3.25     ,  3.       ,  0.95     ,  0.9076397, -0.25     ])
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 1)
-    npt.assert_almost_equal(fit.y, y, 1)
-    npt.assert_almost_equal(fit.sigma, sigma, 1)
-    npt.assert_almost_equal(fit.weight, weight, 1)
-    npt.assert_almost_equal(fit.beta, beta, 1)
-    npt.assert_almost_equal(fit.baseline, baseline, 1)
+    npt.assert_almost_equal(fit.x, x)
+    npt.assert_almost_equal(fit.y, y)
+    npt.assert_almost_equal(fit.sigma, sigma)
+    npt.assert_almost_equal(fit.weight, weight)
+    npt.assert_almost_equal(fit.beta, beta)
+    npt.assert_almost_equal(fit.baseline, baseline)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [2.5270727137292481,
-                                                      2.7416305841622624,
-                                                      1.2256761293512328,
-                                                      0.89789336800034436,
-                                                      0.99962425175020264,
-                                                      -0.25009416568850351],1)
-    # rfs
+    npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327887128,
+                                                      2.7411676344185993,
+                                                      1.2300000000008835,
+                                                      0.89999999999333258,
+                                                      1.0000000000005003,
+                                                      -0.25000000000063088])
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)
     npt.assert_almost_equal(simps(np.abs(m_rf)),simps(p_rf),5)
@@ -128,4 +128,3 @@ def test_strf_2dcos_fit():
     
     # test model == fit RF
     npt.assert_almost_equal(np.round(fit.model.generate_receptive_field(x,y,sigma).sum()), np.round(fit.receptive_field.sum()))
-    

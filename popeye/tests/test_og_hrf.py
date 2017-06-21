@@ -73,21 +73,22 @@ def test_og_fit():
     bounds = (x_bound, y_bound, s_bound, h_bound, b_bound, m_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
+    fit = og.GaussianFit(model, data, grids, bounds, Ns=5)
     
     # coarse fit
-    npt.assert_almost_equal(fit.x0,-10.0)
-    npt.assert_almost_equal(fit.y0,0.0)
-    npt.assert_almost_equal(fit.s0, 5.25)
-    npt.assert_almost_equal(fit.beta0, 1.0)
-    npt.assert_almost_equal(fit.hrf0, 0.0)
+    npt.assert_almost_equal(fit.x0, -5.0)
+    npt.assert_almost_equal(fit.y0, 5.0)
+    npt.assert_almost_equal(fit.s0, 2.75)
+    npt.assert_almost_equal(fit.beta0, 2.7237701222349835)
+    npt.assert_almost_equal(fit.baseline0, -0.625)
+    npt.assert_almost_equal(fit.hrf0, 0.5)
     
     # assert equivalence
-    npt.assert_almost_equal(fit.x, x, 2)
-    npt.assert_almost_equal(fit.y, y, 2)
-    npt.assert_almost_equal(fit.hrf_delay, hrf_delay, 2)
-    npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.x, x)
+    npt.assert_almost_equal(fit.y, y)
+    npt.assert_almost_equal(fit.hrf_delay, hrf_delay)
+    npt.assert_almost_equal(fit.sigma, sigma)
+    npt.assert_almost_equal(fit.beta, beta)
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)

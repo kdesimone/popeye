@@ -24,7 +24,6 @@ def test_dog():
     pixels_down = 50
     pixels_across = 50
     dtype = ctypes.c_int16
-    voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
     
@@ -40,22 +39,23 @@ def test_dog():
     model.hrf_delay = 0.2
     
     # set the pRF params
-    x = -1.4
-    y = 1.5
-    sigma = 1.0
+    x = -5.4
+    y = 3.5
+    sigma = 1.23
     sigma_ratio = 2.0
     volume_ratio = 0.5
-    hrf_delay = -0.2
+    beta = 0.85
+    baseline = -0.25
     
     # create "data"
-    data = model.generate_prediction(x, y, sigma, sigma_ratio, volume_ratio,)
+    data = model.generate_prediction(x, y, sigma, sigma_ratio, volume_ratio, beta, baseline)
     
     # set up the grids
-    x_grid = slice(-10,10,3)
-    y_grid = slice(-10,10,3)
-    s_grid = slice(1/stimulus.ppd,5,3)
-    sr_grid = slice(1.0,5.0,3)
-    vr_grid = slice(0.01,0.99,3)
+    x_grid = utils.grid_slice(-8,8,4)
+    y_grid = utils.grid_slice(-8,8,4)
+    s_grid = utils.grid_slice(1/stimulus.ppd0*1.10,3.5,5)
+    sr_grid = utils.grid_slice(1.0,5.0,5)
+    vr_grid = utils.grid_slice(0.01,0.99,5)
     grids = (x_grid, y_grid, s_grid, sr_grid, vr_grid,)
     
     # set up the bounds
@@ -66,22 +66,20 @@ def test_dog():
     vr_bound = (1e-8,1.0)
     bounds = (x_bound, y_bound, s_bound, sr_bound, vr_bound,)
     
-    # fit it
-    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, voxel_index)
+    # fit it    
+    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds)
     
     # coarse fit
-    nt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0),(-1.0, 2.0, 0.72833937882323319, 1.0, 0.01))
-    
-    # fine fit
-    nt.assert_almost_equal(fit.x, x)
-    nt.assert_almost_equal(fit.y, y)
-    nt.assert_almost_equal(fit.sigma, sigma)
-    nt.assert_almost_equal(fit.sigma_ratio, sigma_ratio)
-    nt.assert_almost_equal(fit.volume_ratio, volume_ratio)
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), [-2.66666667, 2.66666667, 2.07675998, 1., 0.5 ,0.78889732, -0.2125])
+    npt.assert_almost_equal(fit.x, x, 3)
+    npt.assert_almost_equal(fit.y, y, 3)
+    npt.assert_almost_equal(fit.sigma, sigma, 3)
+    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 3)
+    npt.assert_almost_equal(fit.volume_ratio, volume_ratio, 3)
     
     # test the RF
-    rf = fit.model.receptive_field(*fit.estimate)
-    est = fit.estimate.copy()
+    rf = fit.model.receptive_field(*fit.estimate[0:-2])
+    est = fit.estimate[0:-2].copy()
     est[2] *= 2
     rf_new = fit.model.receptive_field(*est)
     value_1 = np.sqrt(simps(simps(rf))) 

@@ -74,16 +74,16 @@ def test_css_fit():
     
     # coarse fit
     observed = [fit.x0, fit.y0, fit.s0, fit.n0, fit.beta0, fit.baseline0]
-    expected = [-3., 2., 0.72833938, 0.5, 1., -0.02525]
+    expected = [-3., 2., 0.72833938, 0.5, 0.89899980678728497, -0.24999999999999997]
     npt.assert_almost_equal(observed, expected)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 1)
-    npt.assert_almost_equal(fit.y, y, 1)
-    npt.assert_almost_equal(fit.sigma, sigma, 1)
-    npt.assert_almost_equal(fit.n, n, 1)
-    npt.assert_almost_equal(fit.beta, beta, 1)
-    npt.assert_almost_equal(fit.beta, beta, 1)
+    npt.assert_almost_equal(fit.x, x)
+    npt.assert_almost_equal(fit.y, y)
+    npt.assert_almost_equal(fit.sigma, sigma)
+    npt.assert_almost_equal(fit.n, n)
+    npt.assert_almost_equal(fit.beta, beta)
+    npt.assert_almost_equal(fit.beta, beta)
     
     # overloaded
     npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327893043,

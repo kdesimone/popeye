@@ -54,9 +54,9 @@ def test_og_fit():
     data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # set search grid
-    x_grid = (-10,10)
-    y_grid = (-10,10)
-    s_grid = (0.25,5.25)
+    x_grid = utils.grid_slice(-10,10,3)
+    y_grid = utils.grid_slice(-10,10,3)
+    s_grid = utils.grid_slice (0.25,5.25,3)
     
     # set search bounds
     x_bound = (-12.0,12.0)
@@ -70,13 +70,14 @@ def test_og_fit():
     bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
     
     # fit the response
-    fit = og.GaussianFit(model, data, grids, bounds, Ns=3)
+    fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal(fit.x0, -10.0)
-    npt.assert_almost_equal(fit.y0, 0.0)
-    npt.assert_almost_equal(fit.s0, 5.25)
-    npt.assert_almost_equal(fit.beta0, 1.0)
+    npt.assert_almost_equal(fit.x0, -10.0, 2)
+    npt.assert_almost_equal(fit.y0, 0.0, 2)
+    npt.assert_almost_equal(fit.s0, 5.25, 2)
+    npt.assert_almost_equal(fit.beta0, 2.87, 2)
+    npt.assert_almost_equal(fit.baseline0, -0.64, 2)
     
     # assert equivalence
     npt.assert_almost_equal(fit.x, x, 2)
