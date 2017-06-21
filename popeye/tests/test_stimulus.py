@@ -88,29 +88,44 @@ def test_noresample_stimulus():
 
 def test_resample_stimulus():
     
-    # set the downsampling rate
-    scale_factor = 0.5
+    # stimulus features
+    viewing_distance = 38
+    screen_width = 25
+    thetas = np.arange(0,360,90)
+    num_blank_steps = 0
+    num_bar_steps = 30
+    ecc = 12
+    tr_length = 1.0
+    frames_per_tr = 1.0
+    scale_factor = 0.50
+    pixels_across = 100
+    pixels_down = 100
+    dtype = ctypes.c_int16
+    Ns = 3
+    voxel_index = (1,2,3)
+    auto_fit = True
+    verbose = 1
     
-    # create a stimulus
-    stimulus = np.random.random((100,100,20))
-    
-    # downsample the stimulus by 50%
-    stimulus_coarse = resample_stimulus(stimulus,scale_factor)
+    # create the sweeping bar stimulus in memory
+    bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
+                                screen_width, thetas, num_bar_steps, num_blank_steps, ecc)
+                                
+    # create an instance of the Stimulus class
+    stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # grab the stimulus dimensions
-    stim_dims = np.shape(stimulus)
-    stim_coarse_dims = np.shape(stimulus_coarse)
+    stim_dims = stimulus.stim_arr.shape
+    stim_coarse_dims = stimulus.stim_arr0.shape
     
     # assert
     nt.assert_true(stim_coarse_dims[0]/stim_dims[0] == scale_factor)
     nt.assert_true(stim_coarse_dims[1]/stim_dims[1] == scale_factor)
     nt.assert_true(stim_coarse_dims[2] == stim_dims[2])
-
-    # test nearest neighbor interpolation
-    binary_stimulus = (stimulus > .5).astype(np.float)
-    binary_stimulus_coarse = resample_stimulus(binary_stimulus, scale_factor,
-                                               order=0, dtype=np.float)
-    npt.assert_array_equal(np.unique(binary_stimulus_coarse), [0, 1])
+    
+    npt.assert_array_equal(np.unique(stimulus.stim_arr0), [0, 1])
+    
+    # make sure the duty-cycle doesn't change with resampling
+    npt.assert_almost_equal(np.sum(stimulus.stim_arr0==1)/np.sum(stimulus.stim_arr0>-1),np.sum(stimulus.stim_arr==1)/np.sum(stimulus.stim_arr>-1),3)
 
 def test_simulate_sinflicker_bar():
     
