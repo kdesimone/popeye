@@ -103,12 +103,12 @@ def test_strf_css_fit():
     
     # fine fit
     npt.assert_almost_equal(fit.x, x, 1)
-    npt.assert_almost_equal(fit.y, y, 2)
-    npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.n, n, 2)
-    npt.assert_almost_equal(fit.weight, weight, 2)
-    npt.assert_almost_equal(fit.beta, beta, 2)
-    npt.assert_almost_equal(fit.baseline, baseline, 2)
+    npt.assert_almost_equal(fit.y, y, 1)
+    npt.assert_almost_equal(fit.sigma, sigma, 1)
+    npt.assert_almost_equal(fit.n, n, 1)
+    npt.assert_almost_equal(fit.weight, weight, 1)
+    npt.assert_almost_equal(fit.beta, beta, 1)
+    npt.assert_almost_equal(fit.baseline, baseline, 1)
     
     # overloaded
     npt.assert_almost_equal(fit.overloaded_estimate,[2.5263689305237405,
