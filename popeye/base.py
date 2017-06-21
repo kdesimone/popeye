@@ -4,14 +4,15 @@ Base-classes for poulation encoding models and fits.
 
 
 """
+from popeye.onetime import auto_attr
 import time, ctypes, itertools
+import pickle
 import sharedmem
 import statsmodels.api as sm 
-import numpy as np
 from scipy.stats import linregress
-from popeye.onetime import auto_attr
 import popeye.utilities as utils
 import numpy as np
+import numexpr as ne
 
 try:  # pragma: no cover
     from types import SliceType
@@ -20,7 +21,7 @@ except ImportError:  # pragma: no cover
 
 def set_verbose(verbose):
     
-    r"""A convenience function for setting the verbosity of a popeye model+fit.
+    r"""A convenience function for setting the verbosity of a popeye model/fit.
     
     Paramaters
     ----------
@@ -49,7 +50,7 @@ class PopulationModel(object):
     
     r""" Base class for all pRF models."""
     
-    def __init__(self, stimulus, hrf_model, nuisance=None):
+    def __init__(self, stimulus, hrf_model, cached_model_path=None, nuisance=None):
         
         r"""Base class for all pRF models.
         
@@ -74,15 +75,24 @@ class PopulationModel(object):
         
         """
         
+        # propogate
         self.stimulus = stimulus
         self.hrf_model = hrf_model
         self.nuisance = nuisance
-    
+        self.cached_model_path = cached_model_path
+        
+        # set up cached model if specified
+        if self.cached_model_path is not None:
+            self.resurrect_cached_model
+            
+    def generate_unscaled_ballpark_prediction(self): # pragma: no cover
+        raise NotImplementedError("Each pRF model must implement its own unscaled (beta,baseline) ballpark prediction!")
+        
     def generate_ballpark_prediction(self): # pragma: no cover
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!") 
+        raise NotImplementedError("Each pRF model must implement its own ballpark prediction!") 
     
     def generate_prediction(self): # pragma: no cover
-        raise NotImplementedError("Each pRF model must implement its own prediction generation!")
+        raise NotImplementedError("Each pRF model must implement its own prediction!")
     
     def distance_mask_coarse(self, x, y, sigma):
         
@@ -94,7 +104,7 @@ class PopulationModel(object):
             mask = np.ones_like(self.stimulus.deg_x0, dtype='uint8')
             
         return mask
-        
+    
     def distance_mask(self, x, y, sigma):
         
         if hasattr(self, 'mask_size'): # pragma: no cover
@@ -111,8 +121,8 @@ class PopulationModel(object):
             return self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
         else: # pragma: no cover
             raise NotImplementedError("You must set the HRF delay to generate the HRF")
-            
-    def cache(self, grids, ncpus=1, Ns=None): # pragma: no cover
+    
+    def cache_model(self, grids, ncpus=1, Ns=None, verbose=False):
         
         # get parameter space
         if isinstance(grids[0], SliceType):
@@ -121,20 +131,46 @@ class PopulationModel(object):
             params = [list(np.linspace(g[0],g[1],Ns)) for g in grids]
         
         # make combos
-        combos = [c for c in itertools.product(*params)]
+        combos = np.array([c for c in itertools.product(*params)])
+        # const = np.vstack((np.ones(combos.shape[0]),np.zeros(combos.shape[0]))).T
+        # combos = np.concatenate((combos,const,1))
+        
+        # sort them by rand
+        idx = np.argsort(np.random.rand(combos.shape[0]))
+        combos = combos[idx]
         
         def mini_predictor(combo):
-            print(combo)
-            return self.generate_ballpark_prediction(*combo)
-            
+            print('%s' %(np.round(combo,2)))
+            combo_long = list(combo)
+            combo_long.extend((1,0))
+            self.data = self.generate_prediction(*combo_long)
+            return self.generate_ballpark_prediction(*combo), combo
+        
         # compute predictions
-        num_cpus = sharedmem.cpu_count()-1
-        with sharedmem.Pool(np=num_cpus) as pool:
-            models = pool.map(self.mini_predictor, combos)
-            
+        with sharedmem.Pool(np=ncpus) as pool:
+            models = pool.map(mini_predictor, combos)
+        
+        # clean up
+        models = [m for m in models if not np.isnan(np.sum(m[0]))]
+        
         # turn into array
         return models
     
+    @auto_attr
+    def resurrect_cached_model(self):
+        dat = pickle.load(open(self.cached_model_path, 'rb'))
+        timeseries = utils.generate_shared_array(np.array([d[0] for d in dat]), np.double)
+        parameters = utils.generate_shared_array(np.array([d[1] for d in dat]), np.double)
+        return timeseries, parameters
+    
+    @auto_attr
+    def cached_model_timeseries(self):
+        return self.resurrect_cached_model[0]
+    
+    @auto_attr
+    def cached_model_parameters(self):
+        return self.resurrect_cached_model[1]
+        
 class PopulationFit(object):
     
     
@@ -234,12 +270,11 @@ class PopulationFit(object):
             # start
             self.start = time.time()
             
-            # init
-            self.brute_force
+            # guestimate
             self.ballpark
+            self.overloaded_ballpark
             
-            # final
-            self.gradient_descent
+            # polished
             self.estimate
             self.overloaded_estimate
             
@@ -253,7 +288,7 @@ class PopulationFit(object):
             # flush if not testing
             if not hasattr(self.model, 'store_search_space'): # pragma: no cover
                 self.gradient_descent = [None]*6
-                self.brute_force =[None,]*4
+                self.brute_force = [None,]*4
             
             # print
             if self.verbose: # pragma: no cover
@@ -269,11 +304,21 @@ class PopulationFit(object):
                                         self.bounds,
                                         self.Ns,
                                         self.very_verbose)
-     
-     
+    @auto_attr
+    def best_cached_model_parameters(self):
+        a = self.model.cached_model_timeseries
+        b = self.data
+        rss = ne.evaluate('sum((a-b)**2,axis=1)')
+        idx = np.argmin(rss)
+        return self.model.cached_model_parameters[idx]
+        
     @auto_attr
     def ballpark(self):
-        return self.brute_force[0]
+        
+        if hasattr(self.model, 'cached_model_path') and self.model.cached_model_path:
+            return self.best_cached_model_parameters
+        else:
+            return self.brute_force[0]
     
     # the gradient search
     @auto_attr
@@ -328,16 +373,27 @@ class PopulationFit(object):
         coordinates. 
         
         """
-        
         return self.model.generate_ballpark_prediction(*self.ballpark)
     
     @auto_attr
+    def unscaled_ballpark_prediction(self):
+        
+        """
+        `overloaded_estimate` allows for flexible representaiton of the
+        final model estimate. For instance, you may fit the model parameters
+        in cartesian space but would rather represent the fit in polar
+        coordinates. 
+        
+        """
+        return self.model.generate_ballpark_prediction(*self.ballpark, unscaled=True)
+    
+    @auto_attr
     def slope(self):
-        return linregress(self.ballpark_prediction, self.data)[0]
+        return linregress(self.unscaled_ballpark_prediction, self.data)[0]
     
     @auto_attr
     def intercept(self):
-        return linregress(self.ballpark_prediction, self.data)[1]
+        return linregress(self.unscaled_ballpark_prediction, self.data)[1]
     
     @auto_attr
     def prediction(self):
@@ -345,7 +401,7 @@ class PopulationFit(object):
     
     @auto_attr
     def rsquared(self):
-        return np.corrcoef(self.data,self.prediction)[1][0]**2
+        return np.corrcoef(self.data, self.prediction)[1][0]**2
     
     @auto_attr
     def rss(self):
