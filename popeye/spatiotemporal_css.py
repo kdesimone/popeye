@@ -52,7 +52,7 @@ class SpatioTemporalModel(PopulationModel):
         
         
     # for the final solution, we use spatiotemporal
-    def generate_ballpark_prediction(self, x, y, sigma, n, weight, unscaled=False):
+    def generate_ballpark_prediction(self, x, y, sigma, n, weight):
         
         # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
@@ -79,22 +79,19 @@ class SpatioTemporalModel(PopulationModel):
         # units
         model = (model - np.mean(model)) / np.mean(model)
         
-        if unscaled:
-            return model
-        else:
-            # regress out mean and linear
-            p = linregress(model, self.data)
-            
-            # offset
-            model += p[1]
-            
-            # scale
-            model *= np.abs(p[0])
-            
-            return model
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
+        
+        return model
         
     # for the final solution, we use spatiotemporal
-    def generate_prediction(self, x, y, sigma, n, weight, beta, baseline):
+    def generate_prediction(self, x, y, sigma, n, weight, beta, baseline, unscaled=False):
         
         # mask for speed
         mask = self.distance_mask(x, y, sigma)
@@ -121,13 +118,16 @@ class SpatioTemporalModel(PopulationModel):
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
         
-        # scale
-        model *= beta
-        
-        # offset
-        model += baseline
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            # scale
+            model *= beta
+            
+            # offset
+            model += baseline
+            
+            return model
 
     @auto_attr
     def p(self):

@@ -18,7 +18,7 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    def __init__(self, stimulus, hrf_model, nuisance=None):
+    def __init__(self, stimulus, hrf_model, cached_model_path=None, nuisance=None):
         
         r"""A 2D Gaussian population receptive field model [1]_,[2]_.
         
@@ -45,10 +45,10 @@ class GaussianModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
+        PopulationModel.__init__(self, stimulus, hrf_model, cached_model_path, nuisance)
     
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, hrf_delay, unscaled=False):
+    def generate_ballpark_prediction(self, x, y, sigma, hrf_delay):
         
         r"""
         Predict signal for the Gaussian Model using the downsampled stimulus.
@@ -89,22 +89,19 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        if unscaled:
-            return model
-        else:
-            # regress out mean and linear
-            p = linregress(model, self.data)
-            
-            # offset
-            model += p[1]
-            
-            # scale
-            model *= np.abs(p[0])
-            
-            return model
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
+        
+        return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline):
+    def generate_prediction(self, x, y, sigma, hrf_delay, beta, baseline, unscaled=False):
         
         r"""
         Predict signal for the Gaussian Model.
@@ -151,14 +148,17 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        # offset
-        model += baseline
-        
-        # scale it by beta
-        model *= beta
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            # offset
+            model += baseline
     
+            # scale it by beta
+            model *= beta
+    
+            return model
+
     def generate_receptive_field(self, x, y, sigma):
         
         r"""

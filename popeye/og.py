@@ -18,7 +18,7 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    def __init__(self, stimulus, hrf_model, nuisance=None):
+    def __init__(self, stimulus, hrf_model, cached_model_path=None, nuisance=None):
         
         r"""A 2D Gaussian population receptive field model [1]_.
         
@@ -42,10 +42,10 @@ class GaussianModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model, nuisance)
+        PopulationModel.__init__(self, stimulus, hrf_model, cached_model_path, nuisance)
         
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, unscaled=False):
+    def generate_ballpark_prediction(self, x, y, sigma):
         
         r"""
         Predict signal for the Gaussian Model using the downsampled stimulus.
@@ -80,22 +80,19 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        if unscaled:
-            return model
-        else:
-            # regress out mean and linear
-            p = linregress(model, self.data)
-            
-            # offset
-            model += p[1]
-            
-            # scale
-            model *= np.abs(p[0])
-            
-            return model
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
+        
+        return model
             
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, beta, baseline):
+    def generate_prediction(self, x, y, sigma, beta, baseline, unscaled=False):
         
         r"""
         Predict signal for the Gaussian Model.
@@ -135,13 +132,17 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        # offset
-        model += baseline
-        
-        # scale it by beta
-        model *= beta
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            
+            # offset
+            model += baseline
+            
+            # scale it by beta
+            model *= beta
+            
+            return model
     
     def generate_receptive_field(self, x, y, sigma):
         
@@ -244,11 +245,14 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def overloaded_estimate(self):
         return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
-    
+
     
     @auto_attr
     def overloaded_ballpark(self):
-        return np.append(self.ballpark, (self.beta0, self.baseline0))
+        overload = np.append(self.ballpark, (self.beta0, self.baseline0))
+        if self.very_verbose:
+            print('The final solution of the gridfit is %s!' %(overload))
+        return overload  
     
     @auto_attr
     def x0(self):

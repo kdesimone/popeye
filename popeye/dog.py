@@ -14,11 +14,11 @@ from scipy.signal import fftconvolve
 from scipy.integrate import trapz
 
 import nibabel
-
+import numexpr as ne
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class DifferenceOfGaussiansModel(PopulationModel):
     
@@ -54,7 +54,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model)
         
         
-    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, unscaled=False):
+    def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
         
         # extract the center response
         rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -64,10 +64,47 @@ class DifferenceOfGaussiansModel(PopulationModel):
                                                   self.stimulus.deg_x0, self.stimulus.deg_x0) * 1/sigma_ratio**2
         
         # difference
-        rf = rf_center - np.sqrt(volume_ratio)*rf_surround
+        rf = ne.evaluate('rf_center - sqrt(volume_ratio)*rf_surround')
         
         # extract the response
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr0, rf)
+        mask = self.distance_mask(x, y, sigma*sigma_ratio)
+        response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
+        
+        # generate the hrf
+        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
+        
+        # convolve it
+        model = fftconvolve(response, hrf)[0:len(response)]
+        
+        # units
+        model = (model-np.mean(model)) / np.mean(model)
+        
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
+        
+        return model
+        
+    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, beta, baseline, unscaled=False):
+        
+        # extract the center response
+        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
+        
+        # extract surround response
+        rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, 
+                                                  self.stimulus.deg_x, self.stimulus.deg_y) * 1/sigma_ratio**2
+        
+        # difference
+        rf = ne.evaluate('rf_center - sqrt(volume_ratio)*rf_surround')
+        
+        # extract the response
+        mask = self.distance_mask(x, y, sigma*sigma_ratio)
+        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # generate the hrf
         hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
@@ -81,48 +118,14 @@ class DifferenceOfGaussiansModel(PopulationModel):
         if unscaled:
             return model
         else:
-            # regress out mean and linear
-            p = linregress(model, self.data)
             
             # offset
-            model += p[1]
+            model += baseline
             
-            # scale
-            model *= np.abs(p[0])
+            # scale it by beta
+            model *= beta
             
             return model
-        
-    def generate_prediction(self, x, y, sigma, sigma_ratio, volume_ratio, beta, baseline):
-        
-        # extract the center response
-        rf_center = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
-        
-        # extract surround response
-        rf_surround = generate_og_receptive_field(x, y, sigma*sigma_ratio, 
-                                                  self.stimulus.deg_x, self.stimulus.deg_y) * 1/sigma_ratio**2
-        
-        # difference
-        rf = rf_center - np.sqrt(volume_ratio)*rf_surround
-        
-        # extract the response
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
-        
-        # generate the hrf
-        hrf = self.hrf_model(self.hrf_delay, self.stimulus.tr_length)
-        
-        # convolve it
-        model = fftconvolve(response, hrf)[0:len(response)]
-        
-        # units
-        model = (model-np.mean(model)) / np.mean(model)
-        
-        # offset
-        model += baseline
-        
-        # scale it by beta
-        model *= beta
-        
-        return model
             
     # DoG receptive field
     def receptive_field(self, x, y, sigma, sigma_ratio, volume_ratio):
@@ -206,9 +209,8 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-       return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
-
-
+       return [self.theta, self.rho, self.sigma, self.sigma_ratio, self.volume_ratio, self.beta, self.baseline]
+       
     @auto_attr
     def overloaded_ballpark(self):
        return np.append(self.ballpark, (self.beta0, self.baseline0))

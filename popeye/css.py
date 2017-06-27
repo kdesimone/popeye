@@ -50,7 +50,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         PopulationModel.__init__(self, stimulus, hrf_model, cached_model_path, nuisance)
         
     # main method for deriving model time-series
-    def generate_ballpark_prediction(self, x, y, sigma, n, unscaled=False):
+    def generate_ballpark_prediction(self, x, y, sigma, n):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x0, self.stimulus.deg_y0)
@@ -73,22 +73,19 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # units
         model = (model - np.mean(model)) / np.mean(model)
         
-        if unscaled:
-            return model
-        else:
-            # regress out mean and linear
-            p = linregress(model, self.data)
-            
-            # offset
-            model += p[1]
-            
-            # scale
-            model *= np.abs(p[0])
-            
-            return model
+        # regress out mean and linear
+        p = linregress(model, self.data)
+        
+        # offset
+        model += p[1]
+        
+        # scale
+        model *= np.abs(p[0])
+        
+        return model
         
     # main method for deriving model time-series
-    def generate_prediction(self, x, y, sigma, n, beta, baseline):
+    def generate_prediction(self, x, y, sigma, n, beta, baseline, unscaled=False):
         
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
@@ -111,13 +108,17 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # convert units
         model = (model - np.mean(model)) / np.mean(model)
         
-        # offset
-        model += baseline
-        
-        # scale it by beta
-        model *= beta
-        
-        return model
+        if unscaled:
+            return model
+        else:
+            
+            # offset
+            model += baseline
+            
+            # scale it by beta
+            model *= beta
+            
+            return model
         
 class CompressiveSpatialSummationFit(PopulationFit):
     
