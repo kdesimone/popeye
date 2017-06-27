@@ -84,9 +84,6 @@ class PopulationModel(object):
         # set up cached model if specified
         if self.cached_model_path is not None:
             self.resurrect_cached_model
-            
-    def generate_unscaled_ballpark_prediction(self): # pragma: no cover
-        raise NotImplementedError("Each pRF model must implement its own unscaled (beta,baseline) ballpark prediction!")
         
     def generate_ballpark_prediction(self): # pragma: no cover
         raise NotImplementedError("Each pRF model must implement its own ballpark prediction!") 
@@ -139,7 +136,7 @@ class PopulationModel(object):
         idx = np.argsort(np.random.rand(combos.shape[0]))
         combos = combos[idx]
         
-        def mini_predictor(combo):
+        def mini_predictor(combo): # pragma: no cover
             print('%s' %(np.round(combo,2)))
             combo_long = list(combo)
             combo_long.extend((1,0))
@@ -270,11 +267,9 @@ class PopulationFit(object):
             # start
             self.start = time.time()
             
-            # guestimate
+            # fit
             self.ballpark
             self.overloaded_ballpark
-            
-            # polished
             self.estimate
             self.overloaded_estimate
             
@@ -293,7 +288,7 @@ class PopulationFit(object):
             # print
             if self.verbose: # pragma: no cover
                 print(self.msg)
-                                                                              
+            
     # the brute search
     @auto_attr
     def brute_force(self):
@@ -315,7 +310,7 @@ class PopulationFit(object):
     @auto_attr
     def ballpark(self):
         
-        if hasattr(self.model, 'cached_model_path') and self.model.cached_model_path:
+        if self.model.cached_model_path is not None:
             return self.best_cached_model_parameters
         else:
             return self.brute_force[0]
@@ -344,6 +339,14 @@ class PopulationFit(object):
     
     @auto_attr
     def overloaded_estimate(self):
+        
+        """
+        `overloaded_estimate` allows for representing the fitted
+        parameter estimates in more useful units, such as 
+        Cartesian to polar coordinates, or Hz to log(Hz).
+        
+        """
+        
         return None
     
     @auto_attr
@@ -361,39 +364,32 @@ class PopulationFit(object):
     
     @auto_attr
     def estimate(self):
+        
+        """
+        `overloaded_estimate` allows for flexible representaiton of the
+        final model estimate. For instance, you may fit the model parameters
+        in cartesian space but would rather represent the fit in polar
+        coordinates. 
+        
+        """
+        
         return self.gradient_descent[0]
     
     @auto_attr
     def ballpark_prediction(self):
-        
-        """
-        `overloaded_estimate` allows for flexible representaiton of the
-        final model estimate. For instance, you may fit the model parameters
-        in cartesian space but would rather represent the fit in polar
-        coordinates. 
-        
-        """
-        return self.model.generate_ballpark_prediction(*self.ballpark)
+        return self.model.generate_prediction(*np.append(self.ballpark,(1,0)), unscaled=True)
     
     @auto_attr
-    def unscaled_ballpark_prediction(self):
-        
-        """
-        `overloaded_estimate` allows for flexible representaiton of the
-        final model estimate. For instance, you may fit the model parameters
-        in cartesian space but would rather represent the fit in polar
-        coordinates. 
-        
-        """
-        return self.model.generate_ballpark_prediction(*self.ballpark, unscaled=True)
+    def scaled_ballpark_prediction(self):
+        return self.ballpark_prediction * self.slope + self.intercept
     
     @auto_attr
     def slope(self):
-        return linregress(self.unscaled_ballpark_prediction, self.data)[0]
+        return linregress(self.ballpark_prediction, self.data)[0]
     
     @auto_attr
     def intercept(self):
-        return linregress(self.unscaled_ballpark_prediction, self.data)[1]
+        return linregress(self.ballpark_prediction, self.data)[1]
     
     @auto_attr
     def prediction(self):
