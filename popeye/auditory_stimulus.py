@@ -27,7 +27,7 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 20
     # get spectrum
     freqs, times, spec = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
     
-    if decibels:
+    if decibels: # pragma: no cover
         
         # Ratio between adjacent frequencies in log-f axis
         fratio = 2**(1/bins_per_octave)
