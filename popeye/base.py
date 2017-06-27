@@ -269,7 +269,6 @@ class PopulationFit(object):
             
             # fit
             self.ballpark
-            self.overloaded_ballpark
             self.estimate
             self.overloaded_estimate
             
@@ -288,7 +287,16 @@ class PopulationFit(object):
             # print
             if self.verbose: # pragma: no cover
                 print(self.msg)
-            
+    
+    
+    @auto_attr
+    def best_cached_model_parameters(self):
+        a = self.model.cached_model_timeseries
+        b = self.data
+        rss = ne.evaluate('sum((a-b)**2,axis=1)')
+        idx = np.argmin(rss)
+        return self.model.cached_model_parameters[idx]
+    
     # the brute search
     @auto_attr
     def brute_force(self):
@@ -299,43 +307,28 @@ class PopulationFit(object):
                                         self.bounds,
                                         self.Ns,
                                         self.very_verbose)
-    @auto_attr
-    def best_cached_model_parameters(self):
-        a = self.model.cached_model_timeseries
-        b = self.data
-        rss = ne.evaluate('sum((a-b)**2,axis=1)')
-        idx = np.argmin(rss)
-        return self.model.cached_model_parameters[idx]
-        
+    
     @auto_attr
     def ballpark(self):
         
         if self.model.cached_model_path is not None:
             return self.best_cached_model_parameters
         else:
-            return self.brute_force[0]
+            ballpark = np.append(self.brute_force[0],(np.abs(self.slope),self.intercept))
+            if self.very_verbose:
+                print('The gridfit solution was %s!' %(ballpark))
+            return ballpark
     
     # the gradient search
     @auto_attr
     def gradient_descent(self):
         
-        # this is in case we want to compute baseline and beta
-        # parameters via linear regression rather than estimation
-        # this should only be used for a grid-search, not fmin
-        if self.overloaded_ballpark is not None:
-            return utils.gradient_descent_search(self.data,
-                                                 utils.error_function,
-                                                 self.model.generate_prediction,
-                                                 self.overloaded_ballpark,
-                                                 self.bounds,
-                                                 self.very_verbose)
-        else:
-            return utils.gradient_descent_search(self.data,
-                                                 utils.error_function,
-                                                 self.model.generate_prediction,
-                                                 self.ballpark,
-                                                 self.bounds,
-                                                 self.very_verbose)
+        return utils.gradient_descent_search(self.data,
+                                             utils.error_function,
+                                             self.model.generate_prediction,
+                                             self.ballpark,
+                                             self.bounds,
+                                             self.very_verbose)
     
     @auto_attr
     def overloaded_estimate(self):
@@ -344,19 +337,6 @@ class PopulationFit(object):
         `overloaded_estimate` allows for representing the fitted
         parameter estimates in more useful units, such as 
         Cartesian to polar coordinates, or Hz to log(Hz).
-        
-        """
-        
-        return None
-    
-    @auto_attr
-    def overloaded_ballpark(self):
-        
-        """
-        `overloaded_ballpark` allows for attaching the calculated 
-        `beta` and `baseline` from the intial grid-fit to `ballpark` 
-        and sets up the gradient descent to also include these 
-        parameters for fine-tuned fitting.
         
         """
         
@@ -377,7 +357,7 @@ class PopulationFit(object):
     
     @auto_attr
     def ballpark_prediction(self):
-        return self.model.generate_prediction(*np.append(self.ballpark,(1,0)), unscaled=True)
+        return self.model.generate_prediction(*np.append(self.brute_force[0],(1,0)), unscaled=True)
     
     @auto_attr
     def scaled_ballpark_prediction(self):
