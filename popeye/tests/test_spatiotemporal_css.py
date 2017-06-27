@@ -16,10 +16,8 @@ def test_strf_css_fit():
     viewing_distance = 38
     screen_width = 25
     thetas = np.tile(np.arange(0,360,90),2)
-    thetas = np.insert(thetas,0,-1)
-    thetas = np.append(thetas,-1)
-    num_blank_steps = 20
-    num_bar_steps = 20
+    num_blank_steps = 0
+    num_bar_steps = 30
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
@@ -99,25 +97,20 @@ def test_strf_css_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),[-3.,  2.,  1.5 ,  0.95,  0.95, 0.87769466, -0.25])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),[-3.,  2.,  1.5 ,  0.95,  0.95, 0.8893113, -0.25])
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x, 1)
-    npt.assert_almost_equal(fit.y, y, 1)
-    npt.assert_almost_equal(fit.sigma, sigma, 1)
-    npt.assert_almost_equal(fit.n, n, 1)
-    npt.assert_almost_equal(fit.weight, weight, 1)
-    npt.assert_almost_equal(fit.beta, beta, 1)
-    npt.assert_almost_equal(fit.baseline, baseline, 1)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.n, n, 2)
+    npt.assert_almost_equal(fit.weight, weight, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate,[2.5263689305237405,
-                                                     2.7346764426634871,
-                                                     1.3095695698432792,
-                                                     0.9013959296721088,
-                                                     0.94982341134496429,
-                                                     0.88089506069647616])
-                                                     
+    npt.assert_almost_equal(fit.overloaded_estimate,[2.5266437,  2.7390143,  1.3014282,  0.9004958,  0.9499708, 0.8801774])
+    
     # rfs
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)

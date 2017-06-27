@@ -26,7 +26,7 @@ def test_og_fit():
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.50
+    scale_factor = 1.0
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
@@ -54,9 +54,9 @@ def test_og_fit():
     data = model.generate_prediction(x, y, sigma, beta, baseline)
     
     # set search grid
-    x_grid = utils.grid_slice(-10,10,3)
-    y_grid = utils.grid_slice(-10,10,3)
-    s_grid = utils.grid_slice (0.25,5.25,3)
+    x_grid = utils.grid_slice(-10,10,5)
+    y_grid = utils.grid_slice(-10,10,5)
+    s_grid = utils.grid_slice (0.25,5.25,5)
     
     # set search bounds
     x_bound = (-12.0,12.0)
@@ -73,17 +73,17 @@ def test_og_fit():
     fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal(fit.x0, -10.0, 2)
-    npt.assert_almost_equal(fit.y0, 0.0, 2)
-    npt.assert_almost_equal(fit.s0, 5.25, 2)
-    npt.assert_almost_equal(fit.beta0, 2.87, 2)
+    npt.assert_almost_equal(fit.x0, -5.0, 2)
+    npt.assert_almost_equal(fit.y0, 5.0, 2)
+    npt.assert_almost_equal(fit.s0, 1.5, 2)
+    npt.assert_almost_equal(fit.beta0, 2.2131609207035576)
     npt.assert_almost_equal(fit.baseline0, -0.6, 1)
     
     # assert equivalence
-    npt.assert_almost_equal(fit.x, x, 2)
-    npt.assert_almost_equal(fit.y, y, 2)
-    npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.x, x)
+    npt.assert_almost_equal(fit.y, y)
+    npt.assert_almost_equal(fit.sigma, sigma)
+    npt.assert_almost_equal(fit.beta, beta)
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)

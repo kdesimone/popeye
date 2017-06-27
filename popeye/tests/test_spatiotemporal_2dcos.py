@@ -19,16 +19,16 @@ def test_strf_2dcos_fit():
     thetas = np.tile(np.arange(0,360,90),2)
     thetas = np.insert(thetas,0,-1)
     thetas = np.append(thetas,-1)
-    num_blank_steps = 20
-    num_bar_steps = 20
+    num_blank_steps = 0
+    num_bar_steps = 30
     ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.50
-    pixels_down = 200
-    pixels_across = 200
+    scale_factor = 1.0
+    pixels_down = 100
+    pixels_across = 100
     dtype = ctypes.c_int16
-    Ns = 3
+    Ns = 5
     voxel_index = (1,2,3)
     auto_fit = True
     verbose = 1
@@ -90,7 +90,7 @@ def test_strf_2dcos_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5      ,  3.25     ,  3.       ,  0.95     ,  0.9076397, -0.25     ])
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0),[-0.5      ,  3.25     ,  3.       ,  0.725    ,  0.8706733, -0.25     ])
     
     # fine fit
     npt.assert_almost_equal(fit.x, x)

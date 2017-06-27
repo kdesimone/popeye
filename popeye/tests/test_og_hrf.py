@@ -26,7 +26,7 @@ def test_og_fit():
     ecc = 12
     tr_length = 1.0
     frames_per_tr = 1.0
-    scale_factor = 0.50
+    scale_factor = 1.0
     pixels_across = 100
     pixels_down = 100
     dtype = ctypes.c_int16
@@ -41,7 +41,7 @@ def test_og_fit():
     # initialize the gaussian model
     model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
     model.hrf_delay = 0
-    model.mask_size = 6
+    model.mask_size = 5
     
     # generate a random pRF estimate
     x = -5.24
@@ -78,8 +78,8 @@ def test_og_fit():
     # coarse fit
     npt.assert_almost_equal(fit.x0, -5.0)
     npt.assert_almost_equal(fit.y0, 5.0)
-    npt.assert_almost_equal(fit.s0, 2.75)
-    npt.assert_almost_equal(fit.beta0, 2.7237701222349835)
+    npt.assert_almost_equal(fit.s0, 1.5)
+    npt.assert_almost_equal(fit.beta0, 2.1843385749772861)
     npt.assert_almost_equal(fit.baseline0, -0.625)
     npt.assert_almost_equal(fit.hrf0, 0.5)
     

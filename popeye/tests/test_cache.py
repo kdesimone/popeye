@@ -42,16 +42,6 @@ def test_cache_model():
     model.hrf_delay = 0
     model.mask_size = 5
     
-    # generate a random pRF estimate
-    x = -5.24
-    y = 2.58
-    sigma = 1.24
-    beta = 2.5    
-    baseline = -0.25
-    
-    # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta, baseline)
-    
     # set cache grids
     x_grid = utils.grid_slice(-10, 10, 10)
     y_grid = utils.grid_slice(-10, 10, 10)
@@ -65,30 +55,14 @@ def test_cache_model():
     cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1);
     
     # save it out
-    now = int(time.clock()*1000)
-    pickle.dump(cache, open('/tmp/og_cached_model_%d.pkl' %(now),'wb'))
+    pickle.dump(cache, open('/tmp/og_cached_model.pkl','wb'))
     
-    model.cached_model_path = '/tmp/og_cached_model_%d.pkl' %(now)
+    # make sure its the right size
+    cached_model = pickle.load(open('/tmp/og_cached_model.pkl','rb'))
     
-    # set search bounds
-    x_bounds = (-15.0,15.0)
-    y_bounds = (-15.0,15.0)
-    s_bounds = (1/model.stimulus.ppd, 10.0)
-    b_bounds = (1e-8,10)
-    m_bounds = (-5,5)
-    bounds = (x_bounds, y_bounds, s_bounds, b_bounds, m_bounds)
-    
-    # fitting params
-    auto_fit = True
-    verbose = 1
-    
-    # fit the model
-    fit = og.GaussianFit(model, data, grids, bounds, verbose=verbose, auto_fit=False)
-    
-    
-    
+    nt.assert_equal(np.sum([c[0] for c in cache]),np.sum([c[0] for c in cached_model]))
 
-def test_cache_model():
+def test_resurrect_model():
     
     # stimulus features
     viewing_distance = 38
@@ -113,49 +87,30 @@ def test_cache_model():
     # create an instance of the Stimulus class
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
-    # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
-    model.hrf_delay = 0
-    model.mask_size = 5
-    
-    # generate a random pRF estimate
-    x = -5.24
-    y = 2.58
-    sigma = 1.24
-    beta = 2.5    
-    baseline = -0.25
-    
-    # create the "data"
-    data = model.generate_prediction(x, y, sigma, beta, baseline)
-    
     # set cache grids
     x_grid = utils.grid_slice(-10, 10, 10)
     y_grid = utils.grid_slice(-10, 10, 10)
     s_grid = utils.grid_slice(0.55,5.25, 10)
     grids = (x_grid, y_grid, s_grid,)
     
+    # initialize the gaussian model
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model.hrf_delay = 0
+    model.mask_size = 5
+    
     # seed rng
     np.random.seed(4932)
     
-    # cache the pRF model
-    cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1)
+    # cache the model
+    cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1);
     
-    # save it out
-    now = int(time.clock()*1000)
-    pickle.dump(cache, open('/tmp/og_cached_model_%d.pkl' %(now),'wb'))
-    
-    # re-read it in 
-    cached_model = pickle.load(open('/tmp/og_cached_model_%d.pkl' %(now),'rb'))
-    
-    # timeseries
-    orig_cached_timeseries = np.array([c[0] for c in cache])
-    cached_timeseries = np.array([c[0] for c in cached_model])
-    
-    # parameters
-    orig_cached_parameters = np.array([c[0] for c in cache])
-    cached_parameters = np.array([c[0] for c in cached_model])
+    # resurrect cached model
+    cached_model_path = '/tmp/og_cached_model.pkl'
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf, cached_model_path=cached_model_path)
+    model.hrf_delay = 0
+    model.mask_size = 5
     
     # make sure the same
-    nt.assert_true(np.sum(orig_cached_parameters - cached_parameters) == 0)
-    nt.assert_true(np.sum(orig_cached_parameters - cached_parameters) == 0)
+    nt.assert_true(np.sum([c[0] for c in cache] -  model.cached_model_timeseries) == 0)
+    nt.assert_true(np.sum([c[1] for c in cache] -  model.cached_model_parameters) == 0)
     

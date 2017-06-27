@@ -26,7 +26,7 @@ def test_auditory_fit():
     auto_fit = True
     verbose = 1
     debug = False
-    Ns = 20
+    Ns = 10
     
     # generate auditory stimulus
     time = np.linspace(0,duration,duration*Fs)

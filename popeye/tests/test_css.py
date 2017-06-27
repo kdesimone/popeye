@@ -74,7 +74,7 @@ def test_css_fit():
     
     # coarse fit
     observed = [fit.x0, fit.y0, fit.s0, fit.n0, fit.beta0, fit.baseline0]
-    expected = [-3., 2., 0.72833938, 0.5, 0.89899980678728497, -0.24999999999999997]
+    expected = [-3., 2., 0.72833938, 0.5, 0.9377413, -0.24999999999999997]
     npt.assert_almost_equal(observed, expected)
     
     # fine fit
