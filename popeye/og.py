@@ -90,7 +90,7 @@ class GaussianModel(PopulationModel):
         model *= np.abs(p[0])
         
         return model
-            
+        
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, beta, baseline, unscaled=False):
         
@@ -245,14 +245,6 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def overloaded_estimate(self):
         return [self.theta, self.rho, self.sigma, self.beta, self.baseline]
-
-    
-    @auto_attr
-    def overloaded_ballpark(self):
-        overload = np.append(self.ballpark, (self.beta0, self.baseline0))
-        if self.very_verbose:
-            print('The final solution of the gridfit is %s!' %(overload))
-        return overload  
     
     @auto_attr
     def x0(self):
@@ -268,11 +260,11 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def beta0(self):
-        return np.abs(self.slope)
+        return self.ballpark[3]
         
     @auto_attr
     def baseline0(self):
-        return self.intercept
+        return self.ballpark[4]
             
     @auto_attr
     def x(self):
