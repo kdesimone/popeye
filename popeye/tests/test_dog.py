@@ -27,7 +27,7 @@ def test_dog():
     pixels_across = 100
     dtype = ctypes.c_int16
     auto_fit = True
-    verbose = 2
+    verbose = 0
     
     # create the sweeping bar stimulus in memory
     bar = simulate_bar_stimulus(pixels_across, pixels_down, viewing_distance, 
@@ -70,7 +70,7 @@ def test_dog():
     bounds = (x_bound, y_bound, s_bound, sr_bound, vr_bound,)
     
     # fit it
-    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds, verbose=verbose)
+    fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds)
     
     # coarse fit
     npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), [ 1.66666667,  1.66666667,  2.82431875,  2.33333333,  0.1, 0.28635548, -0.025     ])

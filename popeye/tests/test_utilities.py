@@ -412,7 +412,7 @@ def test_error_function():
     bounds = ((0.0,20.0),)
 
     # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
-    verbose = 2
+    verbose = 0
 
     # create a simple function to transform the parameters
     func = lambda freq: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq)
