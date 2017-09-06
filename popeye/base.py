@@ -290,7 +290,7 @@ class PopulationFit(object):
     
     
     @auto_attr
-    def best_cached_model_parameters(self):
+    def best_cached_model_parameters(self): # pragma: no cover
         a = self.model.cached_model_timeseries
         b = self.data
         rss = ne.evaluate('sum((a-b)**2,axis=1)')
@@ -311,27 +311,34 @@ class PopulationFit(object):
     @auto_attr
     def ballpark(self):
         
-        if self.model.cached_model_path is not None:
+        if self.model.cached_model_path is not None: # pragma: no cover
             return self.best_cached_model_parameters
         else:
-            ballpark = np.append(self.brute_force[0],(np.abs(self.slope),self.intercept))
-            if self.very_verbose:
-                print('The gridfit solution was %s!' %(ballpark))
-            return ballpark
+            return np.append(self.brute_force[0],(np.abs(self.slope),self.intercept))
     
     # the gradient search
     @auto_attr
     def gradient_descent(self):
         
-        return utils.gradient_descent_search(self.data,
-                                             utils.error_function,
-                                             self.model.generate_prediction,
-                                             self.ballpark,
-                                             self.bounds,
-                                             self.very_verbose)
-    
+        if self.very_verbose:
+            print('The gridfit solution was %s, starting gradient descent ...' %(self.ballpark))
+        
+        if hasattr(self, 'overloaded_ballpark'): # pragma: no cover
+            return utils.gradient_descent_search(self.data,
+                                                 utils.error_function,
+                                                 self.model.generate_prediction,
+                                                 self.overloaded_ballpark,
+                                                 self.bounds,
+                                                 self.very_verbose)
+        else:
+             return utils.gradient_descent_search(self.data,
+                                                  utils.error_function,
+                                                  self.model.generate_prediction,
+                                                  self.ballpark,
+                                                  self.bounds,
+                                                  self.very_verbose)
     @auto_attr
-    def overloaded_estimate(self):
+    def overloaded_estimate(self): # pragma: no cover
         
         """
         `overloaded_estimate` allows for representing the fitted
