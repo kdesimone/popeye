@@ -387,7 +387,7 @@ class SpatioTemporalFit(PopulationFit):
         
         r""" Returns the user-defined overloaded ballpark estimate."""
         
-        return np.append(self.ballpark, (self.beta0, self.baseline0))
+        return [self.x0, self.y0, self.s0, self.weight0, self.beta0, self.baseline0]
     
     @auto_attr
     def x0(self):

@@ -236,7 +236,7 @@ class AuditoryFit(PopulationFit):
     # as a sub-stitute for beta
     @auto_attr
     def overloaded_ballpark(self):
-        return np.append(self.ballpark, (self.beta0, self.baseline0))
+        return [self.center_freq0, self.sigma0, self.hrf0, self.beta0, self.baseline0]
     
     @auto_attr
     def overloaded_estimate(self):

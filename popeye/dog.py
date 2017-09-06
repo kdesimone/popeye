@@ -213,7 +213,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
        
     @auto_attr
     def overloaded_ballpark(self):
-       return np.append(self.ballpark, (self.beta0, self.baseline0))
+       return [self.x0, self.y0, self.s0, self.sr0, self.vr0, self.beta0, self.baseline0]
     
     @auto_attr
     def x0(self):
