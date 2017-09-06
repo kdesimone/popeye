@@ -16,6 +16,78 @@ try:
 except NameError:  # python3
     xrange = range
 
+def slicer(anat, stat, mask, slice_axis, anat_lim, stat_lim, cmap, offset=10, figsize=(2,10)):
+
+    # coords
+    indices = np.where(mask>0)
+
+    # set dims
+    dims = np.array([0,1,2])
+
+    # figure out which is inplane
+    inplane = dims[dims!=slice_axis]
+
+    # find the ranges
+    min_x = indices[inplane[0]].min()-offset
+    max_x = indices[inplane[0]].max()+offset
+    idx_x = np.arange(min_x,max_x+1)
+
+    min_y = indices[inplane[1]].min()-offset
+    max_y = indices[inplane[1]].max()+offset
+    idx_y = np.arange(min_y,max_y+1)
+
+    # find the slices
+    slices = np.unique(indices[slice_axis])
+    numslices = len(slices)
+
+    # get the box of interest
+    box_idx = {}
+    box_idx[slice_axis] = slices
+    box_idx[inplane[0]] = idx_x
+    box_idx[inplane[1]] = idx_y
+
+    mask_box = np.take(np.take(np.take(mask,box_idx[slice_axis],axis=slice_axis),box_idx[inplane[0]],axis=inplane[0]),box_idx[inplane[1]],axis=inplane[1])
+    anat_box = np.take(np.take(np.take(anat,box_idx[slice_axis],axis=slice_axis),box_idx[inplane[0]],axis=inplane[0]),box_idx[inplane[1]],axis=inplane[1])
+    stat_box = np.take(np.take(np.take(stat,box_idx[slice_axis],axis=slice_axis),box_idx[inplane[0]],axis=inplane[0]),box_idx[inplane[1]],axis=inplane[1])
+
+    # calculate cmap bounds
+    anat_lolim = np.percentile(anat_box,anat_lim[0])
+    anat_uplim = np.percentile(anat_box,anat_lim[1])
+
+    # setup figure
+    fig = plt.figure(figsize=figsize)
+    fig.subplots_adjust(left=.05, right=.95, bottom=.05, top=.95, wspace=.05, hspace=.05)
+
+    subplot_idx = 1
+
+    # main loop
+    for s in xrange(numslices):
+
+        # grab slice
+        if slice_axis == 2:
+            mask_sl = np.flipud(np.rot90(mask_box.take(s,axis=slice_axis)))
+            anat_sl = np.flipud(np.rot90(anat_box.take(s,axis=slice_axis)))
+            stat_sl = np.flipud(np.rot90(stat_box.take(s,axis=slice_axis)))
+        else:
+            mask_sl = np.rot90(mask_box.take(s,axis=slice_axis))
+            anat_sl = np.rot90(anat_box.take(s,axis=slice_axis))
+            stat_sl = np.rot90(stat_box.take(s,axis=slice_axis))
+
+        # show the unlabeled anat
+        ax = fig.add_subplot(numslices,2,subplot_idx, aspect='equal')
+        ax.imshow(anat_sl,cmap=cm.gray,interpolation='none',vmin=anat_lolim,vmax=anat_uplim,origin='upper')
+        ax.axis('off')
+        subplot_idx += 1
+
+        # statmap
+        ax = fig.add_subplot(numslices,2,subplot_idx, aspect='equal')
+        ma = np.ma.masked_where(mask_sl==0, stat_sl)
+        ax.imshow(anat_sl, cmap=cm.gray, interpolation='none', vmin=anat_lolim,vmax=anat_uplim, origin='upper')
+        ax.imshow(ma, cmap=cmap, interpolation='none', vmin=stat_lim[0], vmax=stat_lim[1], origin='upper')
+        ax.axis('off')
+        subplot_idx += 1
+
+    return fig
 
 def make_movie_static(stim_arr, dims, vmin=0, vmax=255, dpi=100, fps=60, write=False, fname=None):
 
