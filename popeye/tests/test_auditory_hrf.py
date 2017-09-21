@@ -71,8 +71,6 @@ def test_auditory_hrf_fit():
     # fit it
     fit = aud.AuditoryFit(model, data, grids, bounds, Ns=Ns)
     
-    print(fit.overloaded_ballpark)
-    
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
     npt.assert_almost_equal(fit.sigma0, 2)
