@@ -209,11 +209,7 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def overloaded_estimate(self):
-       return [self.theta, self.rho, self.sigma, self.sigma_ratio, self.volume_ratio, self.beta, self.baseline]
-       
-    @auto_attr
-    def overloaded_ballpark(self):
-       return [self.x0, self.y0, self.s0, self.sr0, self.vr0, self.beta0, self.baseline0]
+       return [self.theta, self.rho, self.sigma, self.sigma_ratio, self.volume_ratio, self.beta, self.baseline] 
     
     @auto_attr
     def x0(self):
@@ -237,11 +233,11 @@ class DifferenceOfGaussiansFit(PopulationFit):
     
     @auto_attr
     def beta0(self):
-        return np.abs(self.slope)
-        
+        return self.ballpark[5]
+    
     @auto_attr
     def baseline0(self):
-        return self.intercept
+        return self.ballpark[6]
     
     @auto_attr
     def x(self):
