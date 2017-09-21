@@ -383,13 +383,6 @@ class SpatioTemporalFit(PopulationFit):
         return [self.theta, self.rho, self.sigma, self.weight, self.beta, self.baseline]
     
     @auto_attr
-    def overloaded_ballpark(self):
-        
-        r""" Returns the user-defined overloaded ballpark estimate."""
-        
-        return [self.x0, self.y0, self.s0, self.weight0, self.beta0, self.baseline0]
-    
-    @auto_attr
     def x0(self):
         return self.ballpark[0]
     
@@ -407,11 +400,11 @@ class SpatioTemporalFit(PopulationFit):
     
     @auto_attr
     def beta0(self):
-        return np.abs(self.slope)
+        return self.ballpark[4]
     
     @auto_attr
     def baseline0(self):
-        return self.intercept
+        return self.ballpark[5]
     
     @auto_attr
     def x(self):
