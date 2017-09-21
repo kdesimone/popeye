@@ -261,11 +261,7 @@ class GaussianFit(PopulationFit):
     @auto_attr
     def overloaded_estimate(self):
         return [self.theta, self.rho, self.sigma, self.hrf_delay + 5, self.beta, self.baseline]
-    
-    @auto_attr
-    def overloaded_ballpark(self):
-        return [self.x0, self.y0, self.s0, self.hrf0, self.beta0, self.baseline0]
-    
+        
     @auto_attr
     def x0(self):
         return self.ballpark[0]
@@ -284,11 +280,11 @@ class GaussianFit(PopulationFit):
     
     @auto_attr
     def beta0(self):
-        return np.abs(self.slope)
+        return self.ballpark[4]
     
     @auto_attr
     def baseline0(self):
-        return self.intercept
+        return self.ballpark[5]
     
     @auto_attr
     def x(self):
