@@ -218,12 +218,6 @@ class AuditoryFit(PopulationFit):
         # invoke the base class
         PopulationFit.__init__(self, model, data, grids, bounds, 
                                voxel_index, Ns, auto_fit, verbose)
-                               
-    # overload ballpark
-    @auto_attr
-    def overloaded_ballpark(self):
-        
-        return [self.center_freq0, self.sigm0, self.beta0, self.baseline0]
     
     @auto_attr
     def overloaded_estimate(self):
@@ -240,11 +234,11 @@ class AuditoryFit(PopulationFit):
         
     @auto_attr
     def beta0(self):
-        return np.abs(self.slope)
+        return self.ballpark[2]
 
     @auto_attr
     def baseline0(self):
-        return self.intercept
+        return self.ballpark[3]
     
     @auto_attr
     def center_freq(self):
