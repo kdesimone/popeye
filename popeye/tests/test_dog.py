@@ -19,7 +19,7 @@ def test_dog():
     # thetas = np.append(thetas,-1)
     num_blank_steps = 0
     num_bar_steps = 30
-    ecc = 15
+    ecc = 10
     tr_length = 1.0
     frames_per_tr = 1.0
     scale_factor = 0.50
@@ -73,12 +73,22 @@ def test_dog():
     fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), [ 1.66666667,  1.66666667,  2.82431875,  2.33333333,  0.1, 0.28635548, -0.025     ])
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio)
-    npt.assert_almost_equal(fit.volume_ratio, volume_ratio)
+    ballpark = [2.5,
+                2.5,
+                2.9932390612571296,
+                2.0,
+                0.10000000000000001,
+                0.38929421818351373,
+                -0.025000000000000012]
+                
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), ballpark)
+    
+    # fine fit
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 2)
+    npt.assert_almost_equal(fit.volume_ratio, volume_ratio, 2)
     
     # test the RF
     rf = fit.model.receptive_field(*fit.estimate[0:-2])
