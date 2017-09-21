@@ -73,11 +73,9 @@ def test_og_fit():
     fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal(fit.x0, -5.0, 2)
-    npt.assert_almost_equal(fit.y0, 5.0, 2)
-    npt.assert_almost_equal(fit.s0, 1.5, 2)
-    npt.assert_almost_equal(fit.beta0, 2.2131609207035576)
-    npt.assert_almost_equal(fit.baseline0, -0.6, 1)
+    ballpark = [-6.0, 2.0, 1.25, 2.4304349220834678, -0.62499999999999989]
+    
+    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0, fit.beta0, fit.baseline0), ballpark)
     
     # assert equivalence
     npt.assert_almost_equal(fit.x, x)
