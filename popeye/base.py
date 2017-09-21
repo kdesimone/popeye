@@ -313,6 +313,8 @@ class PopulationFit(object):
         
         if self.model.cached_model_path is not None: # pragma: no cover
             return self.best_cached_model_parameters
+        elif hasattr(self, 'overloaded_ballpark'): # pragma: no cover
+            return self.overloaded_ballpark
         else:
             return np.append(self.brute_force[0],(np.abs(self.slope),self.intercept))
     
