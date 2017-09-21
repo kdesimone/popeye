@@ -73,17 +73,15 @@ def test_og_fit():
     fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    npt.assert_almost_equal(fit.x0, -5.0)
-    npt.assert_almost_equal(fit.y0, 5.0)
-    npt.assert_almost_equal(fit.s0, 2.75)
-    npt.assert_almost_equal(fit.beta0, -0.27940915461573279)
-    npt.assert_almost_equal(fit.baseline0, -0.062499999999999993)
+    ballpark = [-6.0, 2.0, 1.25, -0.24304349220834681, -0.062500000000000014]
+    
+    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0, fit.beta0, fit.baseline0), ballpark)
     
     # assert equivalence
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.beta, beta)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
     
     # test receptive field
     rf = generate_og_receptive_field(x, y, sigma, fit.model.stimulus.deg_x, fit.model.stimulus.deg_y)
