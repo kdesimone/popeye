@@ -193,50 +193,14 @@ def test_distance_mask():
 def test_grid_slice():
     
     # test this case
-    from_1 = 0
-    to_1 = 20
+    from_1 = 5
+    to_1 = 15
     from_2 = 0
     to_2 = 2
-    Ns=5
+    Ns=10
     
     # set a parameter to estimate
     params = (10,1)
-    
-    # see if we properly tile the parameter space for Ns=2
-    grid_1 = utils.grid_slice(from_1, to_1, Ns)
-    grid_2 = utils.grid_slice(from_2, to_2, Ns)
-    grids = (grid_1, grid_2)
-    
-    # unbounded
-    bounds = ()
-    
-    # create a simple function to generate a response from the parameter
-    func = lambda freq,offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
-    
-    # create a "response"
-    response = func(*params)
-    
-    # get the ball-park estimate
-    p0 = utils.brute_force_search(response, utils.error_function, func, grids, bounds)
-    
-    # make sure we fit right
-    npt.assert_equal(params, p0[0])
-    
-    # make sure we sliced it right
-    npt.assert_equal(p0[2][0].min(),from_1)
-    npt.assert_equal(p0[2][0].max(),to_1)
-    npt.assert_equal(p0[2][1].min(),from_2)
-    npt.assert_equal(p0[2][1].max(),to_2)
-    
-    # test this case
-    from_1 = 0
-    to_1 = 20
-    from_2 = 1
-    to_2 = 2
-    Ns=2
-    
-    # set a parameter to estimate
-    params = (0,1)
     
     # see if we properly tile the parameter space for Ns=2
     grid_1 = utils.grid_slice(from_1, to_1, Ns)
@@ -463,11 +427,11 @@ def test_gradient_descent_search():
 def test_brute_force_search_manual_grids():
 
     # create a parameter to estimate
-    params = (10,10)
+    params = (10,8)
 
     # we need to define some search bounds
-    grid_1 = utils.grid_slice(0,20,5)
-    grid_2 = utils.grid_slice(5,15,5)
+    grid_1 = utils.grid_slice(5,15,10)
+    grid_2 = utils.grid_slice(5,15,10)
     grids = (grid_1,grid_2,)
     bounds = ()
 
