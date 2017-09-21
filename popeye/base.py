@@ -313,10 +313,8 @@ class PopulationFit(object):
         
         if self.model.cached_model_path is not None: # pragma: no cover
             return self.best_cached_model_parameters
-        elif hasattr(self, 'overloaded_ballpark'): # pragma: no cover
-            return self.overloaded_ballpark
         else:
-            return np.append(self.brute_force[0],(np.abs(self.slope),self.intercept))
+            return np.append(self.brute_force[0],(self.slope,self.intercept))
     
     # the gradient search
     @auto_attr
@@ -324,14 +322,6 @@ class PopulationFit(object):
         
         if self.very_verbose:
             print('The gridfit solution was %s, starting gradient descent ...' %(self.ballpark))
-        
-        if hasattr(self, 'overloaded_ballpark'): # pragma: no cover
-            return utils.gradient_descent_search(self.data,
-                                                 utils.error_function,
-                                                 self.model.generate_prediction,
-                                                 self.overloaded_ballpark,
-                                                 self.bounds,
-                                                 self.very_verbose)
         else:
              return utils.gradient_descent_search(self.data,
                                                   utils.error_function,
