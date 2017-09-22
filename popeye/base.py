@@ -322,13 +322,13 @@ class PopulationFit(object):
         
         if self.very_verbose:
             print('The gridfit solution was %s, starting gradient descent ...' %(self.ballpark))
-        else:
-             return utils.gradient_descent_search(self.data,
-                                                  utils.error_function,
-                                                  self.model.generate_prediction,
-                                                  self.ballpark,
-                                                  self.bounds,
-                                                  self.very_verbose)
+        
+        return utils.gradient_descent_search(self.data,
+                                             utils.error_function,
+                                             self.model.generate_prediction,
+                                             self.ballpark,
+                                             self.bounds,
+                                             self.very_verbose)
     @auto_attr
     def overloaded_estimate(self): # pragma: no cover
         
