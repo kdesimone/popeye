@@ -86,7 +86,7 @@ class SpatioTemporalModel(PopulationModel):
         model += p[1]
         
         # scale
-        model *= np.abs(p[0])
+        model *= p[0]
         
         return model
         
