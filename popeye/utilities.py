@@ -124,14 +124,18 @@ def spm_hrf(delay, TR):
 
 def grid_slice(start, stop, Ns, dryrun=False):
     
+    #### NOTE: there is some weird stuff going on when Ns is => stop-start
+    #### it will return an array/slice object that is longer and wide by 1
+    #### element. This is easy to fix in the dry-run mode but not so with
+    #### the slice object. Why oh why does scipy.brute insist on slice?
+    
     # special case
     if Ns == 2:
         step = stop-start
     # all others
     else:
         step = np.diff(np.linspace(start,stop,Ns))[0]
-            
-            
+    
     # if true, this return the ndarray rather than slice object.
     if dryrun: # pragma: no cover
         return arange(start, stop+step, step) # pragma: no cover
