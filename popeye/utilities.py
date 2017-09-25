@@ -129,14 +129,14 @@ def grid_slice(start, stop, Ns, dryrun=False):
         step = stop-start
     # all others
     else:
-        step = (stop-start) / Ns
-        stop += step
-        
+        step = np.diff(np.linspace(start,stop,Ns))[0]
+            
+            
     # if true, this return the ndarray rather than slice object.
     if dryrun: # pragma: no cover
         return arange(start, stop+step, step) # pragma: no cover
     else:
-        return slice(start, stop, step)
+        return slice(start, stop+step, step)
         
 def distance_mask(x, y, sigma, deg_x, deg_y, amplitude=1):
     
