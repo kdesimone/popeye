@@ -20,6 +20,7 @@ script:
     # Change into an innocuous directory and find tests from installation
     - mkdir for_testing
     - cd for_testing
+    - cp ../.coveragerc .
     - nosetests --verbose --with-coverage --cover-package=popeye --with-doctest popeye
 
 after_success:
