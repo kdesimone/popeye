@@ -20,11 +20,7 @@ script:
     # Change into an innocuous directory and find tests from installation
     - mkdir for_testing
     - cd for_testing
-    - if [ "${COVERAGE}" == "1" ]; then
-      cp ../.coveragerc .;
-      COVER_ARGS="--with-coverage --cover-package popeye";
-      fi
-    - nosetests --verbose $COVER_ARGS popeye
+    - nosetests --verbose --with-coverage --cover-package --with-doctest popeye
 
 after_success:
     - coveralls
