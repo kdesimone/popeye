@@ -41,7 +41,7 @@ script:
       cp ../.coveragerc .;
       COVER_ARGS="--with-coverage --cover-package popeye";
       fi
-    - nosetests --with-doctest --verbose $COVER_ARGS popeye
+    - nosetests --verbose $COVER_ARGS popeye
 after_success:
     - coveralls
     - bash <(curl -s https://codecov.io/bash)
