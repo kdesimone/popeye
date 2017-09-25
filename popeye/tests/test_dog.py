@@ -73,13 +73,13 @@ def test_dog():
     fit = dog.DifferenceOfGaussiansFit(model, data, grids, bounds)
     
     # coarse fit
-    ballpark = [2.5,
-                2.5,
-                2.9932390612571296,
-                2.0,
+    ballpark = [1.666666666666667,
+                1.666666666666667,
+                2.8243187483428391,
+                1.9999999999999998,
                 0.10000000000000001,
-                0.38929421818351373,
-                -0.025000000000000012]
+                0.36100589969394553,
+                -0.025000000000000022]
                 
     npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), ballpark)
     

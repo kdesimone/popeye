@@ -90,7 +90,13 @@ def test_strf_2dcos_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    ballpark = [-2.0, 1.0, 1.2, 0.94999999999999996, 0.97767442436634, -0.25000000000000006]
+    ballpark = [-0.5,
+                 3.25,
+                 3.0,
+                 0.72499999999999998,
+                 0.87067329703529583,
+                 -0.25000000000000011]
+                 
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0), ballpark)
     
     # fine fit

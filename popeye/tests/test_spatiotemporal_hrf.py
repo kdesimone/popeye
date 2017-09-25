@@ -90,13 +90,13 @@ def test_strf_hrf_fit():
     fit = strf.SpatioTemporalFit(model, data, grids, bounds)
     
     # coarse fit
-    ballpark = [-0.5,
-     3.25,
-     0.75,
+    ballpark = [-3.0,
+     2.0,
+     1.5,
      0.94999999999999996,
-     0.0,
-     0.74043360803221647,
-     -0.24999999999999997]
+     -0.083333333333333343,
+     0.90357673780719261,
+     -0.24999999999999989]
      
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.hrf0,fit.beta0,fit.baseline0), ballpark)
     

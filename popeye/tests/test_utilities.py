@@ -197,7 +197,7 @@ def test_grid_slice():
     to_1 = 15
     from_2 = 0
     to_2 = 2
-    Ns=10
+    Ns=5
     
     # set a parameter to estimate
     params = (10,1)
@@ -427,11 +427,11 @@ def test_gradient_descent_search():
 def test_brute_force_search_manual_grids():
 
     # create a parameter to estimate
-    params = (10,8)
+    params = (10,10)
 
     # we need to define some search bounds
-    grid_1 = utils.grid_slice(5,15,10)
-    grid_2 = utils.grid_slice(5,15,10)
+    grid_1 = utils.grid_slice(5,15,5)
+    grid_2 = utils.grid_slice(5,15,5)
     grids = (grid_1,grid_2,)
     bounds = ()
 
