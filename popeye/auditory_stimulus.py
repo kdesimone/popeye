@@ -25,7 +25,7 @@ def generate_spectrogram(signal, Fs, tr_length, noverlap=0, bins_per_octave = 20
     nfft=win
     
     # get spectrum
-    freqs, times, spec = spectrogram(signal, Fs, nperseg=win, noverlap=noverlap, nfft=nfft)
+    freqs, times, spec = spectrogram(signal, Fs, nperseg=int(win), noverlap=noverlap, nfft=nfft)
     
     if decibels: # pragma: no cover
         
