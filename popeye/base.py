@@ -364,7 +364,11 @@ class PopulationFit(object):
     
     @auto_attr
     def slope(self):
-        return linregress(self.ballpark_prediction, self.data)[0]
+        slope = linregress(self.ballpark_prediction, self.data)[0]
+        if self.bounds[-2][0] is None or self.bounds[-2][0] < 0:
+            return slope
+        else:
+            return np.abs(slope)
     
     @auto_attr
     def intercept(self):
