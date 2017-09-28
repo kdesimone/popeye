@@ -91,6 +91,13 @@ class PopulationModel(object):
     def generate_prediction(self): # pragma: no cover
         raise NotImplementedError("Each pRF model must implement its own prediction!")
     
+    def regress(self, X, y):
+        slope, intercept = linregress(X, y)[0:2]
+        if hasattr(self, 'bounded_amplitude') and self.bounded_amplitude:
+            return np.abs(slope), intercept
+        else:
+            return slope, intercept
+    
     def distance_mask_coarse(self, x, y, sigma):
         
         if hasattr(self, 'mask_size'): # pragma: no cover
@@ -167,6 +174,7 @@ class PopulationModel(object):
     @auto_attr
     def cached_model_parameters(self):
         return self.resurrect_cached_model[1]
+        
         
 class PopulationFit(object):
     
@@ -254,12 +262,17 @@ class PopulationFit(object):
             self.data = self.model.results.resid
         
         # push data down to model
-        # there is probably a better of exposing the data
+        # there is probably a better way of exposing the data
         # to the PopulationModel. the idea is that the we want to
         # compute beta and baseline via linear regression rather
         # than estimate through optimization. Thus, model needs to see
         # the data. Since the data is in shared memory, no overhead incurred.
         self.model.data = data
+        
+        if self.bounds[-2][0] is not None and self.bounds[-2][0] > 0:
+            self.model.bounded_amplitude = True # +/- amplitudes
+        else:
+            self.model.bounded_amplitude = False # + amplitudes
         
         # automatic fitting
         if self.auto_fit:
@@ -364,15 +377,11 @@ class PopulationFit(object):
     
     @auto_attr
     def slope(self):
-        slope = linregress(self.ballpark_prediction, self.data)[0]
-        if self.bounds[-2][0] is None or self.bounds[-2][0] < 0:
-            return slope
-        else:
-            return np.abs(slope)
+        return self.model.regress(self.ballpark_prediction, self.data)[0]
     
     @auto_attr
     def intercept(self):
-        return linregress(self.ballpark_prediction, self.data)[1]
+        return self.model.regress(self.ballpark_prediction, self.data)[1]
     
     @auto_attr
     def prediction(self):
