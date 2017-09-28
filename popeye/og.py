@@ -80,14 +80,14 @@ class GaussianModel(PopulationModel):
         # units
         model = (model-np.mean(model)) / np.mean(model)
         
-        # regress out mean and linear
-        p = linregress(model, self.data)
+        # regress out mean and amplitude
+        beta, baseline = self.regress(model, self.data)
         
         # offset
-        model += p[1]
+        model += baseline
         
         # scale
-        model *= p[0]
+        model *= beta
         
         return model
         
