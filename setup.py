@@ -55,12 +55,11 @@ opts = dict(name=NAME,
 from distutils.extension import Extension
 from Cython.Distutils import build_ext as build_pyx_ext
 from numpy import get_include
-
 # add Cython extensions to the setup options
 exts = [Extension('popeye.spinach',
                   ['popeye/spinach.pyx'],
                    include_dirs=[get_include()],
-                   extra_compile_args=['-O3', '-march=native', '-mtune=native', '-funroll-loops'])
+                   extra_compile_args=['-O3', '-march=native', '-mtune=native', '-funroll-loops',])
                   ]
 opts['cmdclass'] = dict(build_ext=build_pyx_ext)
 opts['ext_modules'] = exts
