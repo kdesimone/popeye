@@ -77,7 +77,6 @@ that we collect while we present a participant with a visual stimulus. ::
     x_bound = (-12.0,12.0)
     y_bound = (-12.0,12.0)
     s_bound = (0.001,12.0)
-    b_bound = (1e-8,1e2)
     h_bound = (-5.0,5.0)
     
     ## package the grids and bounds
