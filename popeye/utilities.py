@@ -493,7 +493,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
         return np.inf # pragma: no cover
 
     # else, return RSS
-    error = np.sum((data-prediction)**2)
+    error = np.nansum((data-prediction)**2)
 
     # print for debugging
     if verbose:
