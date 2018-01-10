@@ -501,7 +501,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
 
     return error
 
-def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
+def double_gamma_hrf(delay, tr, d_1=5, d_2=15, fptr=1.0, integrator=trapz):
 
     r"""The double gamma hemodynamic reponse function (HRF).
     The user specifies only the delay of the peak and undershoot.
@@ -543,10 +543,10 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     """
 
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 5.0/tr+delay/tr
+    alpha_1 = d_1/tr+delay/tr
     beta_1 = 1.0
     c = 0.1
-    alpha_2 = 15.0/tr+delay/tr
+    alpha_2 = d_2/tr+delay/tr
     beta_2 = 1.0
 
     t = np.arange(0,32,tr)
