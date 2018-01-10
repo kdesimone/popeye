@@ -8,7 +8,6 @@ from popeye.onetime import auto_attr
 import time, ctypes, itertools
 import pickle
 import sharedmem
-import statsmodels.api as sm 
 from scipy.stats import linregress
 import popeye.utilities as utils
 import numpy as np
@@ -50,7 +49,7 @@ class PopulationModel(object):
     
     r""" Base class for all pRF models."""
     
-    def __init__(self, stimulus, hrf_model, cached_model_path=None, nuisance=None):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change, cached_model_path=None, nuisance=None):
         
         r"""Base class for all pRF models.
         
@@ -78,6 +77,7 @@ class PopulationModel(object):
         # propogate
         self.stimulus = stimulus
         self.hrf_model = hrf_model
+        self.normalizer = normalizer
         self.nuisance = nuisance
         self.cached_model_path = cached_model_path
         
@@ -275,7 +275,7 @@ class PopulationFit(object):
             self.model.bounded_amplitude = False # + amplitudes
         
         # automatic fitting
-        if self.auto_fit:
+        if self.auto_fit: # pragma: no cover
             
             # start
             self.start = time.time()
