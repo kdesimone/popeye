@@ -27,7 +27,7 @@ class SpatioTemporalModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change):
         
         """
         A spatiotemporal population receptive field model.
@@ -42,9 +42,13 @@ class SpatioTemporalModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model)
-    
-    
+        PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
+        
+        # attach HRF delay if user did not
+        if not hasattr(self, 'd_1'):
+            self.d_1 = 5
+            self.d_2 = 15
+        
     # for the final solution, we use spatiotemporal
     def generate_ballpark_prediction(self, x, y, sigma, weight, hrf_delay):
         
@@ -93,10 +97,10 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
-        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length))[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length, d_1=self.d_1, d_2=self.d_2))[0:len(mp_ts)]
         
         # units
-        model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         # regress out mean and linear
         p = linregress(model, self.data)
@@ -163,10 +167,10 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts 
         
         # convolve with HRF
-        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length))[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length, d_1=self.d_1, d_2=self.d_2))[0:len(mp_ts)]
         
         # convert units
-        model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         if unscaled:
             return model
@@ -394,7 +398,7 @@ class SpatioTemporalFit(PopulationFit):
         
         r""" Returns the user-defined overloaded estimate."""
         
-        return [self.theta, self.rho, self.sigma, self.weight, self.hrf_delay + 5, self.beta, self.baseline]
+        return [self.theta, self.rho, self.sigma, self.weight, self.hrf_delay + self.model.d_1, self.beta, self.baseline]
     
     @auto_attr
     def x0(self):

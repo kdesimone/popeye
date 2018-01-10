@@ -33,7 +33,7 @@ class SpatioTemporalModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change):
         
         """
         A spatiotemporal population receptive field model.
@@ -48,7 +48,7 @@ class SpatioTemporalModel(PopulationModel):
             
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model)
+        PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
         
         
     # for the final solution, we use spatiotemporal
@@ -77,7 +77,8 @@ class SpatioTemporalModel(PopulationModel):
         model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
         # units
-        model = (model - np.mean(model)) / np.mean(model)
+        # model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         # regress out mean and linear
         p = linregress(model, self.data)
@@ -116,7 +117,7 @@ class SpatioTemporalModel(PopulationModel):
         model = fftconvolve(mp_ts, self.hrf())[0:len(mp_ts)]
         
         # convert units
-        model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         if unscaled:
             return model
