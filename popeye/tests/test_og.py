@@ -6,7 +6,6 @@ import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
 from scipy.signal import fftconvolve
-import statsmodels.api as sm
 
 import popeye.utilities as utils
 import popeye.og as og
@@ -39,7 +38,7 @@ def test_og_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf, utils.percent_change)
     model.hrf_delay = 0
     model.mask_size = 6
     
@@ -117,7 +116,7 @@ def test_negative_og_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf, utils.percent_change)
     model.hrf_delay = 0
     model.mask_size = 6
     
@@ -200,7 +199,7 @@ def test_bounded_amplitude_failure():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.double_gamma_hrf, utils.percent_change)
     model.hrf_delay = 0
     model.mask_size = 6
     

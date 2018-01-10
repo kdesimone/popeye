@@ -6,7 +6,6 @@ import numpy as np
 import numpy.testing as npt
 import nose.tools as nt
 from scipy.signal import fftconvolve
-import statsmodels.api as sm
 
 import popeye.utilities as utils
 import popeye.og_hrf as og
