@@ -18,7 +18,7 @@ from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class GaussianModel(PopulationModel):
     
-    def __init__(self, stimulus, hrf_model, cached_model_path=None, nuisance=None):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change, cached_model_path=None, nuisance=None):
         
         r"""A 2D Gaussian population receptive field model [1]_.
         
@@ -42,8 +42,13 @@ class GaussianModel(PopulationModel):
         
         """
         
-        PopulationModel.__init__(self, stimulus, hrf_model, cached_model_path, nuisance)
+        PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
         
+        # attach HRF delay if user did not
+        if not hasattr(self, 'd_1'):
+            self.d_1 = 5
+            self.d_2 = 15
+                    
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma):
         
@@ -78,7 +83,7 @@ class GaussianModel(PopulationModel):
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # units
-        model = (model-np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         # regress out mean and amplitude
         beta, baseline = self.regress(model, self.data)
@@ -130,7 +135,7 @@ class GaussianModel(PopulationModel):
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # units
-        model = (model-np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         if unscaled:
             return model
