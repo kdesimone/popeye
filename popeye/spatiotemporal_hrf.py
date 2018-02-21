@@ -44,11 +44,6 @@ class SpatioTemporalModel(PopulationModel):
         
         PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
         
-        # attach HRF delay if user did not
-        if not hasattr(self, 'd_1'):
-            self.d_1 = 5
-            self.d_2 = 15
-        
     # for the final solution, we use spatiotemporal
     def generate_ballpark_prediction(self, x, y, sigma, weight, hrf_delay):
         
@@ -97,7 +92,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts
         
         # convolve with HRF
-        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length, d_1=self.d_1, d_2=self.d_2))[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length))[0:len(mp_ts)]
         
         # units
         model = self.normalizer(model)
@@ -167,7 +162,7 @@ class SpatioTemporalModel(PopulationModel):
         mp_ts = (1-weight) * m_ts + weight * p_ts 
         
         # convolve with HRF
-        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length, d_1=self.d_1, d_2=self.d_2))[0:len(mp_ts)]
+        model = fftconvolve(mp_ts, self.hrf_model(hrf_delay, self.stimulus.tr_length))[0:len(mp_ts)]
         
         # convert units
         model = self.normalizer(model)
@@ -398,7 +393,7 @@ class SpatioTemporalFit(PopulationFit):
         
         r""" Returns the user-defined overloaded estimate."""
         
-        return [self.theta, self.rho, self.sigma, self.weight, self.hrf_delay + self.model.d_1, self.beta, self.baseline]
+        return [self.theta, self.rho, self.sigma, self.weight, self.hrf_delay, self.beta, self.baseline]
     
     @auto_attr
     def x0(self):
