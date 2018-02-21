@@ -70,8 +70,8 @@ def test_auditory_fit():
     
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
-    npt.assert_almost_equal(fit.sigma0, 2)
-    npt.assert_almost_equal(fit.beta0, 2.34556886)
+    npt.assert_almost_equal(fit.sigma0, 2.1553266676302263)
+    npt.assert_almost_equal(fit.beta0, 2.4439955572592043)
     npt.assert_almost_equal(fit.baseline0, 1.416)
     npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
     

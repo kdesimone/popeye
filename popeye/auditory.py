@@ -19,7 +19,7 @@ from popeye.spinach import generate_rf_timeseries_1D
 
 class AuditoryModel(PopulationModel):
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change):
         
         r"""A 1D Gaussian population receptive field model [1]_.
         
@@ -45,7 +45,7 @@ class AuditoryModel(PopulationModel):
         """
         
         # invoke the base class
-        PopulationModel.__init__(self, stimulus, hrf_model)
+        PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
     
     def generate_ballpark_prediction(self, center_freq, sigma):
 
@@ -85,16 +85,16 @@ class AuditoryModel(PopulationModel):
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # units
-        model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
-        # regress out mean and linear
-        p = linregress(model, self.data)
+        # regress out mean and amplitude
+        beta, baseline = self.regress(model, self.data)
         
         # offset
-        model += p[1]
+        model += baseline
         
         # scale
-        model *= p[0]
+        model *= beta
         
         return model
         
@@ -139,15 +139,16 @@ class AuditoryModel(PopulationModel):
         model = fftconvolve(response, self.hrf())[0:len(response)]
         
         # units
-        model = (model - np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         if unscaled:
             return model
         else:
+            
             # offset
             model += baseline
             
-            # scale it
+            # scale it by beta
             model *= beta
             
             return model
