@@ -13,12 +13,12 @@ import datetime
 
 import numpy as np
 import nibabel
-from scipy.special import gamma
+from scipy.stats import gamma
 from scipy.optimize import brute, fmin_powell, fmin
 from scipy.stats import linregress
 from scipy.integrate import romb, trapz
 from scipy import c_, ones, dot, stats, diff
-from scipy.linalg import inv, solve, det
+from scipy.linalg import inv, solve, det, norm
 from numpy import log, pi, sqrt, square, diagonal
 from numpy.random import randn, seed
 import sharedmem
@@ -81,46 +81,63 @@ def regularizer(bundle, p_grid, p_bounds, Ns=None): # pragma: no cover
     
     return p0,phat
 
-def spm_hrf(delay, TR):
-    """ An implementation of spm_hrf.m from the SPM distribution
-    
-    Arguments:
-    
-    Required:
-    TR: repetition time at which to generate the HRF (in seconds)
-    
-    Optional:
-    p: list with parameters of the two gamma functions:
-                                                         defaults
-                                                        (seconds)
-       p[0] - delay of response (relative to onset)         6
-       p[1] - delay of undershoot (relative to onset)      16
-       p[2] - dispersion of response                        1
-       p[3] - dispersion of undershoot                      1
-       p[4] - ratio of response to undershoot               6
-       p[5] - onset (seconds)                               0
-       p[6] - length of kernel (seconds)                   32
-       
+def _gamma_difference_hrf(tr, oversampling=1, time_length=32., onset=0.,
+                         delay=5, undershoot=15., dispersion=1.,
+                         u_dispersion=1., ratio=0.167):
+    """ Compute an hrf as the difference of two gamma functions
+    Parameters
+    ----------
+    tr: float, scan repeat time, in seconds
+    oversampling: int, temporal oversampling factor, optional
+    time_length: float, hrf kernel length, in seconds
+    onset: float, onset of the hrf
+    Returns
+    -------
+    hrf: array of shape(length / tr * oversampling, float),
+         hrf sampling on the oversampled time grid
     """
-    # default settings
-    p=[5,15,1,1,6,0,32]
-    p=[float(x) for x in p]
-    
-    # delay variation
-    p[0] += delay
-    p[1] += delay
-    
-    fMRI_T = 16.0
-    
-    TR=float(TR)
-    dt  = TR/fMRI_T
-    u   = np.arange(p[6]/dt + 1) - p[5]/dt
-    hrf=stats.gamma.pdf(u,p[0]/p[2],scale=1.0/(dt/p[2])) - stats.gamma.pdf(u,p[1]/p[3],scale=1.0/(dt/p[3]))/p[4]
-    good_pts=np.array(range(np.int(p[6]/TR)))*fMRI_T
-    hrf = hrf[good_pts.astype(int)]
-    # hrf = hrf([0:(p(7)/RT)]*fMRI_T + 1);
+    dt = tr / oversampling
+    time_stamps = np.linspace(0, time_length, int(float(time_length) / dt))
+    time_stamps -= onset / dt
+    hrf = gamma.pdf(time_stamps, delay / dispersion, dt / dispersion) - \
+        ratio * gamma.pdf(
+        time_stamps, undershoot / u_dispersion, dt / u_dispersion)
     hrf /= trapz(hrf)
     return hrf
+
+def spm_hrf(delay, tr, oversampling=1, time_length=32., onset=0.):
+    """ Implementation of the SPM hrf model
+    Parameters
+    ----------
+    tr: float, scan repeat time, in seconds
+    oversampling: int, temporal oversampling factor, optional
+    time_length: float, hrf kernel length, in seconds
+    onset: float, onset of the response
+    Returns
+    -------
+    hrf: array of shape(length / tr * oversampling, float),
+         hrf sampling on the oversampled time grid
+    """
+    return _gamma_difference_hrf(tr, oversampling, time_length, onset, delay=5+delay, undershoot=15+delay,)
+
+
+def glover_hrf(delay, tr, oversampling=1, time_length=32., onset=0.):
+    """ Implementation of the Glover hrf model
+    Parameters
+    ----------
+    tr: float, scan repeat time, in seconds
+    oversampling: int, temporal oversampling factor, optional
+    time_length: float, hrf kernel length, in seconds
+    onset: float, onset of the response
+    Returns
+    -------
+    hrf: array of shape(length / tr * oversampling, float),
+         hrf sampling on the oversampled time grid
+    """
+    return _gamma_difference_hrf(tr, oversampling, time_length, onset,
+                                delay=5+delay, undershoot=15+delay, dispersion=.9,
+                                u_dispersion=.9, ratio=.35)
+
 
 def grid_slice(start, stop, Ns, dryrun=False):
     
@@ -297,7 +314,7 @@ def gradient_descent_search(data, error_function, objective_function, parameters
     In addition, the user may also supply  `fit_bounds`, containing pairs
     of upper and lower bounds for each of the values in parameters.
     If `fit_bounds` is specified, the error minimization procedure in
-    `error_function` will return an Inf whether the parameters exceed the
+    `f` will return an Inf whether the parameters exceed the
     minimum or maxmimum values specified in `fit_bounds`.
 
 
@@ -464,7 +481,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
     error : float
         The residual sum of squared errors between the prediction and data.
     """
-
+    
     ############
     #   NOTE   #
     ############
@@ -472,7 +489,7 @@ def error_function(parameters, bounds, data, objective_function, verbose):
     # i think it is because scipy.optimize.brute returns
     # a scalar when num params is 1, and a tuple/list
     # when num params is > 1. have to look into this further
-
+    
     # check if parameters are inside bounds
     for p, b in zip(parameters,bounds):
         # if not return an inf
@@ -480,28 +497,29 @@ def error_function(parameters, bounds, data, objective_function, verbose):
             return np.inf
         if b[1] and b[1] < p:
             return np.inf
-
+            
     # merge the parameters and arguments
     ensemble = []
     ensemble.extend(parameters)
-
+    
     # compute the RSS
     prediction = objective_function(*ensemble)
-
+    
     # if nan, return inf
     if np.any(np.isnan(prediction)):
         return np.inf # pragma: no cover
-
+        
     # else, return RSS
     error = np.nansum((data-prediction)**2)
-
+    # error = norm(data-prediction)
+    
     # print for debugging
     if verbose:
         print(parameters, error)
 
     return error
 
-def double_gamma_hrf(delay, tr, d_1=5, d_2=15, fptr=1.0, integrator=trapz):
+def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
 
     r"""The double gamma hemodynamic reponse function (HRF).
     The user specifies only the delay of the peak and undershoot.
@@ -541,22 +559,23 @@ def double_gamma_hrf(delay, tr, d_1=5, d_2=15, fptr=1.0, integrator=trapz):
     BOLD fMRI. NeuroImage 9, 416-429.
 
     """
-
+    from scipy.special import gamma
+    
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = d_1/tr+delay/tr
+    alpha_1 = 5/tr+delay/tr
     beta_1 = 1.0
     c = 0.1
-    alpha_2 = d_2/tr+delay/tr
+    alpha_2 = 15/tr+delay/tr
     beta_2 = 1.0
-
+    
     t = np.arange(0,32,tr)
-
+    
     hrf = ( ( ( t ** (alpha_1) * beta_1 ** alpha_1 * np.exp( -beta_1 * t )) /gamma( alpha_1 )) - c *
             ( ( t ** (alpha_2) * beta_2 ** alpha_2 * np.exp( -beta_2 * t )) /gamma( alpha_2 )) )
-
+            
     if integrator: # pragma: no cover
         hrf /= integrator(hrf)
-
+        
     return hrf
 
 def percent_change(ts, ax=-1):
