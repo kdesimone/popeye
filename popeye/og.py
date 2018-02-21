@@ -44,11 +44,6 @@ class GaussianModel(PopulationModel):
         
         PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
         
-        # attach HRF delay if user did not
-        if not hasattr(self, 'd_1'):
-            self.d_1 = 5
-            self.d_2 = 15
-                    
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma):
         
