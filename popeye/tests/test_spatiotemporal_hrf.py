@@ -109,8 +109,8 @@ def test_strf_hrf_fit():
     npt.assert_almost_equal(fit.baseline, baseline)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [ 2.5272803,  2.7411676,  1.23,  0.9,  4.87, 0.88, -0.25])
-                                                      
+    npt.assert_almost_equal(fit.overloaded_estimate, [ 2.5272803, 2.7411676, 1.23, 0.9, -0.13, 0.88, -0.25])
+    
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)
     npt.assert_almost_equal(simps(np.abs(m_rf)),simps(p_rf),5)

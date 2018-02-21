@@ -37,7 +37,7 @@ def test_css_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = css.CompressiveSpatialSummationModel(stimulus, utils.spm_hrf)
+    model = css.CompressiveSpatialSummationModel(stimulus, utils.double_gamma_hrf)
     model.hrf_delay = 0.2
     
     # generate a random pRF estimate
@@ -74,7 +74,7 @@ def test_css_fit():
     
     # coarse fit
     observed = [fit.x0, fit.y0, fit.s0, fit.n0, fit.beta0, fit.baseline0]
-    expected = [-3., 2., 0.72833938, 0.5, 0.9377413, -0.24999999999999997]
+    expected = [-3., 2., 0.72833938, 0.5, 0.939035, -0.24999999999999997]
     npt.assert_almost_equal(observed, expected)
     
     # fine fit

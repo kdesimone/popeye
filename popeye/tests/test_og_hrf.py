@@ -38,7 +38,7 @@ def test_og_fit():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
     model.hrf_delay = 0
     model.mask_size = 5
     
@@ -77,8 +77,8 @@ def test_og_fit():
     # coarse fit
     npt.assert_almost_equal(fit.x0, -5.0)
     npt.assert_almost_equal(fit.y0, 5.0)
-    npt.assert_almost_equal(fit.s0, 1.5)
-    npt.assert_almost_equal(fit.beta0, 2.1843385749772861)
+    npt.assert_almost_equal(fit.s0, 2.75)
+    npt.assert_almost_equal(fit.beta0, 2.7193885666278903)
     npt.assert_almost_equal(fit.baseline0, -0.625)
     npt.assert_almost_equal(fit.hrf0, 0.5)
     
