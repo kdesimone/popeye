@@ -89,7 +89,6 @@ class SpatioTemporalModel(PopulationModel):
         
         # units
         model = self.normalizer(model)
-        # model = (model - np.mean(model)) / np.mean(model)
         
         # regress out mean and linear
         p = linregress(model, self.data)
@@ -153,7 +152,6 @@ class SpatioTemporalModel(PopulationModel):
         
         # units
         model = self.normalizer(model)
-        # model = (model - np.mean(model)) / np.mean(model)
         
         if unscaled:
             return model
