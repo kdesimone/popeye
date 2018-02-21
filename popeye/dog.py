@@ -27,7 +27,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
     
     """
     
-    def __init__(self, stimulus, hrf_model):
+    def __init__(self, stimulus, hrf_model, normalizer=utils.percent_change, cached_model_path=None, nuisance=None):
         
         r"""
         A Difference of Gaussian population receptive field model [1]_.
@@ -51,7 +51,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         using fMRI. Journal of Vision 12(3):10,1-15.
         
         """
-        PopulationModel.__init__(self, stimulus, hrf_model)
+        PopulationModel.__init__(self, stimulus, hrf_model, normalizer)
         
         
     def generate_ballpark_prediction(self, x, y, sigma, sigma_ratio, volume_ratio):
@@ -77,16 +77,16 @@ class DifferenceOfGaussiansModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # units
-        model = (model-np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         # regress out mean and linear
-        p = linregress(model, self.data)
+        beta, baseline = self.regress(model, self.data)
         
         # offset
-        model += p[1]
+        model += baseline
         
         # scale
-        model *= p[0]
+        model *= beta
         
         return model
         
@@ -113,7 +113,7 @@ class DifferenceOfGaussiansModel(PopulationModel):
         model = fftconvolve(response, hrf)[0:len(response)]
         
         # units
-        model = (model-np.mean(model)) / np.mean(model)
+        model = self.normalizer(model)
         
         if unscaled:
             return model
