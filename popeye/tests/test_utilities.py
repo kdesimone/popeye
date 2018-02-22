@@ -814,7 +814,7 @@ def test_parallel_fit_manual_grids():
     bundle = utils.multiprocess_bundle(og.GaussianFit, model, all_data, grids, bounds, indices)
     
     # run analysis
-    with sharedmem.Pool(np=sharedmem.cpu_count()-1) as pool:
+    with sharedmem.Pool(np=3) as pool:
         output = pool.map(utils.parallel_fit, bundle)
         
     # assert equivalence
