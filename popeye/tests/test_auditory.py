@@ -39,7 +39,7 @@ def test_auditory_fit():
     stimulus = AuditoryStimulus(signal, Fs, tr_length, dtype)  ### stimulus
     
     # initialize the gaussian model
-    model = aud.AuditoryModel(stimulus, utils.double_gamma_hrf)  ### model 
+    model = aud.AuditoryModel(stimulus, utils.spm_hrf)  ### model 
     model.hrf_delay = 0
     
     # invent pRF estimate
@@ -71,7 +71,7 @@ def test_auditory_fit():
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
     npt.assert_almost_equal(fit.sigma0, 2.1553266676302263)
-    npt.assert_almost_equal(fit.beta0, 2.4439955572592043)
+    npt.assert_almost_equal(fit.beta0, 2.4528931326778265)
     npt.assert_almost_equal(fit.baseline0, 1.416)
     npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
     
