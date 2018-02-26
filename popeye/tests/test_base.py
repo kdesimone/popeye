@@ -38,7 +38,7 @@ def test_cache_model_slice():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
     model.hrf_delay = 0
     model.mask_size = 5
     
@@ -52,7 +52,7 @@ def test_cache_model_slice():
     np.random.seed(4932)
     
     # cache the pRF model
-    cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1);
+    cache = model.cache_model(grids, ncpus=3)
     
     # save it out
     pickle.dump(cache, open('/tmp/og_cached_model.pkl','wb'))
@@ -89,7 +89,7 @@ def test_cache_model_Ns():
     stimulus = VisualStimulus(bar, viewing_distance, screen_width, scale_factor, tr_length, dtype)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
     model.hrf_delay = 0
     model.mask_size = 5
     
@@ -103,7 +103,7 @@ def test_cache_model_Ns():
     np.random.seed(4932)
     
     # cache the pRF model
-    cache = model.cache_model(grids, Ns=Ns, ncpus=sharedmem.cpu_count()-1);
+    cache = model.cache_model(grids, Ns=Ns, ncpus=3)
     
     # save it out
     pickle.dump(cache, open('/tmp/og_cached_model.pkl','wb'))
@@ -146,7 +146,7 @@ def test_resurrect_model():
     grids = (x_grid, y_grid, s_grid,)
     
     # initialize the gaussian model
-    model = og.GaussianModel(stimulus, utils.double_gamma_hrf)
+    model = og.GaussianModel(stimulus, utils.spm_hrf)
     model.hrf_delay = 0
     model.mask_size = 5
     
@@ -154,7 +154,7 @@ def test_resurrect_model():
     np.random.seed(4932)
     
     # cache the model
-    cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1);
+    cache = model.cache_model(grids, ncpus=3)
     
     # resurrect cached model
     cached_model_path = '/tmp/og_cached_model.pkl'
@@ -280,7 +280,7 @@ def test_resurrect_model():
     model.hrf_delay = 0
     model.mask_size = 5
     
-    cache = model.cache_model(grids, ncpus=sharedmem.cpu_count()-1);
+    cache = model.cache_model(grids, ncpus=3)
     
     # seed rng
     np.random.seed(4932)
