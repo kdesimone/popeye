@@ -82,7 +82,7 @@ class PopulationModel(object):
         self.cached_model_path = cached_model_path
         
         # set up cached model if specified
-        if self.cached_model_path is not None:
+        if self.cached_model_path is not None: # pragma: no cover
             self.resurrect_cached_model
         
     def generate_ballpark_prediction(self): # pragma: no cover
@@ -168,11 +168,11 @@ class PopulationModel(object):
         return timeseries, parameters
     
     @auto_attr
-    def cached_model_timeseries(self):
+    def cached_model_timeseries(self): # pragma: no cover
         return self.resurrect_cached_model[0]
     
     @auto_attr
-    def cached_model_parameters(self):
+    def cached_model_parameters(self): # pragma: no cover
         return self.resurrect_cached_model[1]
         
         
@@ -333,7 +333,7 @@ class PopulationFit(object):
     @auto_attr
     def gradient_descent(self):
         
-        if self.very_verbose:
+        if self.very_verbose: # pragma: no cover
             print('The gridfit solution was %s, starting gradient descent ...' %(self.ballpark))
         
         return utils.gradient_descent_search(self.data,
