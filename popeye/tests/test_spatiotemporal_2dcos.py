@@ -51,7 +51,7 @@ def test_strf_2dcos_fit():
     stimulus.flicker_hz = [10,20]
     
     # initialize the gaussian model
-    model = strf.SpatioTemporalModel(stimulus, utils.double_gamma_hrf)
+    model = strf.SpatioTemporalModel(stimulus, utils.spm_hrf)
     model.tau = tau
     model.hrf_delay = hrf
     model.mask_size = mask_size
@@ -94,7 +94,7 @@ def test_strf_2dcos_fit():
                  3.25,
                  3.0,
                  0.72499999999999998,
-                 0.87067329703529583,
+                 0.858317,
                  -0.25000000000000011]
                  
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0), ballpark)
