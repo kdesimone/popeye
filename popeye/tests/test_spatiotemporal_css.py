@@ -56,7 +56,7 @@ def test_strf_css_fit():
     stimulus.flicker_hz = [10,20,10,20]
     
     # initialize the gaussian model
-    model = strf.SpatioTemporalModel(stimulus, utils.double_gamma_hrf)
+    model = strf.SpatioTemporalModel(stimulus, utils.spm_hrf)
     model.tau = tau
     model.hrf_delay = hrf
     model.mask_size = mask_size
@@ -100,17 +100,17 @@ def test_strf_css_fit():
     ballpark = [-3.0,
                  2.0,
                  1.5,
-                 0.94999999999999984,
-                 0.94999999999999984,
-                 0.88931133225061265,
-                 -0.25000000000000006]
+                 0.95,
+                 0.95,
+                 0.88574075,
+                 -0.25]
      
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0, fit.n0, fit.weight0,fit.beta0,fit.baseline0),ballpark)
     
     # fine fit
     npt.assert_almost_equal(fit.x, x, 2)
     npt.assert_almost_equal(fit.y, y, 2)
-    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 1)
     npt.assert_almost_equal(fit.n, n, 2)
     npt.assert_almost_equal(fit.weight, weight, 2)
     npt.assert_almost_equal(fit.beta, beta, 2)
