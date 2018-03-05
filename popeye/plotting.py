@@ -36,7 +36,7 @@ def slicer(anat, stat, mask, slice_axis, anat_lim, stat_lim, cmap, offset=10, fi
     idx_y = np.arange(min_y,max_y+1)
     
     # square it
-    idx_min = np.min((len(idx_y),len(idx_x)))
+    idx_min = np.max((len(idx_y),len(idx_x)))
     idx_x = idx_x[0:idx_min]
     idx_y = idx_y[0:idx_min]
     
