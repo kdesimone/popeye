@@ -208,7 +208,60 @@ def recast_estimation_results(output, grid_parent, overloaded=False):
     nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
     
     return nifti_estimates
+
+def recast_xval_results(output, bootstraps, indices, grid_parent, overloaded=False, ncpus=30):
+
+    # load the grid_parent (x,y,z)
+    dims = list(grid_parent.shape)
+    dims = dims[0:3]
     
+    # params + rsquared + cod
+    if overloaded == True and output[0].overloaded_estimate is not None:
+        dims.append(len(output[0].overloaded_estimate)+2)
+    else:
+        dims.append(len(output[0].estimate)+2)
+    
+    # add bootstrap dim
+    dims.append(bootstraps)
+
+    # initialize the statmaps
+    estimates = utils.generate_shared_array(np.zeros(dims), ctypes.c_double)
+
+    # parallelizer
+    def parallel_loader(index):
+
+        # gather up fits for this voxel
+        fits = [o for o in output if list(o.voxel_index) == list(index)]
+
+        # gather the estimate + stats
+        if overloaded == True and fits[0].overloaded_estimate is not None:
+            params = np.array([fit.overloaded_estimate for fit in fits])
+        else:
+            params = np.array([fit.estimate for fit in fits])
+
+        # xval metrics
+        rsq = np.array([fit.rsquared for fit in fits])
+        cod = np.array([fit.cod for fit in fits])
+            
+        # assign
+        estimates[index[0],index[1],index[2]] = np.concatenate((params, cod[:,np.newaxis], rsq[:,np.newaxis]),-1).T
+
+        return None
+
+    # populate data structure
+    with sharedmem.Pool(np=ncpus) as pool:
+        pool.map(parallel_loader, indices)
+
+    # header & affine
+    aff = grid_parent.get_affine()
+    hdr = grid_parent.get_header()
+    hdr.set_data_shape(dims)
+    
+    # recast as nifti
+    nifti_estimates = nibabel.Nifti1Image(estimates,aff,header=hdr)
+    
+    return nifti_estimates
+
 def make_nifti(data, grid_parent=None):
     
     if grid_parent:
