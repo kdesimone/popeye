@@ -5,7 +5,7 @@ though that might change with time.
 """
 
 from __future__ import division
-import sys, os, time, fnmatch, copy
+import sys, os, time, fnmatch, copy, ctypes
 from multiprocessing import Array
 from itertools import repeat
 from random import shuffle
