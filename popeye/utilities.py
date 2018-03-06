@@ -223,35 +223,35 @@ def recast_xval_results(output, bootstraps, indices, grid_parent, overloaded=Fal
     
     # add bootstrap dim
     dims.append(bootstraps)
-
+    
     # initialize the statmaps
-    estimates = utils.generate_shared_array(np.zeros(dims), ctypes.c_double)
-
+    estimates = generate_shared_array(np.zeros(dims), ctypes.c_double)
+    
     # parallelizer
     def parallel_loader(index):
-
+        
         # gather up fits for this voxel
         fits = [o for o in output if list(o.voxel_index) == list(index)]
-
+        
         # gather the estimate + stats
         if overloaded == True and fits[0].overloaded_estimate is not None:
             params = np.array([fit.overloaded_estimate for fit in fits])
         else:
             params = np.array([fit.estimate for fit in fits])
-
+            
         # xval metrics
         rsq = np.array([fit.rsquared for fit in fits])
         cod = np.array([fit.cod for fit in fits])
             
         # assign
         estimates[index[0],index[1],index[2]] = np.concatenate((params, cod[:,np.newaxis], rsq[:,np.newaxis]),-1).T
-
+        
         return None
-
+        
     # populate data structure
     with sharedmem.Pool(np=ncpus) as pool:
         pool.map(parallel_loader, indices)
-
+        
     # header & affine
     aff = grid_parent.get_affine()
     hdr = grid_parent.get_header()
