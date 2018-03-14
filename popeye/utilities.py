@@ -228,7 +228,7 @@ def recast_xval_results(output, bootstraps, indices, grid_parent, overloaded=Fal
     estimates = generate_shared_array(np.zeros(dims), ctypes.c_double)
     
     # parallelizer
-    def parallel_loader(index):
+    def parallel_loader(index): # pragma: no cover
         
         # gather up fits for this voxel
         fits = [o for o in output if list(o.voxel_index) == list(index)]
@@ -749,7 +749,11 @@ def xval_bundle(bootstraps, kfolds, Fit, model, data, grids, bounds, indices, au
             the_data = data[voxel,:,:]
             
             # create random draws
-            trn_idx = np.random.choice(runs, np.int(len(runs)/kfolds), replace=False)
+            if kfolds == 1: # leave one out
+                trn_idx = np.random.choice(runs, len(runs)-1, replace=False)
+            else:
+                trn_idx = np.random.choice(runs, np.int(len(runs)/kfolds), replace=False)
+            
             tst_idx = np.array(list(set(runs)-set(trn_idx)))
             
             # compute mean timeseries
