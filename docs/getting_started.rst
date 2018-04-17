@@ -18,7 +18,7 @@ Once you've downloaded the popeye source code and installed the dependencies, in
 popeye and build the Cython extensions I've written for speeding up the analyses. ::
 
     $ cd popeye
-    $ sudo python setup.py install build_ext
+    $ python setup.py install
     $ cd ~ # this ensures we test the install instead of version in the cwd
     $ python 
     >>> import popeye
