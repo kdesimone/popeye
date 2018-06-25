@@ -41,3 +41,6 @@ To install for all users on Unix/Linux:
 
     python setup.py build
     sudo python setup.py install
+
+![alt text](docs/strf.png "Spatiotemporal pRF model")
+![alt text](docs/mp.png "pRF parameter maps in the LGN")
