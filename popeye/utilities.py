@@ -197,7 +197,7 @@ def recast_estimation_results(output, grid_parent, overloaded=False):
             voxel_dat = np.array(voxel_dat)
             
             # assign to
-            estimates[fit.voxel_index] = voxel_dat
+            estimates[tuple(fit.voxel_index)] = voxel_dat
             
     # get header information from the gridParent and update for the prf volume
     aff = grid_parent.get_affine()
