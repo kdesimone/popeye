@@ -87,8 +87,8 @@ def test_dog():
     npt.assert_almost_equal(fit.x, x, 2)
     npt.assert_almost_equal(fit.y, y, 2)
     npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 2)
-    npt.assert_almost_equal(fit.volume_ratio, volume_ratio, 2)
+    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 1)
+    npt.assert_almost_equal(fit.volume_ratio, volume_ratio, 1)
     
     # test the RF
     rf = fit.model.receptive_field(*fit.estimate[0:-2])
@@ -99,5 +99,5 @@ def test_dog():
     nt.assert_almost_equal(value_1, value_2)
     
     # polar coordinates
-    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)])
+    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)], 5)
     
