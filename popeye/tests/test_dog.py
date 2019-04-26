@@ -87,7 +87,7 @@ def test_dog():
     npt.assert_almost_equal(fit.x, x, 2)
     npt.assert_almost_equal(fit.y, y, 2)
     npt.assert_almost_equal(fit.sigma, sigma, 2)
-    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 2)
+    npt.assert_almost_equal(fit.sigma_ratio, sigma_ratio, 1)
     npt.assert_almost_equal(fit.volume_ratio, volume_ratio, 2)
     
     # test the RF
