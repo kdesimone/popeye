@@ -99,5 +99,5 @@ def test_dog():
     nt.assert_almost_equal(value_1, value_2)
     
     # polar coordinates
-    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)])
+    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)], 5)
     
