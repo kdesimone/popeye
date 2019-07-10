@@ -83,11 +83,11 @@ class GaussianModel(PopulationModel):
         # regress out mean and amplitude
         beta, baseline = self.regress(model, self.data)
         
-        # offset
-        model += baseline
-        
         # scale
         model *= beta
+        
+        # offset
+        model += baseline
         
         return model
         
@@ -136,11 +136,11 @@ class GaussianModel(PopulationModel):
             return model
         else:
             
-            # offset
-            model += baseline
-            
             # scale it by beta
             model *= beta
+            
+            # offset
+            model += baseline
             
             return model
     
