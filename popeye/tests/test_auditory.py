@@ -71,9 +71,12 @@ def test_auditory_fit():
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
     npt.assert_almost_equal(fit.sigma0, 2.1553266676302263)
-    npt.assert_almost_equal(fit.beta0, 2.4528931326778265)
-    npt.assert_almost_equal(fit.baseline0, 1.416)
     npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
+
     
     # final fit
     npt.assert_almost_equal(fit.center_freq, center_freq)

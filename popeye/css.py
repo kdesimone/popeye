@@ -76,11 +76,11 @@ class CompressiveSpatialSummationModel(PopulationModel):
         # regress out mean and linear
         p = linregress(model, self.data)
         
-        # offset
-        model += p[1]
-        
         # scale
         model *= p[0]
+        
+        # offset
+        model += p[1]
         
         return model
         
@@ -112,11 +112,11 @@ class CompressiveSpatialSummationModel(PopulationModel):
             return model
         else:
             
-            # offset
-            model += baseline
-            
             # scale it by beta
             model *= beta
+            
+            # offset
+            model += baseline
             
             return model
         

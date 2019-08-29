@@ -73,10 +73,15 @@ def test_auditory_hrf_fit():
     
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
-    npt.assert_almost_equal(fit.sigma0, 2)
     npt.assert_almost_equal(fit.hrf0, 1.2222222222222223)
-    npt.assert_almost_equal(fit.beta0, 2.3404365192849017)
-    npt.assert_almost_equal(fit.baseline0, 1.416)
+    # test the sigma parameter against best possibility
+    grid_sigmas = np.arange(s_grid.start, s_grid.stop, s_grid.step)
+    best_sigma = grid_sigmas[np.argmin(np.abs(grid_sigmas - sigma))]
+    npt.assert_array_less(np.abs(fit.sigma0 - sigma), s_grid.step)
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
     
     # final fit
     npt.assert_almost_equal(fit.center_freq, center_freq)

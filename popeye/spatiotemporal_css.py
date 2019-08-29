@@ -83,11 +83,11 @@ class SpatioTemporalModel(PopulationModel):
         # regress out mean and linear
         p = linregress(model, self.data)
         
-        # offset
-        model += p[1]
-        
         # scale
         model *= p[0]
+        
+        # offset
+        model += p[1]
         
         return model
         

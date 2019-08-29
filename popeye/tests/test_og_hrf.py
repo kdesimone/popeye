@@ -78,10 +78,12 @@ def test_og_fit():
     npt.assert_almost_equal(fit.x0, -5.0)
     npt.assert_almost_equal(fit.y0, 5.0)
     npt.assert_almost_equal(fit.s0, 2.75)
-    npt.assert_almost_equal(fit.beta0, 2.7193885666278903)
-    npt.assert_almost_equal(fit.baseline0, -0.625)
     npt.assert_almost_equal(fit.hrf0, 0.5)
-    
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
+
     # assert equivalence
     npt.assert_almost_equal(fit.x, x)
     npt.assert_almost_equal(fit.y, y)

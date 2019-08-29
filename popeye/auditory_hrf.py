@@ -98,11 +98,11 @@ class AuditoryModel(PopulationModel):
         # regress out mean and linear
         p = linregress(model, self.data)
         
-        # offset
-        model += p[1]
-        
         # scale
         model *= p[0]
+        
+        # offset
+        model += p[1]
         
         return model
     
@@ -156,11 +156,11 @@ class AuditoryModel(PopulationModel):
             return model
         else:
             
-            # offset
-            model += baseline
-            
             # scale it
             model *= beta
+            
+            # offset
+            model += baseline
             
             return model
 

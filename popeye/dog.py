@@ -82,11 +82,11 @@ class DifferenceOfGaussiansModel(PopulationModel):
         # regress out mean and linear
         beta, baseline = self.regress(model, self.data)
         
-        # offset
-        model += baseline
-        
         # scale
         model *= beta
+        
+        # offset
+        model += baseline
         
         return model
         
@@ -119,11 +119,11 @@ class DifferenceOfGaussiansModel(PopulationModel):
             return model
         else:
             
-            # offset
-            model += baseline
-            
             # scale it by beta
             model *= beta
+            
+            # offset
+            model += baseline
             
             return model
             
