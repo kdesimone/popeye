@@ -77,12 +77,14 @@ def test_dog():
                 1.666666666666667,
                 2.8243187483428391,
                 1.9999999999999998,
-                0.10000000000000001,
-                0.3639449,
-                -0.025000000000000022]
+                0.10000000000000001]
                 
-    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0, fit.beta0, fit.baseline0), ballpark)
-    
+    npt.assert_almost_equal((fit.x0,fit.y0,fit.s0,fit.sr0,fit.vr0), ballpark)
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
+
     # fine fit
     npt.assert_almost_equal(fit.x, x, 2)
     npt.assert_almost_equal(fit.y, y, 2)
@@ -99,5 +101,5 @@ def test_dog():
     nt.assert_almost_equal(value_1, value_2)
     
     # polar coordinates
-    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)], 5)
+    npt.assert_almost_equal([fit.theta,fit.rho],[np.arctan2(y,x),np.sqrt(x**2+y**2)], 4)
     

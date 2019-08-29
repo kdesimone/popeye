@@ -72,9 +72,13 @@ def test_og_fit():
     fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    ballpark = [-5.       ,  5.       ,  2.75     ,  2.7656729, -0.625    ]
+    ballpark = [-5.       ,  5.       ,  2.75]
     
-    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0, fit.beta0, fit.baseline0), ballpark)
+    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0), ballpark)
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
     
     # assert equivalence
     npt.assert_almost_equal(fit.x, x)
@@ -150,9 +154,13 @@ def test_negative_og_fit():
     fit = og.GaussianFit(model, data, grids, bounds)
     
     # coarse fit
-    ballpark = [-5.0, 5.0, 2.75, -0.27940915461573274, -0.062499999999999993]
+    ballpark = [-5.0, 5.0, 2.75]
     
-    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0, fit.beta0, fit.baseline0), ballpark)
+    npt.assert_almost_equal((fit.x0, fit.y0, fit.s0), ballpark)
+    # the baseline/beta should be 0/1 when regressed data vs. estimate
+    (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
+    npt.assert_almost_equal(m, 1.0)
+    npt.assert_almost_equal(b, 0.0)
     
     # assert equivalence
     npt.assert_almost_equal(fit.x, x, 2)
