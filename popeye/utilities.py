@@ -615,10 +615,10 @@ def double_gamma_hrf(delay, tr, fptr=1.0, integrator=trapz):
     from scipy.special import gamma
     
     # add delay to the peak and undershoot params (alpha 1 and 2)
-    alpha_1 = 5 + delay
+    alpha_1 = float(5 + delay)
     beta_1 = 1.0
     c = 0.1
-    alpha_2 = 15 + delay
+    alpha_2 = float(15 + delay)
     beta_2 = 1.0
     
     t = np.arange(0,32,tr)
