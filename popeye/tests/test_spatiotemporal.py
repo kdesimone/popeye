@@ -22,8 +22,8 @@ def test_strf_fit():
     num_blank_steps = 20
     num_bar_steps = 20
     ecc = 10
-    tr_length = 1.0
-    frames_per_tr = 1.0
+    tr_length = 1
+    frames_per_tr = 1
     scale_factor = 0.50
     pixels_down = 200
     pixels_across = 200
