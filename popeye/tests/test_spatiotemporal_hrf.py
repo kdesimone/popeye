@@ -101,15 +101,15 @@ def test_strf_hrf_fit():
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.hrf0,fit.beta0,fit.baseline0), ballpark)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.weight, weight)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.baseline, baseline)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.weight, weight, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # overloaded
-    npt.assert_almost_equal(fit.overloaded_estimate, [ 2.5272803, 2.7411676, 1.23, 0.9, -0.13, 0.88, -0.25])
+    npt.assert_almost_equal(fit.overloaded_estimate, [ 2.5272803, 2.7411676, 1.23, 0.9, -0.13, 0.88, -0.25], 2)
     
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)

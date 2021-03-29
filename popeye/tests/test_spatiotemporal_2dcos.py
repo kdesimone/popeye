@@ -100,12 +100,12 @@ def test_strf_2dcos_fit():
     npt.assert_almost_equal((fit.x0,fit.y0,fit.sigma0,fit.weight0,fit.beta0,fit.baseline0), ballpark)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.weight, weight)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.baseline, baseline)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.weight, weight, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # overloaded
     npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327887128,
@@ -113,7 +113,7 @@ def test_strf_2dcos_fit():
                                                       1.2300000000008835,
                                                       0.89999999999333258,
                                                       1.0000000000005003,
-                                                      -0.25000000000063088])
+                                                      -0.25000000000063088], 2)
     m_rf = fit.model.m_rf(fit.model.tau)
     p_rf = fit.model.p_rf(fit.model.tau)
     npt.assert_almost_equal(simps(np.abs(m_rf)),simps(p_rf),5)

@@ -71,7 +71,7 @@ def test_auditory_fit():
     # grid fit
     npt.assert_almost_equal(fit.center_freq0, 3)
     npt.assert_almost_equal(fit.sigma0, 2.1553266676302263)
-    npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
+    npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz, 2)
     # the baseline/beta should be 0/1 when regressed data vs. estimate
     (m,b) = np.polyfit(fit.scaled_ballpark_prediction, data, 1)
     npt.assert_almost_equal(m, 1.0)
@@ -79,10 +79,10 @@ def test_auditory_fit():
 
     
     # final fit
-    npt.assert_almost_equal(fit.center_freq, center_freq)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.baseline, baseline)
+    npt.assert_almost_equal(fit.center_freq, center_freq, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
     
     # test receptive field
     rf = np.exp(-((10**fit.model.stimulus.freqs-10**fit.center_freq)**2)/(2*(10**fit.sigma)**2))

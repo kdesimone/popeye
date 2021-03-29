@@ -172,7 +172,7 @@ def test_xval():
     for b in bundle:
         fit = utils.parallel_xval(b)
         npt.assert_almost_equal(fit.rss,0)
-        npt.assert_equal(fit.cod, 100.0)
+        npt.assert_almost_equal(fit.cod, 100.0,2)
         npt.assert_(np.all(fit.tst_data == fit.trn_data))
         npt.assert_(np.all(fit.tst_idx != fit.trn_idx))
 
@@ -305,11 +305,11 @@ def test_recast_estimation_results():
     dat = nif.get_data()
     
     # assert equivalence
-    npt.assert_almost_equal(np.mean(dat[...,0]), x)
-    npt.assert_almost_equal(np.mean(dat[...,1]), y)
-    npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
-    npt.assert_almost_equal(np.mean(dat[...,3]), beta)
-    npt.assert_almost_equal(np.mean(dat[...,4]), baseline)
+    npt.assert_almost_equal(np.mean(dat[...,0]), x,2)
+    npt.assert_almost_equal(np.mean(dat[...,1]), y,2)
+    npt.assert_almost_equal(np.mean(dat[...,2]), sigma,2)
+    npt.assert_almost_equal(np.mean(dat[...,3]), beta,2)
+    npt.assert_almost_equal(np.mean(dat[...,4]), baseline,2)
     
     # recast the estimation results - OVERLOADED
     nif = utils.recast_estimation_results(output, grid_parent, True)
@@ -318,9 +318,9 @@ def test_recast_estimation_results():
     # assert equivalence
     npt.assert_almost_equal(np.mean(dat[...,0]), np.arctan2(y,x),2)
     npt.assert_almost_equal(np.mean(dat[...,1]), np.sqrt(x**2+y**2),2)
-    npt.assert_almost_equal(np.mean(dat[...,2]), sigma)
-    npt.assert_almost_equal(np.mean(dat[...,3]), beta)
-    npt.assert_almost_equal(np.mean(dat[...,4]), baseline)
+    npt.assert_almost_equal(np.mean(dat[...,2]), sigma,2)
+    npt.assert_almost_equal(np.mean(dat[...,3]), beta,2)
+    npt.assert_almost_equal(np.mean(dat[...,4]), baseline,2)
 
 
 def test_make_nifti():
@@ -400,11 +400,11 @@ def test_error_function():
 def test_gradient_descent_search():
 
     # create a parameter to estimate
-    params = (10,10)
+    params = (10,)
 
     # set grids + bounds
-    grids = ((0,20),(5,15))
-    bounds = ()
+    grids = ((0,20))
+    bounds = None
 
     # set the verbose level 0 is silent, 1 is final estimate, 2 is each iteration
     verbose = 0
@@ -413,16 +413,17 @@ def test_gradient_descent_search():
     Ns = 3
 
     # create a simple function to transform the parameters
-    func = lambda freq, offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * freq) + offset
+    func = lambda offset: np.sin( np.linspace(0,1,1000) * 2 * np.pi * 10) + offset
 
     # create a "response"
-    response = func(*params)
+    response = func(*params) 
+    response += np.random.randn(len(response))*.1
 
     # get the fine estimate
-    phat = utils.gradient_descent_search(response, utils.error_function, func, (8,8), bounds, verbose)
+    phat = utils.gradient_descent_search(response, utils.error_function, func, (8), bounds, verbose)
 
     # assert that the estimate is equal to the parameter
-    npt.assert_almost_equal(params, phat[0])
+    npt.assert_almost_equal(params, phat.x, 2)
 
 def test_brute_force_search_manual_grids():
 

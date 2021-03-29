@@ -67,7 +67,7 @@ def test_og_fit():
     # loop over each voxel and set up a GaussianFit object
     grids = (x_grid, y_grid, s_grid,)
     bounds = (x_bound, y_bound, s_bound, b_bound, m_bound)
-    
+
     # fit the response
     fit = og.GaussianFit(model, data, grids, bounds)
     

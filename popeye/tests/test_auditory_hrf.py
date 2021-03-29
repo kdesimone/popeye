@@ -84,11 +84,11 @@ def test_auditory_hrf_fit():
     npt.assert_almost_equal(b, 0.0)
     
     # final fit
-    npt.assert_almost_equal(fit.center_freq, center_freq)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.baseline, baseline)
-    npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz)
+    npt.assert_almost_equal(fit.center_freq, center_freq, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.baseline, baseline, 2)
+    npt.assert_almost_equal(fit.center_freq_hz, center_freq_hz, 2)
     
     # test receptive field
     rf = np.exp(-((10**fit.model.stimulus.freqs-10**fit.center_freq)**2)/(2*(10**fit.sigma)**2))

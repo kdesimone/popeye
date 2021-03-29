@@ -78,12 +78,12 @@ def test_css_fit():
     npt.assert_almost_equal(observed, expected)
     
     # fine fit
-    npt.assert_almost_equal(fit.x, x)
-    npt.assert_almost_equal(fit.y, y)
-    npt.assert_almost_equal(fit.sigma, sigma)
-    npt.assert_almost_equal(fit.n, n)
-    npt.assert_almost_equal(fit.beta, beta)
-    npt.assert_almost_equal(fit.beta, beta)
+    npt.assert_almost_equal(fit.x, x, 2)
+    npt.assert_almost_equal(fit.y, y, 2)
+    npt.assert_almost_equal(fit.sigma, sigma, 2)
+    npt.assert_almost_equal(fit.n, n, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
+    npt.assert_almost_equal(fit.beta, beta, 2)
     
     # overloaded
     npt.assert_almost_equal(fit.overloaded_estimate, [2.5272803327893043,
@@ -91,7 +91,7 @@ def test_css_fit():
                                                       1.2965338406691291,
                                                       0.90000000000036384,
                                                       0.99999999999999067,
-                                                      -0.25000000000200889])
+                                                      -0.25000000000200889], 2)
                                                      
                                                      
                                                      

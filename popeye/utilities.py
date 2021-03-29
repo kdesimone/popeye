@@ -14,7 +14,7 @@ import datetime
 import numpy as np
 import nibabel
 from scipy.stats import gamma
-from scipy.optimize import brute, fmin_powell, fmin
+from scipy.optimize import brute, fmin_powell, fmin, least_squares
 from scipy.stats import linregress
 from scipy.integrate import romb, trapz
 from scipy import c_, ones, dot, stats, diff
@@ -22,6 +22,7 @@ from scipy.linalg import inv, solve, det, norm
 from numpy import log, pi, sqrt, square, diagonal
 from numpy.random import randn, seed
 import sharedmem
+import numba
 
 # Python 3 compatibility below:
 try:  # pragma: no cover
@@ -412,12 +413,59 @@ def gradient_descent_search(data, error_function, objective_function, parameters
     method for minimization, Compututation Journal 6, 163-168.
 
     """
-
-    output = fmin_powell(error_function, parameters,
-                         args=(bounds, data, objective_function, verbose),
-                         full_output=True, disp=False, retall=True)
+    
+    if bounds is None:
+        output = least_squares(error_function_residual, parameters, method='lm',
+                                args=(bounds, data, objective_function, verbose))
+    else:
+        output = least_squares(error_function_residual, parameters,
+                                args=(bounds, data, objective_function, verbose))
 
     return output
+
+@numba.jit(nopython=True, parallel=False)
+def stacker(x,y):
+    return np.hstack((x,y))
+
+@numba.jit(nopython=True, parallel=False)
+def rss(data,prediction):
+    return np.nansum((data-prediction)**2)
+
+@numba.jit(nopython=True, parallel=False)
+def residual(data,prediction):
+    return (data-prediction)**2
+
+@numba.jit(nopython=True, parallel=False)
+def check_parameters(parameters, bounds):
+    for i in range(len(parameters)):
+        b = bounds[i]
+        p = parameters[i]
+        if b[0] and p < b[0]:
+            return None
+        if b[1] and b[1] < p:
+            return None
+    
+    # merge the parameters and arguments
+    ensemble = []
+    ensemble.extend(parameters)
+    return ensemble
+
+def error_function_rss(parameters, bounds, data, objective_function, verbose):
+    # parameters = check_parameters(parameters, bounds)
+    # if parameters is None:
+    #   return np.inf
+    prediction = objective_function(*parameters)
+    error = rss(data, prediction)
+    return error
+
+# generic error function
+def error_function_residual(parameters, bounds, data, objective_function, verbose):
+    # parameters = check_parameters(parameters, bounds)
+    # if parameters is None:
+    #   return np.inf
+    prediction = objective_function(*parameters)
+    error = residual(data, prediction)
+    return error
 
 def brute_force_search(data, error_function, objective_function, grids, bounds, Ns=None, verbose=False):
 
@@ -486,7 +534,7 @@ def brute_force_search(data, error_function, objective_function, grids, bounds, 
 
     # if user provides their own grids
     if isinstance(grids[0], SliceType):
-        output = brute(error_function,
+        output = brute(error_function_rss,
                        args=(bounds, data, objective_function, verbose),
                        ranges=grids,
                        finish=None,
@@ -495,7 +543,7 @@ def brute_force_search(data, error_function, objective_function, grids, bounds, 
 
     # otherwise specify (min,max) and Ns for each dimension
     else:
-        output = brute(error_function,
+        output = brute(error_function_rss,
                args=(bounds, data, objective_function, verbose),
                ranges=grids,
                Ns=Ns,
