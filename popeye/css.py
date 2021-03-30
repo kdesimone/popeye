@@ -14,7 +14,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask, generate_rf_timeseries
 
 class CompressiveSpatialSummationModel(PopulationModel):
     
@@ -52,6 +52,9 @@ class CompressiveSpatialSummationModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, n):
         
+        # mask for speed
+        mask = self.distance_mask_coarse(x, y, sigma)
+
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma,self.stimulus.deg_x0, self.stimulus.deg_y0)
         
@@ -59,7 +62,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x0[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr0, rf)
+        response = generate_rf_timeseries(self.stimulus.stim_arr0, rf, mask)
         
         # compression
         response **= n
@@ -87,6 +90,10 @@ class CompressiveSpatialSummationModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, n, beta, baseline, unscaled=False):
         
+
+        # mask for speed
+        mask = self.distance_mask(x, y, sigma)
+
         # generate the RF
         rf = generate_og_receptive_field(x, y, sigma, self.stimulus.deg_x, self.stimulus.deg_y)
         
@@ -94,7 +101,7 @@ class CompressiveSpatialSummationModel(PopulationModel):
         rf /= ((2 * np.pi * sigma**2) * 1/np.diff(self.stimulus.deg_x[0,0:2])**2)
         
         # extract the stimulus time-series
-        response = generate_rf_timeseries_nomask(self.stimulus.stim_arr, rf)
+        response = generate_rf_timeseries(self.stimulus.stim_arr, rf, mask)
         
         # compression
         response **= n
