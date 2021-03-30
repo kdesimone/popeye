@@ -365,7 +365,7 @@ class PopulationFit(object):
         
         """
         
-        return self.gradient_descent.x
+        return self.gradient_descent[0]
     
     @auto_attr
     def ballpark_prediction(self):
@@ -398,19 +398,19 @@ class PopulationFit(object):
     @auto_attr
     def msg(self):
         if self.auto_fit is True and self.overloaded_estimate is not None: # pragma: no cover
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIMEMS=%.04d   RSQ=%.02f  EST=%s"
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  (self.finish-self.start)*1000,
+                  self.finish-self.start,
                   self.rsquared,
                   np.round(self.overloaded_estimate,4)))
         elif self.auto_fit is True: # pragma: no cover
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIMEMS=%.04d   RSQ=%.02f  EST=%s"
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  (self.finish-self.start)*1000,
+                  self.finish-self.start,
                   self.rsquared,
                   np.round(self.estimate,4)))
         else: # pragma: no cover
