@@ -14,7 +14,7 @@ import nibabel
 from popeye.onetime import auto_attr
 import popeye.utilities as utils
 from popeye.base import PopulationModel, PopulationFit
-from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries_nomask, generate_rf_timeseries
+from popeye.spinach import generate_og_receptive_field, generate_rf_timeseries
 
 class CompressiveSpatialSummationModel(PopulationModel):
     
@@ -52,7 +52,6 @@ class CompressiveSpatialSummationModel(PopulationModel):
     # main method for deriving model time-series
     def generate_ballpark_prediction(self, x, y, sigma, n):
         
-        # mask for speed
         mask = self.distance_mask_coarse(x, y, sigma)
 
         # generate the RF
@@ -90,8 +89,6 @@ class CompressiveSpatialSummationModel(PopulationModel):
     # main method for deriving model time-series
     def generate_prediction(self, x, y, sigma, n, beta, baseline, unscaled=False):
         
-
-        # mask for speed
         mask = self.distance_mask(x, y, sigma)
 
         # generate the RF

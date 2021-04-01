@@ -269,10 +269,10 @@ class PopulationFit(object):
         # the data. Since the data is in shared memory, no overhead incurred.
         self.model.data = data
         
-        if self.bounds[-2][0] is not None and self.bounds[-2][0] > 0:
-            self.model.bounded_amplitude = True # +/- amplitudes
-        else:
-            self.model.bounded_amplitude = False # + amplitudes
+        # if self.bounds[-2][0] is not None and self.bounds[-2][0] > 0:
+        #     self.model.bounded_amplitude = True # +/- amplitudes
+        # else:
+        #     self.model.bounded_amplitude = False # + amplitudes
         
         # automatic fitting
         if self.auto_fit: # pragma: no cover
@@ -365,7 +365,7 @@ class PopulationFit(object):
         
         """
         
-        return self.gradient_descent[0]
+        return self.gradient_descent.x
     
     @auto_attr
     def ballpark_prediction(self):
@@ -398,19 +398,19 @@ class PopulationFit(object):
     @auto_attr
     def msg(self):
         if self.auto_fit is True and self.overloaded_estimate is not None: # pragma: no cover
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIMEMS=%.04d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  self.finish-self.start,
+                  (self.finish-self.start)*1000,
                   self.rsquared,
                   np.round(self.overloaded_estimate,4)))
         elif self.auto_fit is True: # pragma: no cover
-            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIME=%.03d   RSQ=%.02f  EST=%s"
+            txt = ("VOXEL=(%.03d,%.03d,%.03d)   TIMEMS=%.04d   RSQ=%.02f  EST=%s"
                 %(self.voxel_index[0],
                   self.voxel_index[1],
                   self.voxel_index[2],
-                  self.finish-self.start,
+                  (self.finish-self.start)*1000,
                   self.rsquared,
                   np.round(self.estimate,4)))
         else: # pragma: no cover
