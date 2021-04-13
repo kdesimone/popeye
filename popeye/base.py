@@ -317,7 +317,6 @@ class PopulationFit(object):
                                         utils.error_function,
                                         self.model.generate_ballpark_prediction,
                                         self.grids,
-                                        self.bounds,
                                         self.Ns,
                                         self.very_verbose)
     

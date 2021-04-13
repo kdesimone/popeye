@@ -14,7 +14,7 @@ import datetime
 import numpy as np
 import nibabel
 from scipy.stats import gamma
-from scipy.optimize import brute, fmin_powell, fmin, least_squares
+from scipy.optimize import brute, fmin_powell, fmin, least_squares, minimize
 from scipy.stats import linregress
 from scipy.integrate import romb, trapz
 from scipy import c_, ones, dot, stats, diff
@@ -414,12 +414,14 @@ def gradient_descent_search(data, error_function, objective_function, parameters
 
     """
     
-    if bounds is None:
-        output = least_squares(error_function_residual, parameters, method='lm',
-                                args=(bounds, data, objective_function, verbose))
-    else:
-        output = least_squares(error_function_residual, parameters,
-                                args=(bounds, data, objective_function, verbose))
+    # if bounds is None:
+    #     output = least_squares(error_function_residual, parameters, method='lm',
+    #                            args=(data, objective_function, verbose))
+    # else:
+    #     output = least_squares(error_function_residual, parameters, bounds=bounds,
+    #                            args=(data, objective_function, verbose))
+    output = minimize(error_function_rss, parameters, bounds=bounds, method='SLSQP',
+                      args=(data, objective_function, verbose))
 
     return output
 
@@ -450,24 +452,18 @@ def check_parameters(parameters, bounds):
     ensemble.extend(parameters)
     return ensemble
 
-def error_function_rss(parameters, bounds, data, objective_function, verbose):
-    # parameters = check_parameters(parameters, bounds)
-    # if parameters is None:
-    #   return np.inf
+def error_function_rss(parameters, data, objective_function, verbose):
     prediction = objective_function(*parameters)
     error = rss(data, prediction)
     return error
 
 # generic error function
-def error_function_residual(parameters, bounds, data, objective_function, verbose):
-    # parameters = check_parameters(parameters, bounds)
-    # if parameters is None:
-    #   return np.inf
+def error_function_residual(parameters, data, objective_function, verbose):
     prediction = objective_function(*parameters)
     error = residual(data, prediction)
     return error
 
-def brute_force_search(data, error_function, objective_function, grids, bounds, Ns=None, verbose=False):
+def brute_force_search(data, error_function, objective_function, grids, Ns=None, verbose=False):
 
     r"""A generic brute-force grid-search error minimization function.
 
@@ -535,7 +531,7 @@ def brute_force_search(data, error_function, objective_function, grids, bounds, 
     # if user provides their own grids
     if isinstance(grids[0], SliceType):
         output = brute(error_function_rss,
-                       args=(bounds, data, objective_function, verbose),
+                       args=(data, objective_function, verbose),
                        ranges=grids,
                        finish=None,
                        full_output=True,
@@ -544,7 +540,7 @@ def brute_force_search(data, error_function, objective_function, grids, bounds, 
     # otherwise specify (min,max) and Ns for each dimension
     else:
         output = brute(error_function_rss,
-               args=(bounds, data, objective_function, verbose),
+               args=(data, objective_function, verbose),
                ranges=grids,
                Ns=Ns,
                finish=None,
@@ -1000,7 +996,7 @@ def parallel_fit(args):
     auto_fit = args[7]
     verbose = args[8]
     
-    try:
+    if True:
         # fit the data
         fit = Fit(model,
                   data,
@@ -1012,17 +1008,17 @@ def parallel_fit(args):
                   verbose)
         return fit
     
-    except:
+    # except:
 
-        fit = Fit(model,
-                  data,
-                  grids,
-                  bounds,
-                  Ns,
-                  voxel_index,
-                  False,
-                  verbose)
-        return 
+    #     fit = Fit(model,
+    #               data,
+    #               grids,
+    #               bounds,
+    #               Ns,
+    #               voxel_index,
+    #               False,
+    #               verbose)
+    #     return fit
 
 
 
